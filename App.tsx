@@ -63,13 +63,16 @@ create table public.payment_methods (
 );
 
 -- 6. Сотрудники (ЗАШИФРОВАННЫЕ ДАННЫЕ)
--- Администратор: Логин '000' -> 'wADM', Пароль 'admin' -> '4NtaWRY', Имя 'Administrator' -> '==gcrVycm5pc3RtaWdQ'
-insert into public.users (phone, name, password, role, balance)
-values ('wADM', '==gcrVycm5pc3RtaWdQ', '4NtaWRY', 'ADMIN', 0);
 
--- Менеджер: Логин '001' -> 'xADM', Пароль 'manager' -> '==gcGZlNaFkb', Имя 'Manager' -> '==gcGZlFuWT'
+-- Администратор (Логин: 000, Пароль: admin)
+-- Encoded: 000 -> wADM, admin -> =4mWdaY
 insert into public.users (phone, name, password, role, balance)
-values ('xADM', '==gcGZlFuWT', '==gcGZlNaFkb', 'MANAGER', 0);
+values ('wADM', '==gcldhcnRzaW5pbWRWQ', '=4mWdaY', 'ADMIN', 0);
+
+-- Менеджер (Логин: 001, Пароль: manager)
+-- Encoded: 001 -> xADM, manager -> ==gcldYNaWb
+insert into public.users (phone, name, password, role, balance)
+values ('xADM', '==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
 
 -- 7. Доступ (RLS)
 alter table public.users enable row level security;
