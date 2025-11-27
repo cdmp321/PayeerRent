@@ -8,18 +8,24 @@ import { supabaseUrl, supabase } from './services/supabase';
 import { User, UserRole } from './types';
 import { LogOut, Settings, Home, Wallet as WalletIcon, ShoppingBag, Store, AlertTriangle, Database, RefreshCw, Copy, Check } from 'lucide-react';
 
-const SCHEMA_SQL = `-- 1. Пользователи
+const SCHEMA_SQL = `-- 1. Очистка старых таблиц
+DROP TABLE IF EXISTS public.transactions;
+DROP TABLE IF EXISTS public.items;
+DROP TABLE IF EXISTS public.payment_methods;
+DROP TABLE IF EXISTS public.users;
+
+-- 2. Пользователи
 create table public.users (
   id uuid default gen_random_uuid() primary key,
   phone text unique not null,
   name text not null,
   password text,
   balance numeric default 0,
-  role text default 'USER',
+  role text default 'USER', -- 'USER', 'ADMIN', 'MANAGER'
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 2. Товары
+-- 3. Товары
 create table public.items (
   id uuid default gen_random_uuid() primary key,
   title text not null,
@@ -27,16 +33,18 @@ create table public.items (
   image_url text,
   price numeric not null,
   status text default 'AVAILABLE',
-  owner_id uuid references public.users(id),
+  -- Если владелец удален, товар возвращается в магазин (owner_id = null)
+  owner_id uuid references public.users(id) on delete set null,
   purchased_at timestamp with time zone,
   last_purchase_price numeric,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 3. Транзакции
+-- 4. Транзакции
 create table public.transactions (
   id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.users(id) not null,
+  -- Если пользователь удален, транзакции удаляются (Cascade)
+  user_id uuid references public.users(id) on delete cascade not null,
   amount numeric not null,
   type text not null,
   status text not null,
@@ -46,7 +54,7 @@ create table public.transactions (
   date timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 4. Методы оплаты
+-- 5. Методы оплаты
 create table public.payment_methods (
   id uuid default gen_random_uuid() primary key,
   name text not null,
@@ -55,12 +63,16 @@ create table public.payment_methods (
   min_amount numeric default 0
 );
 
--- 5. Админ (000 / admin)
+-- 6. Сотрудники
+-- Админ (000 / admin)
 insert into public.users (phone, name, password, role, balance)
-values ('000', 'Administrator', 'admin', 'ADMIN', 0)
-on conflict (phone) do nothing;
+values ('000', 'Administrator', 'admin', 'ADMIN', 0);
 
--- 6. Доступ
+-- Менеджер (001 / manager)
+insert into public.users (phone, name, password, role, balance)
+values ('001', 'Manager', 'manager', 'MANAGER', 0);
+
+-- 7. Доступ (RLS)
 alter table public.users enable row level security;
 alter table public.items enable row level security;
 alter table public.transactions enable row level security;
@@ -121,7 +133,7 @@ const App: React.FC = () => {
             // 3. Get current user session
             const u = await api.getCurrentUser();
             setUser(u);
-            if (u?.role === UserRole.ADMIN) {
+            if (u?.role === UserRole.ADMIN || u?.role === UserRole.MANAGER) {
                 setIsAdminView(true);
             }
         } catch (err: any) {
@@ -138,7 +150,7 @@ const App: React.FC = () => {
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
     setError(null);
-    if (loggedInUser.role === UserRole.ADMIN) {
+    if (loggedInUser.role === UserRole.ADMIN || loggedInUser.role === UserRole.MANAGER) {
       setIsAdminView(true);
     } else {
         setActiveUserTab('market');
@@ -251,11 +263,15 @@ const App: React.FC = () => {
                 <Store className="w-4 h-4" />
             </div>
             <h1 className="font-extrabold text-xl text-slate-800 tracking-tight">PayeerRent</h1>
-            {isAdminView && <span className="bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ml-1">Admin</span>}
+            {isAdminView && (
+                <span className={`text-white text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ml-1 ${user.role === UserRole.MANAGER ? 'bg-purple-600' : 'bg-slate-800'}`}>
+                    {user.role === UserRole.MANAGER ? 'Manager' : 'Admin'}
+                </span>
+            )}
           </div>
           
           <div className="flex items-center gap-2">
-            {user.role === UserRole.ADMIN && (
+            {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (
                <button 
                  onClick={() => setIsAdminView(!isAdminView)}
                  className={`p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 ${isAdminView ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'hover:bg-slate-100 text-slate-500'}`}
