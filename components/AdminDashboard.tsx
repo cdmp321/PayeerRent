@@ -4,7 +4,11 @@ import { api } from '../services/api';
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
 import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
-export const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  user: User | null;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState<'items' | 'users' | 'payments' | 'deposits' | 'finances' | 'settings'>('deposits');
   const [items, setItems] = useState<Item[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -243,9 +247,13 @@ export const AdminDashboard: React.FC = () => {
       { id: 'items', label: 'Товары', icon: Package },
       { id: 'users', label: 'Юзеры', icon: Users },
       { id: 'finances', label: 'Финансы', icon: TrendingUp, count: unviewedIncomeCount },
-      { id: 'payments', label: 'Метод оплаты', icon: CreditCard },
-      { id: 'settings', label: 'Настр.', icon: Settings },
   ];
+
+  // ONLY MANAGER can see Payments and Settings
+  if (user?.role === UserRole.MANAGER) {
+      navItems.push({ id: 'payments', label: 'Метод оплаты', icon: CreditCard } as any);
+      navItems.push({ id: 'settings', label: 'Настр.', icon: Settings } as any);
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-[80vh] gap-6 pb-24 md:pb-0">
@@ -573,7 +581,7 @@ export const AdminDashboard: React.FC = () => {
                                 <span className="text-xs text-gray-400 uppercase font-bold">Баланс</span>
                                 <span className={`font-bold ${u.balance > 0 ? 'text-emerald-600' : 'text-gray-800'}`}>{u.balance.toFixed(2)} P</span>
                             </div>
-                            <div className="text-[10px] text-gray-300 mt-2 font-mono truncate">ID: {u.id}</div>
+                            <div className="text-xs text-gray-300 mt-2 font-mono truncate">ID: {u.id}</div>
                         </div>
                     </div>
                 ))}
@@ -581,8 +589,8 @@ export const AdminDashboard: React.FC = () => {
             </div>
         )}
 
-        {/* CONTENT: PAYMENTS */}
-        {activeTab === 'payments' && (
+        {/* CONTENT: PAYMENTS (ONLY MANAGER) */}
+        {activeTab === 'payments' && user?.role === UserRole.MANAGER && (
             <div className="space-y-6">
                 <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl">Методы оплаты</h3>
                 
@@ -648,10 +656,10 @@ export const AdminDashboard: React.FC = () => {
             </div>
         )}
 
-         {/* CONTENT: SETTINGS */}
-         {activeTab === 'settings' && (
+         {/* CONTENT: SETTINGS (ONLY MANAGER) */}
+         {activeTab === 'settings' && user?.role === UserRole.MANAGER && (
              <div className="max-w-md">
-                 <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Настройки Админа</h3>
+                 <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Настройки</h3>
                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                      <form onSubmit={handleUpdateCreds} className="space-y-4">
                          <div>

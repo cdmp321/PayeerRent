@@ -300,7 +300,7 @@ const App: React.FC = () => {
       {/* Main Content Area - Responsive Container */}
       <main className={`${isAdminView ? 'max-w-7xl px-6' : 'max-w-md px-4'} mx-auto py-6 transition-all duration-300`}>
         {isAdminView ? (
-          <AdminDashboard />
+          <AdminDashboard user={user} />
         ) : (
           <>
             {/* User Content Area */}
