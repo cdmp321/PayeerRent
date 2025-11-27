@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -31,10 +31,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [newMethodInstr, setNewMethodInstr] = useState('');
   const [newMethodMin, setNewMethodMin] = useState('');
 
-  // Settings State
-  const [newAdminLogin, setNewAdminLogin] = useState('');
-  const [newAdminPass, setNewAdminPass] = useState('');
-  const [settingsMsg, setSettingsMsg] = useState('');
+  // Settings State - Manager
+  const [managerLogin, setManagerLogin] = useState('');
+  const [managerPass, setManagerPass] = useState('');
+  const [msgManager, setMsgManager] = useState('');
+
+  // Settings State - Admin
+  const [adminLogin, setAdminLogin] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [msgAdmin, setMsgAdmin] = useState('');
 
   useEffect(() => {
     refreshAll();
@@ -87,20 +92,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     refreshAll();
   };
 
-  const handleUpdateCreds = async (e: React.FormEvent) => {
+  const handleUpdateManager = async (e: React.FormEvent) => {
       e.preventDefault();
-      if(!newAdminLogin || !newAdminPass) {
-          setSettingsMsg('Заполните все поля');
+      if(!managerLogin || !managerPass) {
+          setMsgManager('Заполните все поля');
           return;
       }
       try {
-          await api.updateAdminCredentials(newAdminLogin, newAdminPass);
-          setSettingsMsg('Данные успешно обновлены!');
-          setNewAdminLogin('');
-          setNewAdminPass('');
-          setTimeout(() => setSettingsMsg(''), 3000);
-      } catch (err) {
-          setSettingsMsg('Ошибка обновления');
+          await api.updateStaffCredentials('MANAGER', managerLogin, managerPass);
+          setMsgManager('Данные Менеджера обновлены!');
+          setManagerLogin('');
+          setManagerPass('');
+          setTimeout(() => setMsgManager(''), 3000);
+      } catch (err: any) {
+          setMsgManager('Ошибка: ' + err.message);
+      }
+  };
+
+  const handleUpdateAdmin = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if(!adminLogin || !adminPass) {
+          setMsgAdmin('Заполните все поля');
+          return;
+      }
+      try {
+          await api.updateStaffCredentials('ADMIN', adminLogin, adminPass);
+          setMsgAdmin('Данные Админа обновлены!');
+          setAdminLogin('');
+          setAdminPass('');
+          setTimeout(() => setMsgAdmin(''), 3000);
+      } catch (err: any) {
+          setMsgAdmin('Ошибка: ' + err.message);
       }
   };
 
@@ -244,9 +266,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Navigation Items Config
   const navItems = [
       { id: 'deposits', label: 'Заявки', icon: FileText, count: pendingRequests.length },
+      { id: 'finances', label: 'Финансы', icon: TrendingUp, count: unviewedIncomeCount },
       { id: 'items', label: 'Товары', icon: Package },
       { id: 'users', label: 'Юзеры', icon: Users },
-      { id: 'finances', label: 'Финансы', icon: TrendingUp, count: unviewedIncomeCount },
   ];
 
   // ONLY MANAGER can see Payments and Settings
@@ -658,31 +680,85 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
          {/* CONTENT: SETTINGS (ONLY MANAGER) */}
          {activeTab === 'settings' && user?.role === UserRole.MANAGER && (
-             <div className="max-w-md">
-                 <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Настройки</h3>
-                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                     <form onSubmit={handleUpdateCreds} className="space-y-4">
-                         <div>
-                             <label className="block text-sm font-bold text-gray-500 mb-1">Новый Логин</label>
-                             <input 
-                                value={newAdminLogin}
-                                onChange={e => setNewAdminLogin(e.target.value)}
-                                className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-slate-800 outline-none"
-                             />
+             <div className="w-full">
+                 <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Настройки доступа</h3>
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     
+                     {/* Column 1: Update Manager (Self) */}
+                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                         <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <UserCog className="w-6 h-6" />
+                            </div>
+                            <h3 className="font-bold text-lg text-gray-800">Данные Менеджера</h3>
                          </div>
-                         <div>
-                             <label className="block text-sm font-bold text-gray-500 mb-1">Новый Пароль</label>
-                             <input 
-                                value={newAdminPass}
-                                onChange={e => setNewAdminPass(e.target.value)}
-                                className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-slate-800 outline-none"
-                             />
+                         <form onSubmit={handleUpdateManager} className="space-y-4">
+                             <div>
+                                 <label className="block text-sm font-bold text-gray-500 mb-1">Новый Логин</label>
+                                 <input 
+                                    value={managerLogin}
+                                    onChange={e => setManagerLogin(e.target.value)}
+                                    placeholder="Например: manager_new"
+                                    className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-indigo-600 outline-none transition-colors"
+                                 />
+                             </div>
+                             <div>
+                                 <label className="block text-sm font-bold text-gray-500 mb-1">Новый Пароль</label>
+                                 <input 
+                                    value={managerPass}
+                                    onChange={e => setManagerPass(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-indigo-600 outline-none transition-colors"
+                                 />
+                             </div>
+                             {msgManager && (
+                                 <div className={`text-sm font-bold ${msgManager.startsWith('Ошибка') ? 'text-red-500' : 'text-green-600'}`}>
+                                     {msgManager}
+                                 </div>
+                             )}
+                             <button className="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]">
+                                 Обновить Менеджера
+                             </button>
+                         </form>
+                     </div>
+
+                     {/* Column 2: Update Admin (Target) */}
+                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                         <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                                <Lock className="w-6 h-6" />
+                            </div>
+                            <h3 className="font-bold text-lg text-gray-800">Данные Администратора</h3>
                          </div>
-                         {settingsMsg && <div className="text-sm text-green-600 font-bold">{settingsMsg}</div>}
-                         <button className="w-full bg-slate-800 text-white p-4 rounded-xl font-bold hover:bg-slate-700 transition-colors">
-                             Обновить данные входа
-                         </button>
-                     </form>
+                         <form onSubmit={handleUpdateAdmin} className="space-y-4">
+                             <div>
+                                 <label className="block text-sm font-bold text-gray-500 mb-1">Новый Логин</label>
+                                 <input 
+                                    value={adminLogin}
+                                    onChange={e => setAdminLogin(e.target.value)}
+                                    placeholder="Например: admin_new"
+                                    className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-slate-800 outline-none transition-colors"
+                                 />
+                             </div>
+                             <div>
+                                 <label className="block text-sm font-bold text-gray-500 mb-1">Новый Пароль</label>
+                                 <input 
+                                    value={adminPass}
+                                    onChange={e => setAdminPass(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-slate-800 outline-none transition-colors"
+                                 />
+                             </div>
+                             {msgAdmin && (
+                                 <div className={`text-sm font-bold ${msgAdmin.startsWith('Ошибка') ? 'text-red-500' : 'text-green-600'}`}>
+                                     {msgAdmin}
+                                 </div>
+                             )}
+                             <button className="w-full bg-slate-800 text-white p-4 rounded-xl font-bold hover:bg-slate-700 shadow-lg shadow-slate-200 transition-all active:scale-[0.98]">
+                                 Обновить Администратора
+                             </button>
+                         </form>
+                     </div>
                  </div>
              </div>
          )}

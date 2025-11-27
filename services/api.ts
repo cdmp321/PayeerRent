@@ -174,10 +174,10 @@ export const api = {
     return data.password === encrypt('admin');
   },
 
-  updateAdminCredentials: async (newPhone: string, newPassword: string): Promise<void> => {
+  // Generic function for Manager to update credentials by role
+  updateStaffCredentials: async (targetRole: 'ADMIN' | 'MANAGER', newPhone: string, newPassword: string): Promise<void> => {
     const currentUser = await api.getCurrentUser();
-    // Allow both Admin and Manager to update their OWN credentials
-    if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER')) throw new Error('Нет прав');
+    if (currentUser?.role !== 'MANAGER') throw new Error('Только менеджер может менять данные');
 
     const { error } = await supabase
       .from('users')
@@ -185,7 +185,7 @@ export const api = {
           phone: encrypt(newPhone.trim()), 
           password: encrypt(newPassword.trim()) 
       })
-      .eq('id', currentUser.id);
+      .eq('role', targetRole);
 
     if (error) throw new Error(error.message);
   },
