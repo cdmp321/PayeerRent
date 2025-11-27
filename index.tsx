@@ -1,6 +1,7 @@
-import React, { ReactNode, Component } from 'react';
+import React, { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import './index.css';
 
 // Global error handler for white screen debugging
 window.onerror = function(message, source, lineno, colno, error) {
@@ -26,7 +27,7 @@ interface ErrorBoundaryState {
   error: any;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
