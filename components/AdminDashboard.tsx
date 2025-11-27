@@ -64,24 +64,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItemTitle) return; 
+    if (!newItemTitle) {
+        alert('Введите название товара');
+        return;
+    }
     
-    const priceVal = parseFloat(newItemPrice);
-    const quantityVal = parseFloat(newItemQuantity);
+    try {
+        const priceVal = newItemPrice === '' ? 0 : parseFloat(newItemPrice);
+        const quantityVal = newItemQuantity === '' ? 1 : parseFloat(newItemQuantity);
 
-    await api.createItem({
-      title: newItemTitle,
-      description: newItemDesc || 'Описание отсутствует',
-      imageUrl: newItemImage.trim(),
-      price: isNaN(priceVal) ? 0 : priceVal,
-      quantity: isNaN(quantityVal) ? 1 : quantityVal
-    });
-    setNewItemTitle('');
-    setNewItemDesc('');
-    setNewItemPrice('');
-    setNewItemQuantity('1');
-    setNewItemImage('');
-    refreshAll();
+        await api.createItem({
+            title: newItemTitle,
+            description: newItemDesc || 'Описание отсутствует',
+            imageUrl: newItemImage.trim(),
+            price: isNaN(priceVal) ? 0 : priceVal,
+            quantity: isNaN(quantityVal) ? 1 : quantityVal
+        });
+        
+        setNewItemTitle('');
+        setNewItemDesc('');
+        setNewItemPrice('');
+        setNewItemQuantity('1');
+        setNewItemImage('');
+        
+        alert('Товар успешно добавлен!');
+        refreshAll();
+    } catch (e: any) {
+        alert('Ошибка добавления: ' + e.message);
+    }
   };
 
   const handleAddMethod = async (e: React.FormEvent) => {
@@ -254,6 +264,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const unviewedIncomeCount = transactions.filter(t => (t.type === 'PURCHASE' || t.type === 'RENT_CHARGE') && !t.viewed).length;
   
   const refundsHistory = transactions.filter(t => t.type === 'REFUND');
+  const withdrawalsHistory = transactions.filter(t => t.type === 'WITHDRAWAL');
 
   const groupedFinances = useMemo(() => {
     const incomeTransactions = transactions.filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE');
@@ -542,7 +553,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     )}
                 </div>
 
-                {/* 2. REFUND HISTORY Section */}
+                {/* 2. WITHDRAWAL HISTORY Section */}
+                <div className="pt-8 border-t border-gray-200">
+                    <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4 flex items-center gap-2">
+                        <ArrowUpRight className="w-6 h-6 text-indigo-500" />
+                        История выводов (Отправлено клиентам)
+                    </h3>
+                    {withdrawalsHistory.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl text-sm font-medium">История выводов пуста</div>
+                    ) : (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
+                                    <tr>
+                                        <th className="p-4">Клиент</th>
+                                        <th className="p-4">Сумма</th>
+                                        <th className="p-4 hidden md:table-cell">Реквизиты</th>
+                                        <th className="p-4">Статус</th>
+                                        <th className="p-4 hidden md:table-cell">Дата</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm">
+                                    {withdrawalsHistory.map(tx => {
+                                        const u = users.find(user => user.id === tx.userId);
+                                        return (
+                                            <tr key={tx.id} className="hover:bg-gray-50/50">
+                                                <td className="p-4">
+                                                    <div className="font-bold text-gray-800">{u ? u.name : 'Unknown'}</div>
+                                                    <div className="text-xs text-gray-400 md:hidden">{new Date(tx.date).toLocaleDateString()}</div>
+                                                </td>
+                                                <td className="p-4 font-bold text-indigo-600">-{tx.amount} P</td>
+                                                <td className="p-4 text-gray-600 font-mono text-xs hidden md:table-cell">{tx.description.replace('Заявка на вывод: ', '')}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
+                                                        tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-700' :
+                                                        tx.status === TransactionStatus.REJECTED ? 'bg-red-100 text-red-700' :
+                                                        'bg-orange-100 text-orange-700'
+                                                    }`}>
+                                                        {tx.status === TransactionStatus.APPROVED ? 'Успешно' :
+                                                         tx.status === TransactionStatus.REJECTED ? 'Отклонено' : 'Ожидание'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-gray-400 text-xs hidden md:table-cell">{new Date(tx.date).toLocaleString()}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {/* 3. REFUND HISTORY Section */}
                 <div className="pt-8 border-t border-gray-200">
                     <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4 flex items-center gap-2">
                         <CornerUpLeft className="w-6 h-6 text-red-500" />
@@ -558,7 +620,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         <th className="p-4">Клиент</th>
                                         <th className="p-4">Сумма</th>
                                         <th className="p-4">Причина</th>
-                                        <th className="p-4">Дата</th>
+                                        <th className="p-4 hidden md:table-cell">Дата</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-sm">
@@ -569,7 +631,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                 <td className="p-4 font-bold text-gray-800">{u ? u.name : 'Unknown'}</td>
                                                 <td className="p-4 font-bold text-red-500">-{tx.amount} P</td>
                                                 <td className="p-4 text-gray-600">{tx.description.replace('Возврат средств: ', '')}</td>
-                                                <td className="p-4 text-gray-400 text-xs">{new Date(tx.date).toLocaleString()}</td>
+                                                <td className="p-4 text-gray-400 text-xs hidden md:table-cell">{new Date(tx.date).toLocaleString()}</td>
                                             </tr>
                                         );
                                     })}

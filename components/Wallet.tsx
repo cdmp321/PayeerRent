@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -21,7 +21,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   const [withdrawDetails, setWithdrawDetails] = useState('');
 
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
-  const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     loadData();
@@ -32,13 +32,9 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     setMethods(methodsData.filter(m => m.isActive));
 
     const allTxs = await api.getTransactions();
-    // Filter only pending deposits OR withdrawals for this user
-    const pending = allTxs.filter(t => 
-        t.userId === user.id && 
-        t.status === TransactionStatus.PENDING && 
-        (t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
-    );
-    setPendingTransactions(pending);
+    // Filter transactions for this user
+    const userTxs = allTxs.filter(t => t.userId === user.id);
+    setTransactions(userTxs);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,8 +114,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       }
   };
 
-  const pendingDeposit = pendingTransactions.find(t => t.type === 'DEPOSIT');
-  const pendingWithdrawal = pendingTransactions.find(t => t.type === 'WITHDRAWAL');
+  const pendingTransactions = transactions.filter(t => 
+    t.status === TransactionStatus.PENDING && 
+    (t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
+  );
+
+  const withdrawalHistory = transactions.filter(t => t.type === 'WITHDRAWAL');
 
   return (
     <div className="space-y-6 pb-36">
@@ -185,6 +185,49 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                  </div>
              ))}
           </div>
+      )}
+
+      {/* WITHDRAWAL HISTORY */}
+      {withdrawalHistory.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
+                <History className="w-6 h-6 text-indigo-500" />
+                История выводов
+            </h3>
+            <div className="space-y-4">
+                {withdrawalHistory.map(tx => (
+                    <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2.5 rounded-xl ${
+                                tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-600' :
+                                tx.status === TransactionStatus.REJECTED ? 'bg-red-100 text-red-600' :
+                                'bg-gray-100 text-gray-500'
+                            }`}>
+                                <ArrowUpRight className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="font-bold text-gray-800">Вывод средств</div>
+                                <div className="text-xs text-gray-400 font-medium">{new Date(tx.date).toLocaleString()}</div>
+                                {tx.status === TransactionStatus.REJECTED && (
+                                    <div className="text-xs text-red-500 mt-0.5 font-bold">Отклонено (Средства возвращены)</div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="text-right">
+                             <div className="font-bold text-gray-800 text-lg">-{tx.amount} P</div>
+                             <div className={`text-xs font-bold uppercase ${
+                                 tx.status === TransactionStatus.APPROVED ? 'text-green-600' :
+                                 tx.status === TransactionStatus.REJECTED ? 'text-red-500' :
+                                 'text-orange-500'
+                             }`}>
+                                 {tx.status === TransactionStatus.APPROVED ? 'Выполнено' : 
+                                  tx.status === TransactionStatus.REJECTED ? 'Отклонено' : 'В обработке'}
+                             </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
       )}
 
       {/* Notification Toast */}
