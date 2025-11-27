@@ -50,7 +50,7 @@ export interface Transaction {
   id: string;
   userId: string;
   amount: number;
-  type: 'DEPOSIT' | 'RENT_CHARGE' | 'PURCHASE' | 'REFUND';
+  type: 'DEPOSIT' | 'RENT_CHARGE' | 'PURCHASE' | 'REFUND' | 'WITHDRAWAL';
   status: TransactionStatus;
   description: string;
   date: string;
