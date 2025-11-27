@@ -24,6 +24,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   // Form states
   const [newItemTitle, setNewItemTitle] = useState('');
+  const [newItemDesc, setNewItemDesc] = useState(''); // Added description state
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemImage, setNewItemImage] = useState('');
   
@@ -64,11 +65,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
     await api.createItem({
       title: newItemTitle,
-      description: 'Описание товара от администратора',
+      description: newItemDesc || 'Описание отсутствует',
       imageUrl: newItemImage.trim(), // Use provided image or empty string
       price: isNaN(priceVal) ? 0 : priceVal // Default to 0 if empty
     });
     setNewItemTitle('');
+    setNewItemDesc('');
     setNewItemPrice('');
     setNewItemImage('');
     refreshAll();
@@ -146,6 +148,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     
     await api.deleteItem(id);
     await refreshAll();
+  };
+
+  const handleDeleteUser = async (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!window.confirm('Вы действительно хотите удалить этого пользователя? Все его транзакции и товары будут удалены.')) return;
+      try {
+          await api.deleteUser(id);
+          refreshAll();
+      } catch (err: any) {
+          alert('Ошибка удаления: ' + err.message);
+      }
   };
 
   const deleteMethod = async (id: string, e: React.MouseEvent) => {
@@ -472,28 +485,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold mb-4 text-lg">Добавить новый товар</h3>
-                <form onSubmit={handleAddItem} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <input 
-                        placeholder="Название" 
-                        value={newItemTitle}
-                        onChange={e => setNewItemTitle(e.target.value)}
-                        className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium lg:col-span-1" 
+                <form onSubmit={handleAddItem} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input 
+                            placeholder="Название" 
+                            value={newItemTitle}
+                            onChange={e => setNewItemTitle(e.target.value)}
+                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
+                        />
+                        <input 
+                            placeholder="URL картинки" 
+                            value={newItemImage}
+                            onChange={e => setNewItemImage(e.target.value)}
+                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
+                        />
+                        <input 
+                            placeholder="Цена (0=своб.)" 
+                            type="number"
+                            value={newItemPrice}
+                            onChange={e => setNewItemPrice(e.target.value)}
+                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
+                        />
+                    </div>
+                    
+                    <textarea 
+                        placeholder="Описание товара..." 
+                        value={newItemDesc}
+                        onChange={e => setNewItemDesc(e.target.value)}
+                        className="w-full border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium h-24 resize-none" 
                     />
-                    <input 
-                        placeholder="URL картинки" 
-                        value={newItemImage}
-                        onChange={e => setNewItemImage(e.target.value)}
-                        className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium lg:col-span-1" 
-                    />
-                    <input 
-                        placeholder="Цена (0=своб.)" 
-                        type="number"
-                        value={newItemPrice}
-                        onChange={e => setNewItemPrice(e.target.value)}
-                        className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium lg:col-span-1" 
-                    />
-                    <button className="bg-green-600 text-white p-3 rounded-xl font-extrabold text-base flex justify-center items-center gap-2 shadow-lg hover:shadow-xl hover:bg-green-700 transition-all active:scale-[0.98] lg:col-span-1">
-                        <Plus className="w-5 h-5" /> Добавить
+
+                    <button className="w-full bg-green-600 text-white p-3 rounded-xl font-extrabold text-base flex justify-center items-center gap-2 shadow-lg hover:shadow-xl hover:bg-green-700 transition-all active:scale-[0.98]">
+                        <Plus className="w-5 h-5" /> Добавить товар
                     </button>
                 </form>
             </div>
@@ -589,14 +612,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {sortedUsers.map(u => (
                     <div key={u.id} className="bg-white p-5 rounded-2xl shadow-sm border flex flex-col hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-3 mb-3">
-                             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                                 <UserIcon className="w-5 h-5" />
+                        <div className="flex items-center justify-between mb-3">
+                             <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                                     <UserIcon className="w-5 h-5" />
+                                 </div>
+                                 <div>
+                                     <div className="font-bold text-lg text-gray-800 leading-none">{u.name}</div>
+                                     <div className="text-sm text-gray-500 font-mono mt-1">{u.phone}</div>
+                                 </div>
                              </div>
-                             <div>
-                                 <div className="font-bold text-lg text-gray-800 leading-none">{u.name}</div>
-                                 <div className="text-sm text-gray-500 font-mono mt-1">{u.phone}</div>
-                             </div>
+                             {/* Delete User Button - Only for Manager */}
+                             {user?.role === UserRole.MANAGER && u.role !== UserRole.ADMIN && (
+                                 <button 
+                                    onClick={(e) => handleDeleteUser(u.id, e)}
+                                    className="text-gray-300 hover:text-red-500 p-2 rounded-lg transition-colors active:scale-90"
+                                    title="Удалить пользователя"
+                                 >
+                                     <Trash2 className="w-5 h-5" />
+                                 </button>
+                             )}
                         </div>
                         <div className="mt-auto pt-3 border-t border-gray-50">
                             <div className="flex justify-between items-center">
