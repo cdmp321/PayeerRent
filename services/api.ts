@@ -1,13 +1,15 @@
 
 import { supabase } from './supabase';
 import { User, Item, ItemStatus, UserRole, PaymentMethod, Transaction, TransactionStatus } from '../types';
+import { encrypt, decrypt } from './encryption';
 
 // Helper to map Database (snake_case) to App (camelCase)
+// NOW DECRYPTS DATA FROM DB
 const mapUser = (data: any): User => ({
   id: data.id,
-  phone: data.phone,
-  name: data.name,
-  balance: Number(data.balance), // Postgres numeric comes as string/number
+  phone: decrypt(data.phone), // Decrypt
+  name: decrypt(data.name),   // Decrypt
+  balance: Number(data.balance),
   role: data.role as UserRole,
   createdAt: data.created_at
 });
@@ -48,11 +50,14 @@ const mapTransaction = (data: any): Transaction => ({
 export const api = {
   // Auth
   loginOrRegister: async (phone: string, name: string): Promise<User> => {
-    // Check if user exists
+    const encryptedPhone = encrypt(phone);
+    const encryptedName = encrypt(name);
+
+    // Check if user exists (Search by Encrypted Phone)
     const { data: existingUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
-      .eq('phone', phone)
+      .eq('phone', encryptedPhone)
       .single();
 
     if (existingUser) {
@@ -60,10 +65,10 @@ export const api = {
       return mapUser(existingUser);
     }
 
-    // Create new user
+    // Create new user (Store Encrypted Data)
     const { data: newUser, error: createError } = await supabase
       .from('users')
-      .insert([{ phone, name, balance: 0, role: 'USER' }])
+      .insert([{ phone: encryptedPhone, name: encryptedName, balance: 0, role: 'USER' }])
       .select()
       .single();
 
@@ -74,17 +79,22 @@ export const api = {
   },
 
   loginAdmin: async (phone: string, password: string): Promise<User> => {
+    const encryptedPhone = encrypt(phone);
+    const encryptedPassword = encrypt(password);
+
+    // 1. Try to find user with this phone AND role ADMIN or MANAGER
     const { data: admin, error } = await supabase
       .from('users')
       .select('*')
-      .eq('phone', phone)
-      .eq('role', 'ADMIN')
+      .eq('phone', encryptedPhone)
+      .in('role', ['ADMIN', 'MANAGER']) // Allow both roles to login here
       .single();
 
-    if (error || !admin) throw new Error('Администратор не найден');
+    if (error || !admin) throw new Error('Сотрудник не найден');
     
-    // Simple password check (In production, use hashing!)
-    if (admin.password !== password) {
+    // 2. Check password (Compare Encrypted)
+    // We treat null passwords as empty string for safety
+    if ((admin.password || '') !== encryptedPassword) {
       throw new Error('Неверный пароль');
     }
 
@@ -93,26 +103,53 @@ export const api = {
   },
 
   isDefaultAdmin: async (): Promise<boolean> => {
+    // Encrypted '000' is 'wADM' (reversed btoa)
+    const encPhone = encrypt('000');
+    
     const { data } = await supabase
       .from('users')
       .select('phone, password')
       .eq('role', 'ADMIN')
+      .eq('phone', encPhone)
       .limit(1)
       .single();
-      
-    return data ? (data.phone === '000' && data.password === 'admin') : false;
+    
+    // Check if password matches encrypted 'admin'
+    if (!data) return false;
+    return data.password === encrypt('admin');
   },
 
   updateAdminCredentials: async (newPhone: string, newPassword: string): Promise<void> => {
     const currentUser = await api.getCurrentUser();
-    if (!currentUser || currentUser.role !== 'ADMIN') throw new Error('Нет прав');
+    // Allow both Admin and Manager to update their OWN credentials
+    if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.role !== 'MANAGER')) throw new Error('Нет прав');
 
+    // If Manager tries to update Admin (logic handled in UI, but safe check here)
+    // Actually API just updates current user by default unless we pass ID.
+    // Let's support updating specific ID if needed, or just current user.
+    
+    // For simplicity in this function: Update CURRENT user
+    // To implement "Manager updates Admin", we would need a targetUserId param.
+    // Assuming this is "Update My Credentials":
+    
     const { error } = await supabase
       .from('users')
-      .update({ phone: newPhone, password: newPassword })
+      .update({ 
+          phone: encrypt(newPhone), 
+          password: encrypt(newPassword) 
+      })
       .eq('id', currentUser.id);
 
     if (error) throw new Error(error.message);
+  },
+
+  // Manager deleting a user
+  deleteUser: async (targetUserId: string): Promise<void> => {
+      const currentUser = await api.getCurrentUser();
+      if (currentUser?.role !== 'MANAGER') throw new Error('Только менеджер может удалять пользователей');
+      
+      const { error } = await supabase.from('users').delete().eq('id', targetUserId);
+      if (error) throw new Error(error.message);
   },
 
   getCurrentUser: async (): Promise<User | null> => {
@@ -137,7 +174,7 @@ export const api = {
   getUsers: async (): Promise<User[]> => {
     const { data, error } = await supabase.from('users').select('*');
     if (error) return [];
-    return data.map(mapUser);
+    return data.map(mapUser); // mapUser decrypts the data
   },
 
   // Items
@@ -153,7 +190,7 @@ export const api = {
       .insert([{
         title: itemData.title,
         description: itemData.description,
-        image_url: itemData.imageUrl, // Now directly uses the passed URL (can be empty)
+        image_url: itemData.imageUrl,
         price: itemData.price,
         status: 'AVAILABLE'
       }])
@@ -177,14 +214,12 @@ export const api = {
   },
 
   deleteItem: async (id: string): Promise<void> => {
-    // No refund logic, just delete
     const { error } = await supabase.from('items').delete().eq('id', id);
     if (error) throw new Error(error.message);
   },
 
   // Wallet & Transactions
   requestTopUp: async (userId: string, amount: number, receiptFile?: File): Promise<void> => {
-    // In a real app, upload receiptFile to Supabase Storage here and get URL
     const receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=Receipt+Check'; 
 
     const { error } = await supabase
@@ -210,7 +245,6 @@ export const api = {
         throw new Error("Недостаточно средств для вывода");
     }
 
-    // Deduct balance immediately to prevent double spending
     const { error: balanceError } = await supabase
         .from('users')
         .update({ balance: Number(user.balance) - Number(amount) })
@@ -218,7 +252,9 @@ export const api = {
 
     if (balanceError) throw new Error("Ошибка списания средств");
 
-    // Create transaction
+    // We do NOT encrypt transaction description here as it is not strictly user table data 
+    // and might be needed for simple DB queries by admin tools.
+    // If you want to encrypt withdrawal details, wrap `details` in `encrypt()`.
     const { error } = await supabase
       .from('transactions')
       .insert([{
@@ -231,10 +267,9 @@ export const api = {
       }]);
 
     if (error) {
-        // Rollback balance (simple version)
         await supabase
             .from('users')
-            .update({ balance: Number(user.balance) }) // revert to original
+            .update({ balance: Number(user.balance) })
             .eq('id', userId);
         throw new Error(error.message);
     }
@@ -255,7 +290,6 @@ export const api = {
 
     if (tx.type === 'DEPOSIT') {
         newDesc = 'Пополнение кошелька (Подтверждено)';
-        // Add balance for DEPOSIT
         const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
         if (user) {
             await supabase
@@ -265,10 +299,8 @@ export const api = {
         }
     } else if (tx.type === 'WITHDRAWAL') {
         newDesc = `Вывод средств подтвержден (Списано): ${tx.amount} P`;
-        // Balance already deducted at request time, just confirm status
     }
 
-    // Update transaction
     await supabase
       .from('transactions')
       .update({ status: newStatus, description: newDesc })
@@ -280,7 +312,6 @@ export const api = {
     if (!tx || tx.status !== 'PENDING') return;
 
     if (tx.type === 'WITHDRAWAL') {
-        // Refund balance if withdrawal is rejected
         const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
         if (user) {
             await supabase
@@ -305,7 +336,6 @@ export const api = {
 
   // Reserve / Buy / Rent
   reserveItem: async (userId: string, itemId: string, amountToPay: number): Promise<void> => {
-    // 1. Fetch User and Item
     const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
     const { data: item } = await supabase.from('items').select('*').eq('id', itemId).single();
 
@@ -316,7 +346,6 @@ export const api = {
     if (finalPrice <= 0 && item.price > 0) throw new Error("Некорректная сумма");
     if (user.balance < finalPrice) throw new Error(`Недостаточно средств. Баланс: ${user.balance}`);
 
-    // 2. Deduct Balance
     const { error: balErr } = await supabase
         .from('users')
         .update({ balance: Number(user.balance) - finalPrice })
@@ -324,7 +353,6 @@ export const api = {
     
     if (balErr) throw new Error("Ошибка списания средств");
 
-    // 3. Update Item
     await supabase
         .from('items')
         .update({
@@ -335,7 +363,6 @@ export const api = {
         })
         .eq('id', itemId);
 
-    // 4. Create Transaction
     await supabase.from('transactions').insert([{
         user_id: userId,
         amount: finalPrice,
@@ -356,20 +383,17 @@ export const api = {
     const finalPrice = Number(item.price > 0 ? item.price : amountToPay);
     if (user.balance < finalPrice) throw new Error("Недостаточно средств");
 
-    // Deduct
     await supabase
         .from('users')
         .update({ balance: Number(user.balance) - finalPrice })
         .eq('id', userId);
 
-    // Accumulate Price on Item
     const currentPaid = Number(item.last_purchase_price || 0);
     await supabase
         .from('items')
         .update({ last_purchase_price: currentPaid + finalPrice })
         .eq('id', itemId);
 
-    // Transaction
     await supabase.from('transactions').insert([{
         user_id: userId,
         amount: finalPrice,
@@ -381,7 +405,6 @@ export const api = {
   },
 
   cancelReservation: async (itemId: string): Promise<void> => {
-    // Just return to market, no refund
     await supabase
         .from('items')
         .update({

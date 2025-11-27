@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { User } from '../types';
-import { Phone, User as UserIcon, ShieldCheck, Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { Phone, User as UserIcon, ShieldCheck, Loader2, Lock, ArrowLeft, Briefcase } from 'lucide-react';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -64,15 +65,15 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         {/* Header Icon */}
         <div className="flex justify-center mb-6">
           <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl rotate-3 transition-colors duration-300 ${isAdminMode ? 'bg-slate-800 shadow-slate-300/50' : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-300/50'}`}>
-            {isAdminMode ? <Lock className="w-9 h-9 text-white" /> : <ShieldCheck className="w-10 h-10 text-white" />}
+            {isAdminMode ? <Briefcase className="w-9 h-9 text-white" /> : <ShieldCheck className="w-10 h-10 text-white" />}
           </div>
         </div>
         
         <h2 className="text-3xl font-extrabold text-center text-slate-800 mb-2 tracking-tight">
-            {isAdminMode ? 'Админ Панель' : 'PayeerRent'}
+            {isAdminMode ? 'Панель сотрудников' : 'PayeerRent'}
         </h2>
         <p className="text-center text-slate-500 mb-8 font-medium">
-            {isAdminMode ? 'Вход для управления сервисом' : 'Бронирование и аренда'}
+            {isAdminMode ? 'Вход для Админа и Менеджера' : 'Бронирование и аренда'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,7 +95,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <Phone className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="tel"
-              placeholder={isAdminMode ? (isDefaultAdmin ? "Логин (000)" : "Логин") : "Номер телефона"}
+              placeholder={isAdminMode ? (isDefaultAdmin ? "Логин (000 или 001)" : "Логин сотрудника") : "Номер телефона"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
@@ -106,7 +107,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 <Lock className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
                 <input
                     type="password"
-                    placeholder={isDefaultAdmin ? "Пароль (admin)" : "Пароль"}
+                    placeholder={isDefaultAdmin ? "Пароль (admin или manager)" : "Пароль"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
@@ -141,7 +142,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                         <ArrowLeft className="w-4 h-4" /> Я клиент
                     </>
                 ) : (
-                    "Вход для администратора"
+                    "Вход для сотрудников"
                 )}
             </button>
         </div>

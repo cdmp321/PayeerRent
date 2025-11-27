@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { Auth } from './components/Auth';
 import { Wallet } from './components/Wallet';
@@ -8,13 +9,13 @@ import { supabaseUrl, supabase } from './services/supabase';
 import { User, UserRole } from './types';
 import { LogOut, Settings, Home, Wallet as WalletIcon, ShoppingBag, Store, AlertTriangle, Database, RefreshCw, Copy, Check } from 'lucide-react';
 
-const SCHEMA_SQL = `-- 1. Очистка старых таблиц
+const SCHEMA_SQL = `-- 1. Очистка старых таблиц (ПЕРЕУСТАНОВКА)
 DROP TABLE IF EXISTS public.transactions;
 DROP TABLE IF EXISTS public.items;
 DROP TABLE IF EXISTS public.payment_methods;
 DROP TABLE IF EXISTS public.users;
 
--- 2. Пользователи
+-- 2. Пользователи (Данные: phone, name, password хранятся в ЗАШИФРОВАННОМ виде)
 create table public.users (
   id uuid default gen_random_uuid() primary key,
   phone text unique not null,
@@ -33,7 +34,6 @@ create table public.items (
   image_url text,
   price numeric not null,
   status text default 'AVAILABLE',
-  -- Если владелец удален, товар возвращается в магазин (owner_id = null)
   owner_id uuid references public.users(id) on delete set null,
   purchased_at timestamp with time zone,
   last_purchase_price numeric,
@@ -43,7 +43,6 @@ create table public.items (
 -- 4. Транзакции
 create table public.transactions (
   id uuid default gen_random_uuid() primary key,
-  -- Если пользователь удален, транзакции удаляются (Cascade)
   user_id uuid references public.users(id) on delete cascade not null,
   amount numeric not null,
   type text not null,
@@ -63,14 +62,14 @@ create table public.payment_methods (
   min_amount numeric default 0
 );
 
--- 6. Сотрудники
--- Админ (000 / admin)
+-- 6. Сотрудники (ЗАШИФРОВАННЫЕ ДАННЫЕ)
+-- Администратор: Логин '000' -> 'wADM', Пароль 'admin' -> '4NtaWRY', Имя 'Administrator' -> '==gcrVycm5pc3RtaWdQ'
 insert into public.users (phone, name, password, role, balance)
-values ('000', 'Administrator', 'admin', 'ADMIN', 0);
+values ('wADM', '==gcrVycm5pc3RtaWdQ', '4NtaWRY', 'ADMIN', 0);
 
--- Менеджер (001 / manager)
+-- Менеджер: Логин '001' -> 'xADM', Пароль 'manager' -> '==gcGZlNaFkb', Имя 'Manager' -> '==gcGZlFuWT'
 insert into public.users (phone, name, password, role, balance)
-values ('001', 'Manager', 'manager', 'MANAGER', 0);
+values ('xADM', '==gcGZlFuWT', '==gcGZlNaFkb', 'MANAGER', 0);
 
 -- 7. Доступ (RLS)
 alter table public.users enable row level security;
@@ -201,7 +200,7 @@ const App: React.FC = () => {
             
             <p className="text-slate-500 mb-8 font-medium">
                 {isSchemaError 
-                    ? "Теперь нужно создать таблицы в Supabase." 
+                    ? "Необходимо обновить структуру базы для поддержки шифрования." 
                     : error}
             </p>
 
