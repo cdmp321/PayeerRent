@@ -181,17 +181,17 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   if (viewMode === 'purchases') {
       return (
         <div className="space-y-6 pb-24 w-full">
-            <h3 className="text-xl font-bold text-gray-800 px-2 flex items-center gap-2">
-                <ShoppingBag className="w-6 h-6 text-indigo-600" />
+            <h3 className="text-xl font-bold text-gray-800 px-2 flex items-center gap-3">
+                <ShoppingBag className="w-8 h-8 text-indigo-600" />
                 Мои покупки и резервы
             </h3>
             
             {myReservations.length === 0 ? (
                  <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
-                    <Package className="w-12 h-12 mb-2 opacity-50" />
-                    <p>У вас пока нет товаров</p>
+                    <Package className="w-16 h-16 mb-4 opacity-50 text-indigo-200" />
+                    <p className="text-lg font-medium">У вас пока нет товаров</p>
                     {onNavigateToMarket && (
-                        <button onClick={onNavigateToMarket} className="text-sm mt-3 text-indigo-600 font-bold hover:underline">
+                        <button onClick={onNavigateToMarket} className="text-base mt-3 text-indigo-600 font-bold hover:underline">
                             Перейти в магазин
                         </button>
                     )}
@@ -220,7 +220,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                     {/* Rent / Recurring Payment Block */}
                                     <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
                                         <div className="text-xs font-bold text-emerald-700 uppercase mb-2 flex items-center gap-1">
-                                            <Wallet className="w-3 h-3" />
+                                            <Wallet className="w-4 h-4" />
                                             Пополнение средств
                                         </div>
                                         {isFreePrice ? (
@@ -239,15 +239,15 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                                     onClick={() => handlePayRent(item)}
                                                     className="bg-emerald-600 text-white px-4 rounded-lg font-bold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
                                                 >
-                                                    <CheckCircle2 className="w-5 h-5" />
+                                                    <CheckCircle2 className="w-6 h-6" />
                                                 </button>
                                             </div>
                                         ) : (
                                             <button 
                                                 onClick={() => handlePayRent(item)}
-                                                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 shadow-emerald-200 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-base hover:bg-emerald-700 shadow-emerald-200 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
                                             >
-                                                <CreditCard className="w-4 h-4" />
+                                                <CreditCard className="w-5 h-5" />
                                                 Внести платеж ({item.price} P)
                                             </button>
                                         )}
@@ -257,7 +257,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                         onClick={() => handleUnreserve(item)}
                                         className="w-full bg-white text-red-500 py-3 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-bold text-sm active:scale-[0.98] border-2 border-red-50"
                                     >
-                                        <RefreshCcw className="w-4 h-4" />
+                                        <RefreshCcw className="w-5 h-5" />
                                         Вернуть в магазин
                                     </button>
                                 </div>
@@ -275,28 +275,28 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
     <div className="space-y-6 pb-24 w-full">
       {/* Available Items */}
       <div>
-        <h3 className="text-xl font-bold text-gray-800 mb-4 px-2 flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-blue-600" />
+        <h3 className="text-xl font-bold text-gray-800 mb-4 px-2 flex items-center gap-3">
+            <ShoppingCart className="w-8 h-8 text-blue-600" />
             Витрина
         </h3>
 
         {/* Search & Sort Bar */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6 px-1">
             <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3.5 top-3.5 h-6 w-6 text-indigo-500" />
                 <input 
                     type="text"
                     placeholder="Поиск товаров..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white shadow-sm"
+                    className="w-full pl-12 pr-10 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white shadow-sm font-medium"
                 />
                 {searchQuery && (
                     <button 
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-3 p-0.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500"
+                        className="absolute right-3 top-3.5 p-0.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="w-5 h-5" />
                     </button>
                 )}
             </div>
@@ -308,7 +308,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                 })}
                 className="px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm min-w-[140px]"
             >
-                <ArrowUpDown className="w-5 h-5 text-indigo-600" />
+                <ArrowUpDown className="w-6 h-6 text-indigo-600" />
                 <span className="text-sm">
                     {sortType === 'newest' && 'Новые'}
                     {sortType === 'price_asc' && 'Дешевле'}
@@ -321,13 +321,13 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
           <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-500">
               {searchQuery ? (
                   <>
-                    <Search className="w-10 h-10 mb-2 opacity-30" />
+                    <Search className="w-12 h-12 mb-2 opacity-30" />
                     <p>По запросу "{searchQuery}" ничего не найдено</p>
                     <button onClick={() => setSearchQuery('')} className="text-indigo-600 font-bold mt-2 text-sm">Очистить поиск</button>
                   </>
               ) : (
                   <>
-                     <Package className="w-10 h-10 mb-2 opacity-30" />
+                     <Package className="w-12 h-12 mb-2 opacity-30" />
                      <p>Нет доступных товаров</p>
                   </>
               )}
@@ -339,30 +339,30 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                 const isFreePrice = item.price === 0;
 
                 return (
-                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col w-full">
+                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col w-full group">
                     
                     {/* Conditionally render image if URL exists */}
                     {item.imageUrl && (
-                        <div className="h-56 bg-gray-200 relative shrink-0 w-full group overflow-hidden">
+                        <div className="h-64 bg-gray-200 relative shrink-0 w-full overflow-hidden">
                         <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         {item.price > 0 ? (
-                            <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-gray-900 px-3 py-1.5 rounded-xl text-sm font-extrabold shadow-sm">
+                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur text-gray-900 px-4 py-2 rounded-xl text-base font-extrabold shadow-md">
                                 {item.price} P
                             </div>
                         ) : (
-                            <div className="absolute top-3 right-3 bg-blue-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
+                            <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">
                                 Свободная цена
                             </div>
                         )}
                         </div>
                     )}
 
-                    <div className="p-5 flex flex-col flex-grow min-w-0">
+                    <div className="p-6 flex flex-col flex-grow min-w-0">
                     <div className="flex justify-between items-start">
                         <h4 className="font-bold text-gray-900 text-2xl leading-tight mb-2 break-words">{item.title}</h4>
                         {/* Show price badge here if no image */}
                         {!item.imageUrl && (
-                            <div className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap ml-2 ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
+                            <div className={`px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap ml-2 ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
                                 {item.price > 0 ? `${item.price} P` : 'Свободная цена'}
                             </div>
                         )}
@@ -371,7 +371,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                     <p className="text-base text-gray-500 mb-6 break-words leading-relaxed">{item.description}</p>
                     
                     {/* Control Area */}
-                    <div className="space-y-3 mt-auto w-full">
+                    <div className="space-y-4 mt-auto w-full">
                         {isFreePrice && (
                             <div className="relative w-full">
                                 <input 
@@ -387,9 +387,9 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                         
                         <button 
                             onClick={() => handleReserve(item)}
-                            className="w-full py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-[0.98]"
+                            className="w-full py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2.5 transition-all bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-[0.98]"
                         >
-                            <CreditCard className="w-6 h-6 shrink-0" />
+                            <CreditCard className="w-7 h-7 shrink-0" />
                             <span className="truncate">
                             {isFreePrice 
                                 ? (currentInputAmount > 0 ? `Оплатить ${currentInputAmount} P` : 'Оплатить') 
@@ -414,18 +414,18 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
             {otherReserved.map(item => (
               <div key={item.id} className="bg-gray-50 p-3 rounded-xl flex items-center gap-4 overflow-hidden w-full border border-gray-100">
                 {item.imageUrl ? (
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden shrink-0">
+                    <div className="w-14 h-14 bg-gray-200 rounded-lg overflow-hidden shrink-0">
                         <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                     </div>
                 ) : (
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-                        <ShoppingBag className="w-5 h-5 text-gray-400" />
+                    <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
+                        <ShoppingBag className="w-6 h-6 text-gray-400" />
                     </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-gray-600 truncate text-sm">{item.title}</h4>
-                  <div className="flex items-center gap-1 text-[10px] text-orange-500 font-bold uppercase mt-0.5">
-                    <ShoppingBag className="w-3 h-3 shrink-0" />
+                  <h4 className="font-medium text-gray-600 truncate text-base">{item.title}</h4>
+                  <div className="flex items-center gap-1 text-[10px] text-orange-500 font-bold uppercase mt-1">
+                    <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
                     Продано
                   </div>
                 </div>

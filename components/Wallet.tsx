@@ -124,35 +124,37 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   return (
     <div className="space-y-6 pb-36">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white relative overflow-hidden">
             {/* Abstract decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             
             <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-                <WalletIcon className="w-5 h-5 text-emerald-400" />
-                <span className="font-medium text-slate-300">Мой баланс</span>
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-slate-700/50 rounded-xl">
+                    <WalletIcon className="w-8 h-8 text-emerald-300" />
+                </div>
+                <span className="font-medium text-slate-300 text-lg">Мой баланс</span>
             </div>
-            <span className="text-xs font-mono bg-slate-700/50 px-2 py-1 rounded text-slate-400">PAYEER®</span>
+            <span className="text-sm font-mono bg-slate-700/50 px-3 py-1.5 rounded-lg text-emerald-300 font-bold">PAYEER®</span>
             </div>
             
-            <div className="text-4xl font-bold mb-6 relative z-10">
-            {user.balance.toFixed(2)} <span className="text-xl font-normal text-slate-400">P</span>
+            <div className="text-5xl font-extrabold mb-8 relative z-10 tracking-tight">
+            {user.balance.toFixed(2)} <span className="text-2xl font-normal text-slate-400">P</span>
             </div>
 
-            <div className="flex gap-3 relative z-10">
+            <div className="flex gap-4 relative z-10">
                 <button 
                     onClick={() => setShowTopUpModal(true)}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20"
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-6 h-6" />
                     Пополнить
                 </button>
                 <button 
                     onClick={() => setShowWithdrawModal(true)}
-                    className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors border border-slate-600"
+                    className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors border border-slate-600"
                 >
-                    <ArrowUpRight className="w-5 h-5 text-slate-300" />
+                    <ArrowUpRight className="w-6 h-6 text-slate-300" />
                     Вывести
                 </button>
             </div>
@@ -161,22 +163,22 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
       {/* PENDING TRANSACTIONS NOTIFICATION */}
       {pendingTransactions.length > 0 && (
-          <div className="space-y-3 animate-fade-in">
+          <div className="space-y-4 animate-fade-in">
              {pendingTransactions.map(tx => (
-                 <div key={tx.id} className={`rounded-2xl p-4 relative overflow-hidden border ${tx.type === 'DEPOSIT' ? 'bg-orange-50 border-orange-100' : 'bg-blue-50 border-blue-100'}`}>
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full animate-pulse ${tx.type === 'DEPOSIT' ? 'bg-orange-100' : 'bg-blue-100'}`}>
-                            <Clock className={`w-5 h-5 ${tx.type === 'DEPOSIT' ? 'text-orange-600' : 'text-blue-600'}`} />
+                 <div key={tx.id} className={`rounded-2xl p-5 relative overflow-hidden border-2 ${tx.type === 'DEPOSIT' ? 'bg-orange-50 border-orange-100' : 'bg-blue-50 border-blue-100'}`}>
+                    <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-full animate-pulse ${tx.type === 'DEPOSIT' ? 'bg-orange-200' : 'bg-blue-200'}`}>
+                            <Clock className={`w-7 h-7 ${tx.type === 'DEPOSIT' ? 'text-orange-700' : 'text-blue-700'}`} />
                         </div>
                         <div className="flex-1">
-                            <h3 className={`font-bold ${tx.type === 'DEPOSIT' ? 'text-orange-900' : 'text-blue-900'}`}>
+                            <h3 className={`font-bold text-lg ${tx.type === 'DEPOSIT' ? 'text-orange-900' : 'text-blue-900'}`}>
                                 {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : 'Обработка вывода'}
                             </h3>
-                            <div className={`text-xs mt-0.5 font-medium ${tx.type === 'DEPOSIT' ? 'text-orange-500' : 'text-blue-500'}`}>
+                            <div className={`text-sm mt-0.5 font-bold ${tx.type === 'DEPOSIT' ? 'text-orange-600/70' : 'text-blue-600/70'}`}>
                                 {new Date(tx.date).toLocaleDateString()}
                             </div>
                         </div>
-                        <div className={`font-extrabold text-lg ${tx.type === 'DEPOSIT' ? 'text-orange-600' : 'text-blue-600'}`}>
+                        <div className={`font-black text-2xl ${tx.type === 'DEPOSIT' ? 'text-orange-600' : 'text-blue-600'}`}>
                             {tx.type === 'DEPOSIT' ? '+' : '-'}{tx.amount} P
                         </div>
                     </div>
@@ -187,8 +189,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
       {/* Notification Toast */}
       {notification && (
-        <div className={`mx-4 mt-4 p-3 rounded-lg flex items-center gap-2 text-sm animate-fade-in ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-          {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+        <div className={`mx-4 mt-4 p-4 rounded-xl flex items-center gap-3 text-base font-bold animate-fade-in border-2 ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+          {notification.type === 'success' ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
           {notification.msg}
         </div>
       )}
@@ -199,15 +201,15 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           <div className="bg-white w-full max-w-md rounded-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-slide-up sm:animate-zoom-in shadow-2xl overflow-hidden">
             
             {/* Header */}
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 shrink-0 bg-white z-10">
-              <h3 className="text-lg font-bold text-gray-900">Пополнение кошелька</h3>
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 shrink-0 bg-white z-10">
+              <h3 className="text-xl font-extrabold text-gray-900">Пополнение кошелька</h3>
               <button onClick={() => setShowTopUpModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-6 h-6 text-gray-500" />
               </button>
             </div>
 
             {/* Scrollable Content */}
-            <div className="p-4 overflow-y-auto space-y-4 custom-scrollbar flex-1">
+            <div className="p-5 overflow-y-auto space-y-5 custom-scrollbar flex-1">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Сумма (PAYEER®)</label>
                 <input 
@@ -217,32 +219,32 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full text-xl p-3 border border-gray-700 bg-gray-800 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-white placeholder-gray-500 transition-all"
+                  className="w-full text-2xl p-4 border border-gray-700 bg-gray-800 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-white placeholder-gray-500 transition-all font-bold"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Способ оплаты</label>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 gap-3">
                   {methods.map(method => (
                     <button
                       key={method.id}
                       onClick={() => setSelectedMethod(method)}
-                      className={`p-3 rounded-xl border flex items-center justify-between transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                      className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                     >
-                      <div className="text-left flex items-center gap-3">
-                        <div className={`p-2 rounded-lg transition-colors ${selectedMethod?.id === method.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400 group-hover:bg-white'}`}>
-                             <CreditCard className="w-5 h-5" />
+                      <div className="text-left flex items-center gap-4">
+                        <div className={`p-3 rounded-xl transition-colors ${selectedMethod?.id === method.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400 group-hover:bg-white'}`}>
+                             <CreditCard className="w-6 h-6" />
                         </div>
                         <div>
-                             <span className="font-bold text-gray-700 block text-sm">{method.name}</span>
+                             <span className="font-bold text-gray-800 block text-base">{method.name}</span>
                              {method.minAmount && method.minAmount > 0 && (
-                                <span className="text-xs text-orange-500 font-medium">От {method.minAmount} P</span>
+                                <span className="text-xs text-orange-500 font-bold uppercase">От {method.minAmount} P</span>
                              )}
                         </div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selectedMethod?.id === method.id ? 'border-emerald-500' : 'border-gray-300'}`}>
-                        {selectedMethod?.id === method.id && <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />}
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selectedMethod?.id === method.id ? 'border-emerald-500' : 'border-gray-300'}`}>
+                        {selectedMethod?.id === method.id && <div className="w-3 h-3 bg-emerald-500 rounded-full" />}
                       </div>
                     </button>
                   ))}
@@ -250,25 +252,25 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               </div>
 
               {selectedMethod && (
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm animate-fade-in">
-                  <div className="mb-4">
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-1">Реквизиты для перевода</p>
-                      <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs sm:text-sm leading-relaxed">{selectedMethod.instruction}</p>
+                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 text-sm animate-fade-in">
+                  <div className="mb-5">
+                      <p className="text-xs font-bold text-gray-500 uppercase mb-2">Реквизиты для перевода</p>
+                      <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-4 rounded-xl border border-gray-200 select-all text-sm leading-relaxed shadow-sm font-medium">{selectedMethod.instruction}</p>
                   </div>
                   
                   <div className="pt-2 border-t border-gray-200">
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 mt-2">Чек перевода</label>
-                    <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-2 px-2">
+                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3 px-2">
                             {receipt ? (
                                 <>
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                                    <span className="text-sm font-medium text-emerald-700 truncate">{receipt.name}</span>
+                                    <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
+                                    <span className="text-base font-bold text-emerald-700 truncate">{receipt.name}</span>
                                 </>
                             ) : (
                                 <>
-                                    <Upload className="w-5 h-5 text-gray-400" />
-                                    <span className="text-xs font-medium text-gray-500">Загрузить скриншот</span>
+                                    <Upload className="w-6 h-6 text-gray-400" />
+                                    <span className="text-sm font-bold text-gray-500">Загрузить скриншот</span>
                                 </>
                             )}
                         </div>
@@ -280,13 +282,13 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             </div>
 
             {/* Footer Action */}
-            <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
+            <div className="p-5 pb-8 sm:pb-5 border-t border-gray-100 bg-white shrink-0 z-10">
               <button 
                 onClick={handleTopUpRequest}
                 disabled={isProcessing}
-                className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold text-base shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                className="w-full bg-slate-900 text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2.5"
               >
-                {isProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-5 h-5" />}
+                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-6 h-6" />}
                 {isProcessing ? 'Обработка...' : 'Отправить заявку'}
               </button>
             </div>
@@ -299,19 +301,19 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl flex flex-col animate-slide-up sm:animate-zoom-in shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 shrink-0 bg-white z-10">
-              <h3 className="text-lg font-bold text-gray-900">Вывод средств</h3>
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 shrink-0 bg-white z-10">
+              <h3 className="text-xl font-extrabold text-gray-900">Вывод средств</h3>
               <button onClick={() => setShowWithdrawModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-6 h-6 text-gray-500" />
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
-               <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-3 text-sm text-blue-800 mb-2">
-                   <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <div className="p-5 space-y-5">
+               <div className="bg-blue-50 p-4 rounded-xl flex items-start gap-3 text-sm text-blue-800 mb-2 border border-blue-100">
+                   <AlertCircle className="w-6 h-6 shrink-0 mt-0.5 text-blue-600" />
                    <div>
-                       <p className="font-bold">Баланс: {user.balance.toFixed(2)} P</p>
-                       <p className="text-xs opacity-80 mt-1">Средства списываются сразу при создании заявки. Если администратор отклонит заявку, средства вернутся на баланс.</p>
+                       <p className="font-bold text-base">Баланс: {user.balance.toFixed(2)} P</p>
+                       <p className="text-xs opacity-80 mt-1 font-medium">Средства списываются сразу. При отказе возвращаются на баланс.</p>
                    </div>
                </div>
 
@@ -325,7 +327,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
                   max={user.balance}
-                  className="w-full text-xl p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-gray-800 placeholder-gray-400 transition-all"
+                  className="w-full text-2xl p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono text-gray-800 placeholder-gray-400 transition-all font-bold"
                 />
               </div>
 
@@ -335,18 +337,18 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   value={withdrawDetails}
                   onChange={(e) => setWithdrawDetails(e.target.value)}
                   placeholder="Номер карты, Payeer кошелек или номер телефона..."
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-gray-800 h-24 resize-none"
+                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-gray-800 h-28 resize-none text-base font-medium"
                 />
               </div>
             </div>
 
-            <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
+            <div className="p-5 pb-8 sm:pb-5 border-t border-gray-100 bg-white shrink-0 z-10">
               <button 
                 onClick={handleWithdrawRequest}
                 disabled={isProcessing}
-                className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold text-base shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                className="w-full bg-slate-900 text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2.5"
               >
-                {isProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Banknote className="w-5 h-5" />}
+                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Banknote className="w-6 h-6" />}
                 {isProcessing ? 'Создание заявки...' : 'Создать заявку'}
               </button>
             </div>

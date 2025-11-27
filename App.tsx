@@ -260,9 +260,9 @@ const App: React.FC = () => {
       <header className="glass-header sticky top-0 z-30 transition-all duration-300">
         {/* Dynamic max-width based on role */}
         <div className={`${isAdminView ? 'max-w-7xl px-6' : 'max-w-md px-4'} mx-auto py-3.5 flex justify-between items-center`}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                <Store className="w-4 h-4" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-300">
+                <Store className="w-6 h-6" />
             </div>
             <h1 className="font-extrabold text-xl text-slate-800 tracking-tight">PayeerRent</h1>
             {isAdminView && (
@@ -348,35 +348,35 @@ const App: React.FC = () => {
             )}
 
             {/* User Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-lg border-t border-white/50 px-6 py-2 flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
+            <nav className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-xl border-t border-white/50 px-6 py-2 flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
                 <button 
                     onClick={() => setActiveUserTab('market')}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'market' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 group ${activeUserTab === 'market' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`p-1.5 rounded-2xl transition-all duration-300 ${activeUserTab === 'market' ? 'bg-indigo-50 shadow-inner' : 'scale-90'}`}>
-                        <Store className={`w-6 h-6 ${activeUserTab === 'market' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                    <div className={`p-2 rounded-2xl transition-all duration-300 ${activeUserTab === 'market' ? 'bg-indigo-50 shadow-inner scale-110' : 'group-hover:bg-slate-50'}`}>
+                        <Store className={`w-8 h-8 ${activeUserTab === 'market' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                     </div>
-                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'market' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>Магазин</span>
+                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'market' ? 'opacity-100 translate-y-0 text-indigo-600' : 'opacity-0 translate-y-2 hidden'}`}>Магазин</span>
                 </button>
 
                 <button 
                     onClick={() => setActiveUserTab('purchases')}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'purchases' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 group ${activeUserTab === 'purchases' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`p-1.5 rounded-2xl transition-all duration-300 ${activeUserTab === 'purchases' ? 'bg-indigo-50 shadow-inner' : 'scale-90'}`}>
-                        <ShoppingBag className={`w-6 h-6 ${activeUserTab === 'purchases' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                    <div className={`p-2 rounded-2xl transition-all duration-300 ${activeUserTab === 'purchases' ? 'bg-indigo-50 shadow-inner scale-110' : 'group-hover:bg-slate-50'}`}>
+                        <ShoppingBag className={`w-8 h-8 ${activeUserTab === 'purchases' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                     </div>
-                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'purchases' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>Моё</span>
+                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'purchases' ? 'opacity-100 translate-y-0 text-indigo-600' : 'opacity-0 translate-y-2 hidden'}`}>Моё</span>
                 </button>
 
                 <button 
                     onClick={() => setActiveUserTab('wallet')}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'wallet' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 group ${activeUserTab === 'wallet' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`p-1.5 rounded-2xl transition-all duration-300 ${activeUserTab === 'wallet' ? 'bg-indigo-50 shadow-inner' : 'scale-90'}`}>
-                        <WalletIcon className={`w-6 h-6 ${activeUserTab === 'wallet' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                    <div className={`p-2 rounded-2xl transition-all duration-300 ${activeUserTab === 'wallet' ? 'bg-indigo-50 shadow-inner scale-110' : 'group-hover:bg-slate-50'}`}>
+                        <WalletIcon className={`w-8 h-8 ${activeUserTab === 'wallet' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                     </div>
-                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'wallet' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>Кошелек</span>
+                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'wallet' ? 'opacity-100 translate-y-0 text-indigo-600' : 'opacity-0 translate-y-2 hidden'}`}>Кошелек</span>
                 </button>
             </nav>
           </>
