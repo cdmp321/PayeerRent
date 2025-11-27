@@ -28,19 +28,24 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     
+    // Explicit trim again just to be safe
+    const cleanPhone = phone.trim();
+    const cleanPass = password.trim();
+    const cleanName = name.trim();
+
     setLoading(true);
     try {
       if (isAdminMode) {
-        if (!phone.trim() || !password.trim()) {
+        if (!cleanPhone || !cleanPass) {
            throw new Error('Введите логин и пароль');
         }
-        const user = await api.loginAdmin(phone.trim(), password.trim());
+        const user = await api.loginAdmin(cleanPhone, cleanPass);
         onLogin(user);
       } else {
-        if (phone.trim().length < 3 || name.trim().length < 2) {
+        if (cleanPhone.length < 3 || cleanName.length < 2) {
           throw new Error('Пожалуйста, введите корректные данные');
         }
-        const user = await api.loginOrRegister(phone.trim(), name.trim());
+        const user = await api.loginOrRegister(cleanPhone, cleanName);
         onLogin(user);
       }
     } catch (err: any) {
@@ -76,8 +81,11 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             {isAdminMode ? 'Вход для Админа и Менеджера' : 'Бронирование и аренда'}
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+          {/* Fake inputs to disable autocomplete more effectively in some browsers */}
+          <input type="text" style={{display: 'none'}} />
+          <input type="password" style={{display: 'none'}} />
+
           {!isAdminMode && (
             <div className="relative group">
               <UserIcon className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
@@ -94,10 +102,11 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           <div className="relative group">
             <Phone className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
-              type="tel"
+              type="text" 
               placeholder={isAdminMode ? (isDefaultAdmin ? "Логин (000 или 001)" : "Логин сотрудника") : "Номер телефона"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              autoComplete="off"
               className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
             />
           </div>
@@ -110,12 +119,13 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     placeholder={isDefaultAdmin ? "Пароль (admin или manager)" : "Пароль"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
                     className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
                 />
               </div>
           )}
 
-          {error && <p className="text-red-500 text-sm text-center font-bold bg-red-50 py-2 rounded-lg">{error}</p>}
+          {error && <p className="text-red-500 text-sm text-center font-bold bg-red-50 py-2 rounded-lg border border-red-100">{error}</p>}
 
           <button
             type="submit"
@@ -132,6 +142,13 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         </form>
         
         <div className="mt-8 text-center">
+            {isAdminMode && isDefaultAdmin && (
+                 <div className="mb-4 text-xs text-slate-400 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <p>Админ: <b>000</b> / <b>admin</b></p>
+                    <p>Менеджер: <b>001</b> / <b>manager</b></p>
+                 </div>
+            )}
+
             <button 
                 type="button"
                 onClick={toggleMode}
