@@ -31,16 +31,16 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     setLoading(true);
     try {
       if (isAdminMode) {
-        if (!phone || !password) {
+        if (!phone.trim() || !password.trim()) {
            throw new Error('Введите логин и пароль');
         }
-        const user = await api.loginAdmin(phone, password);
+        const user = await api.loginAdmin(phone.trim(), password.trim());
         onLogin(user);
       } else {
-        if (phone.length < 3 || name.length < 2) {
+        if (phone.trim().length < 3 || name.trim().length < 2) {
           throw new Error('Пожалуйста, введите корректные данные');
         }
-        const user = await api.loginOrRegister(phone, name);
+        const user = await api.loginOrRegister(phone.trim(), name.trim());
         onLogin(user);
       }
     } catch (err: any) {

@@ -50,8 +50,8 @@ const mapTransaction = (data: any): Transaction => ({
 export const api = {
   // Auth
   loginOrRegister: async (phone: string, name: string): Promise<User> => {
-    const encryptedPhone = encrypt(phone);
-    const encryptedName = encrypt(name);
+    const encryptedPhone = encrypt(phone.trim());
+    const encryptedName = encrypt(name.trim());
 
     // Check if user exists (Search by Encrypted Phone)
     const { data: existingUser, error: fetchError } = await supabase
@@ -79,8 +79,13 @@ export const api = {
   },
 
   loginAdmin: async (phone: string, password: string): Promise<User> => {
-    const encryptedPhone = encrypt(phone);
-    const encryptedPassword = encrypt(password);
+    const cleanPhone = phone.trim();
+    const cleanPassword = password.trim();
+    
+    const encryptedPhone = encrypt(cleanPhone);
+    const encryptedPassword = encrypt(cleanPassword);
+
+    console.log('Login attempt:', { cleanPhone, encryptedPhone });
 
     // 1. Try to find user with this phone AND role ADMIN or MANAGER
     const { data: admin, error } = await supabase
@@ -90,11 +95,15 @@ export const api = {
       .in('role', ['ADMIN', 'MANAGER']) // Allow both roles to login here
       .single();
 
-    if (error || !admin) throw new Error('Сотрудник не найден');
+    if (error || !admin) {
+        console.error('User not found or error:', error);
+        throw new Error('Сотрудник не найден');
+    }
     
     // 2. Check password (Compare Encrypted)
     // We treat null passwords as empty string for safety
     if ((admin.password || '') !== encryptedPassword) {
+      console.error('Password mismatch');
       throw new Error('Неверный пароль');
     }
 
@@ -135,8 +144,8 @@ export const api = {
     const { error } = await supabase
       .from('users')
       .update({ 
-          phone: encrypt(newPhone), 
-          password: encrypt(newPassword) 
+          phone: encrypt(newPhone.trim()), 
+          password: encrypt(newPassword.trim()) 
       })
       .eq('id', currentUser.id);
 
