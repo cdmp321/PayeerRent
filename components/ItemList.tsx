@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Item, ItemStatus, User } from '../types';
@@ -375,7 +376,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                             <div className="relative w-full">
                                 <input 
                                     type="number" 
-                                    placeholder="Сумма пожертвования"
+                                    placeholder="Пополнение средств"
                                     value={customAmounts[item.id] || ''}
                                     onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
                                     className="w-full pl-4 pr-10 py-4 border-2 border-gray-100 rounded-xl text-lg outline-none focus:border-indigo-500 focus:ring-0 transition-all bg-gray-50 focus:bg-white font-bold text-gray-800 placeholder-gray-400"

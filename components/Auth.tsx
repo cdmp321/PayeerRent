@@ -58,75 +58,75 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-100 transition-all duration-300">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-fade-in">
+      <div className="glass-panel p-8 sm:p-10 rounded-3xl w-full max-w-sm transition-all duration-300">
         
         {/* Header Icon */}
         <div className="flex justify-center mb-6">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors duration-300 ${isAdminMode ? 'bg-slate-800 shadow-slate-200' : 'bg-blue-600 shadow-blue-200'}`}>
-            {isAdminMode ? <Lock className="w-8 h-8 text-white" /> : <ShieldCheck className="w-8 h-8 text-white" />}
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl rotate-3 transition-colors duration-300 ${isAdminMode ? 'bg-slate-800 shadow-slate-300/50' : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-300/50'}`}>
+            {isAdminMode ? <Lock className="w-9 h-9 text-white" /> : <ShieldCheck className="w-10 h-10 text-white" />}
           </div>
         </div>
         
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
-            {isAdminMode ? 'Вход администратора' : 'PayeerRent'}
+        <h2 className="text-3xl font-extrabold text-center text-slate-800 mb-2 tracking-tight">
+            {isAdminMode ? 'Админ Панель' : 'PayeerRent'}
         </h2>
-        <p className="text-center text-gray-500 mb-8 text-sm">
-            {isAdminMode ? 'Введите учетные данные для доступа' : 'Бронирование товаров и оборудования'}
+        <p className="text-center text-slate-500 mb-8 font-medium">
+            {isAdminMode ? 'Вход для управления сервисом' : 'Бронирование и аренда'}
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           
           {!isAdminMode && (
-            <div className="relative">
-              <UserIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+            <div className="relative group">
+              <UserIcon className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
               <input
                 type="text"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-700 bg-gray-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
               />
             </div>
           )}
           
-          <div className="relative">
-            <Phone className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+          <div className="relative group">
+            <Phone className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="tel"
               placeholder={isAdminMode ? (isDefaultAdmin ? "Логин (000)" : "Логин") : "Номер телефона"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border border-gray-700 bg-gray-800 rounded-xl focus:ring-2 focus:border-transparent outline-none transition-all text-white placeholder-gray-500 ${isAdminMode ? 'focus:ring-slate-500' : 'focus:ring-blue-500'}`}
+              className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
             />
           </div>
 
           {isAdminMode && (
-              <div className="relative">
-                <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <div className="relative group">
+                <Lock className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
                 <input
                     type="password"
                     placeholder={isDefaultAdmin ? "Пароль (admin)" : "Пароль"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-700 bg-gray-800 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition-all text-white placeholder-gray-500"
+                    className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
                 />
               </div>
           )}
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {error && <p className="text-red-500 text-sm text-center font-bold bg-red-50 py-2 rounded-lg">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex justify-center items-center gap-2 ${
+            className={`w-full text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex justify-center items-center gap-2 mt-4 ${
                 isAdminMode 
                 ? 'bg-slate-800 shadow-slate-200 hover:bg-slate-700' 
-                : 'bg-gradient-to-r from-blue-600 to-indigo-700 shadow-blue-200'
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-indigo-200 hover:to-indigo-700'
             }`}
           >
             {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-            {loading ? 'Вход...' : (isAdminMode ? 'Войти в панель' : 'Войти / Регистрация')}
+            {loading ? 'Вход...' : (isAdminMode ? 'Войти' : 'Продолжить')}
           </button>
         </form>
         
@@ -134,14 +134,14 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <button 
                 type="button"
                 onClick={toggleMode}
-                className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1 mx-auto"
+                className="text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors flex items-center justify-center gap-1 mx-auto"
             >
                 {isAdminMode ? (
                     <>
-                        <ArrowLeft className="w-4 h-4" /> Вернуться к входу для клиентов
+                        <ArrowLeft className="w-4 h-4" /> Я клиент
                     </>
                 ) : (
-                    "Я администратор"
+                    "Вход для администратора"
                 )}
             </button>
         </div>

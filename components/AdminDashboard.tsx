@@ -243,7 +243,7 @@ export const AdminDashboard: React.FC = () => {
       { id: 'items', label: 'Товары', icon: Package },
       { id: 'users', label: 'Юзеры', icon: Users },
       { id: 'finances', label: 'Финансы', icon: TrendingUp, count: unviewedIncomeCount },
-      { id: 'payments', label: 'Оплата', icon: CreditCard },
+      { id: 'payments', label: 'Метод оплаты', icon: CreditCard },
       { id: 'settings', label: 'Настр.', icon: Settings },
   ];
 
@@ -512,14 +512,8 @@ export const AdminDashboard: React.FC = () => {
                                         item.status === ItemStatus.SOLD ? 'Продано' : 'Доступно'}
                                         </span>
                                     </div>
-
-                                    {(item.status === ItemStatus.RESERVED || item.status === ItemStatus.SOLD) && owner && (
-                                        <div className="mt-3 bg-gray-50 p-2 rounded-lg border border-gray-100 text-xs">
-                                            <div className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Клиент</div>
-                                            <div className="font-bold text-gray-800 truncate">{owner.name}</div>
-                                            <a href={`tel:${owner.phone}`} className="font-medium text-blue-600 hover:underline">{owner.phone}</a>
-                                        </div>
-                                    )}
+                                    
+                                    {/* Client info block removed as per request */}
                                 </div>
                             </div>
 

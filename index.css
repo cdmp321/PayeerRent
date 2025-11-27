@@ -1,21 +1,38 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply text-slate-900 antialiased;
+    /* Beautiful Soft Blue Gradient */
+    background: linear-gradient(to top, #accbee 0%, #e7f0fd 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 }
 
-/* Custom styles that were previously inline or specific overrides */
+/* Ensure inputs don't zoom on mobile IOS if font size is small */
+input, textarea, select {
+    font-size: 16px; 
+}
+
+/* Custom Utilities */
+.glass-panel {
+    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl;
+}
+
+.glass-header {
+    @apply bg-white/70 backdrop-blur-lg border-b border-white/50 shadow-sm;
+}
+
+/* Remove default number input spinners */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
-/* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
 }

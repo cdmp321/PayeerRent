@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { Auth } from './components/Auth';
 import { Wallet } from './components/Wallet';
@@ -167,9 +166,9 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <div className="text-gray-500 font-medium">Загрузка PayeerRent...</div>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-transparent">
+            <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <div className="text-slate-500 font-medium">Загрузка PayeerRent...</div>
         </div>
     );
   }
@@ -178,58 +177,58 @@ const App: React.FC = () => {
     const isSchemaError = error === "SCHEMA_MISSING";
     
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gray-50">
-        <div className="bg-white p-6 rounded-2xl shadow-xl max-w-lg border border-red-100 w-full">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${isSchemaError ? 'bg-blue-100' : 'bg-red-100'}`}>
-                {isSchemaError ? <Database className="w-7 h-7 text-blue-600" /> : <AlertTriangle className="w-7 h-7 text-red-500" />}
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-transparent">
+        <div className="glass-panel p-8 rounded-2xl w-full max-w-lg">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner ${isSchemaError ? 'bg-blue-50' : 'bg-red-50'}`}>
+                {isSchemaError ? <Database className="w-8 h-8 text-blue-600" /> : <AlertTriangle className="w-8 h-8 text-red-500" />}
             </div>
             
-            <h2 className="text-xl font-bold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
                 {isSchemaError ? "База данных подключена!" : "Ошибка подключения"}
             </h2>
             
-            <p className="text-gray-500 mb-6 text-sm">
+            <p className="text-slate-500 mb-8 font-medium">
                 {isSchemaError 
                     ? "Теперь нужно создать таблицы в Supabase." 
                     : error}
             </p>
 
             {isSchemaError ? (
-                <div className="text-left mb-6">
+                <div className="text-left mb-8">
                     <div className="flex justify-between items-center mb-2 px-1">
-                        <span className="text-xs font-bold text-gray-500 uppercase">SQL Код для вставки</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SQL Код для вставки</span>
                         <button 
                             onClick={copySchema}
-                            className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded-md transition-colors"
+                            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
                         >
-                            {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                            {copied ? 'Скопировано!' : 'Копировать'}
+                            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copied ? 'Скопировано' : 'Копировать'}
                         </button>
                     </div>
-                    <div className="bg-slate-900 rounded-xl p-3 border border-slate-700 relative group">
+                    <div className="bg-slate-900 rounded-xl p-4 border border-slate-700 shadow-inner">
                         <pre className="text-xs text-slate-300 font-mono overflow-auto max-h-48 custom-scrollbar whitespace-pre-wrap">
                             {SCHEMA_SQL}
                         </pre>
                     </div>
                     
-                    <div className="mt-4 text-xs text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <div className="mt-4 text-xs text-slate-600 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
                         1. Скопируйте код выше.<br/>
-                        2. Перейдите в <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-blue-600 underline font-bold">Supabase SQL Editor</a>.<br/>
+                        2. Перейдите в <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-blue-600 underline font-bold hover:text-blue-700">Supabase SQL Editor</a>.<br/>
                         3. Вставьте код и нажмите <b>Run</b>.
                     </div>
                 </div>
             ) : (
-                 <div className="text-xs text-left bg-gray-50 p-4 rounded-lg text-gray-600 mb-6 border border-gray-200">
-                    <p className="font-bold mb-2">Совет:</p>
-                    <p>Проверьте ключи в <code>services/supabase.ts</code>.</p>
+                 <div className="text-xs text-left bg-slate-50 p-4 rounded-xl text-slate-600 mb-8 border border-slate-200">
+                    <p className="font-bold mb-1">Совет:</p>
+                    <p>Проверьте ключи в файле <code>services/supabase.ts</code>.</p>
                 </div>
             )}
 
             <button 
                 onClick={() => window.location.reload()}
-                className={`w-full text-white py-3.5 rounded-xl font-bold transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 ${isSchemaError ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-slate-900 hover:bg-slate-800'}`}
+                className={`w-full text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 ${isSchemaError ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-slate-900 hover:bg-slate-800'}`}
             >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-5 h-5" />
                 {isSchemaError ? "Я выполнил код, войти" : "Попробовать снова"}
             </button>
         </div>
@@ -242,38 +241,37 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
+    <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
       {/* Header / Navbar */}
-      <header className="bg-white shadow-sm sticky top-0 z-20">
+      <header className="glass-header sticky top-0 z-30 transition-all duration-300">
         {/* Dynamic max-width based on role */}
-        <div className={`${isAdminView ? 'max-w-7xl px-6' : 'max-w-md px-4'} mx-auto py-3 flex justify-between items-center transition-all duration-300`}>
-          <div className="flex items-center gap-2">
-            <h1 className="font-bold text-xl text-gray-900 tracking-tight">PayeerRent</h1>
-            {isAdminView && <span className="bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">Admin Panel</span>}
+        <div className={`${isAdminView ? 'max-w-7xl px-6' : 'max-w-md px-4'} mx-auto py-3.5 flex justify-between items-center`}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                <Store className="w-4 h-4" />
+            </div>
+            <h1 className="font-extrabold text-xl text-slate-800 tracking-tight">PayeerRent</h1>
+            {isAdminView && <span className="bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ml-1">Admin</span>}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {user.role === UserRole.ADMIN && (
                <button 
                  onClick={() => setIsAdminView(!isAdminView)}
-                 className={`p-2 rounded-full transition-colors flex items-center gap-2 ${isAdminView ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-500'}`}
+                 className={`p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 ${isAdminView ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'hover:bg-slate-100 text-slate-500'}`}
+                 title={isAdminView ? "Перейти в магазин" : "Панель управления"}
                >
                  {isAdminView ? (
-                    <>
-                        <Home className="w-5 h-5" />
-                        <span className="text-xs font-bold hidden sm:inline">К клиенту</span>
-                    </>
+                    <Home className="w-5 h-5" />
                  ) : (
-                    <>
-                        <Settings className="w-5 h-5" />
-                        <span className="text-xs font-bold hidden sm:inline">Админка</span>
-                    </>
+                    <Settings className="w-5 h-5" />
                  )}
                </button>
             )}
             <button 
               onClick={handleLogout}
-              className="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-500 transition-colors"
+              className="p-2.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
+              title="Выйти"
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -290,9 +288,9 @@ const App: React.FC = () => {
             {/* User Content Area */}
             {activeUserTab === 'market' && (
                 <div className="animate-fade-in">
-                    <div className="mb-4">
-                        <h2 className="text-2xl font-bold text-gray-900">Магазин</h2>
-                        <p className="text-gray-500 text-sm">Доступные товары и услуги</p>
+                    <div className="mb-6 px-1">
+                        <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Магазин</h2>
+                        <p className="text-slate-500 font-medium">Доступные товары и услуги</p>
                     </div>
                     <ItemList 
                         user={user} 
@@ -307,9 +305,9 @@ const App: React.FC = () => {
 
             {activeUserTab === 'purchases' && (
                 <div className="animate-fade-in">
-                     <div className="mb-4">
-                        <h2 className="text-2xl font-bold text-gray-900">Мои товары</h2>
-                        <p className="text-gray-500 text-sm">Ваши активные бронирования</p>
+                     <div className="mb-6 px-1">
+                        <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Мои товары</h2>
+                        <p className="text-slate-500 font-medium">Ваши активные бронирования</p>
                     </div>
                     <ItemList 
                         user={user} 
@@ -323,44 +321,44 @@ const App: React.FC = () => {
 
             {activeUserTab === 'wallet' && (
                 <div className="animate-fade-in">
-                    <div className="mb-4">
-                        <h2 className="text-2xl font-bold text-gray-900">Кошелек</h2>
-                        <p className="text-gray-500 text-sm">Управление балансом</p>
+                    <div className="mb-6 px-1">
+                        <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight">Кошелек</h2>
+                        <p className="text-slate-500 font-medium">Управление балансом</p>
                     </div>
                     <Wallet user={user} onUpdateUser={setUser} />
                 </div>
             )}
 
             {/* User Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+            <nav className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-lg border-t border-white/50 px-6 py-2 flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
                 <button 
                     onClick={() => setActiveUserTab('market')}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'market' ? 'text-blue-600 -translate-y-2' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'market' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${activeUserTab === 'market' ? 'bg-blue-50 shadow-blue-100 shadow-lg' : ''}`}>
-                        <Store className="w-7 h-7" strokeWidth={2.5} />
+                    <div className={`p-1.5 rounded-2xl transition-all duration-300 ${activeUserTab === 'market' ? 'bg-indigo-50 shadow-inner' : 'scale-90'}`}>
+                        <Store className={`w-6 h-6 ${activeUserTab === 'market' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                     </div>
-                    <span className={`text-[10px] font-bold ${activeUserTab === 'market' ? 'opacity-100' : 'opacity-0 h-0'}`}>Магазин</span>
+                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'market' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>Магазин</span>
                 </button>
 
                 <button 
                     onClick={() => setActiveUserTab('purchases')}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'purchases' ? 'text-indigo-600 -translate-y-2' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'purchases' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${activeUserTab === 'purchases' ? 'bg-indigo-50 shadow-indigo-100 shadow-lg' : ''}`}>
-                        <ShoppingBag className="w-7 h-7" strokeWidth={2.5} />
+                    <div className={`p-1.5 rounded-2xl transition-all duration-300 ${activeUserTab === 'purchases' ? 'bg-indigo-50 shadow-inner' : 'scale-90'}`}>
+                        <ShoppingBag className={`w-6 h-6 ${activeUserTab === 'purchases' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                     </div>
-                    <span className={`text-[10px] font-bold ${activeUserTab === 'purchases' ? 'opacity-100' : 'opacity-0 h-0'}`}>Моё</span>
+                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'purchases' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>Моё</span>
                 </button>
 
                 <button 
                     onClick={() => setActiveUserTab('wallet')}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'wallet' ? 'text-emerald-600 -translate-y-2' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 ${activeUserTab === 'wallet' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${activeUserTab === 'wallet' ? 'bg-emerald-50 shadow-emerald-100 shadow-lg' : ''}`}>
-                        <WalletIcon className="w-7 h-7" strokeWidth={2.5} />
+                    <div className={`p-1.5 rounded-2xl transition-all duration-300 ${activeUserTab === 'wallet' ? 'bg-indigo-50 shadow-inner' : 'scale-90'}`}>
+                        <WalletIcon className={`w-6 h-6 ${activeUserTab === 'wallet' ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                     </div>
-                    <span className={`text-[10px] font-bold ${activeUserTab === 'wallet' ? 'opacity-100' : 'opacity-0 h-0'}`}>Кошелек</span>
+                    <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'wallet' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>Кошелек</span>
                 </button>
             </nav>
           </>
