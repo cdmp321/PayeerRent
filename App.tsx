@@ -33,6 +33,7 @@ create table public.items (
   description text,
   image_url text,
   price numeric not null,
+  quantity numeric default 1, -- 0 = Unlimited
   status text default 'AVAILABLE',
   owner_id uuid references public.users(id) on delete set null,
   purchased_at timestamp with time zone,
@@ -203,7 +204,7 @@ const App: React.FC = () => {
             
             <p className="text-slate-500 mb-8 font-medium">
                 {isSchemaError 
-                    ? "Необходимо обновить структуру базы для поддержки шифрования." 
+                    ? "Необходимо обновить структуру базы для поддержки шифрования и новых функций." 
                     : error}
             </p>
 

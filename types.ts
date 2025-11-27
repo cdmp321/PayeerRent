@@ -27,6 +27,7 @@ export interface Item {
   description: string;
   imageUrl: string;
   price: number; // Fixed cost
+  quantity: number; // 0 = Unlimited, >0 = Finite stock
   status: ItemStatus;
   ownerId?: string; // User ID
   purchasedAt?: string; // ISO Date

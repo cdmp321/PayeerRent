@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -21,11 +21,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   // Finances Group Expansion State
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  
+  // Refund Form State
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
 
   // Form states
   const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemDesc, setNewItemDesc] = useState(''); // Added description state
+  const [newItemDesc, setNewItemDesc] = useState(''); 
   const [newItemPrice, setNewItemPrice] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState('1'); // Default to 1
   const [newItemImage, setNewItemImage] = useState('');
   
   const [newMethodName, setNewMethodName] = useState('');
@@ -59,19 +64,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItemTitle) return; // Allow empty or 0 price
+    if (!newItemTitle) return; 
     
     const priceVal = parseFloat(newItemPrice);
+    const quantityVal = parseFloat(newItemQuantity);
 
     await api.createItem({
       title: newItemTitle,
       description: newItemDesc || 'Описание отсутствует',
-      imageUrl: newItemImage.trim(), // Use provided image or empty string
-      price: isNaN(priceVal) ? 0 : priceVal // Default to 0 if empty
+      imageUrl: newItemImage.trim(),
+      price: isNaN(priceVal) ? 0 : priceVal,
+      quantity: isNaN(quantityVal) ? 1 : quantityVal
     });
     setNewItemTitle('');
     setNewItemDesc('');
     setNewItemPrice('');
+    setNewItemQuantity('1');
     setNewItemImage('');
     refreshAll();
   };
@@ -125,6 +133,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           setTimeout(() => setMsgAdmin(''), 3000);
       } catch (err: any) {
           setMsgAdmin('Ошибка: ' + err.message);
+      }
+  };
+
+  const handleRefund = async (userId: string) => {
+      if(!refundAmount || !refundReason) {
+          alert("Заполните сумму и причину возврата");
+          return;
+      }
+      if(!window.confirm(`Вернуть ${refundAmount} P клиенту?`)) return;
+
+      try {
+          await api.processRefund(userId, parseFloat(refundAmount), refundReason);
+          setRefundAmount('');
+          setRefundReason('');
+          alert("Возврат успешно выполнен!");
+          refreshAll();
+      } catch (e: any) {
+          alert("Ошибка: " + e.message);
       }
   };
 
@@ -195,6 +221,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const toggleUserExpansion = (userId: string) => {
       setExpandedUserId(prev => prev === userId ? null : userId);
+      setRefundAmount('');
+      setRefundReason('');
   };
 
   // Sorting Helpers
@@ -224,6 +252,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   );
   
   const unviewedIncomeCount = transactions.filter(t => (t.type === 'PURCHASE' || t.type === 'RENT_CHARGE') && !t.viewed).length;
+  
+  const refundsHistory = transactions.filter(t => t.type === 'REFUND');
 
   const groupedFinances = useMemo(() => {
     const incomeTransactions = transactions.filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE');
@@ -406,75 +436,148 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
         {/* CONTENT: FINANCES (GROUPED BY USER) */}
         {activeTab === 'finances' && (
-            <div className="space-y-4">
-                <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Поступления от клиентов</h3>
-                {groupedFinances.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 bg-white rounded-xl border-2 border-dashed">Пока нет оплат</div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                        {groupedFinances.map(group => {
-                            if (!group.user) return null;
-                            const isExpanded = expandedUserId === group.user.id;
-                            const sortedTxs = [...group.txs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            <div className="space-y-8">
+                {/* 1. INCOME Section */}
+                <div>
+                    <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Поступления от клиентов</h3>
+                    {groupedFinances.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 bg-white rounded-xl border-2 border-dashed">Пока нет оплат</div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                            {groupedFinances.map(group => {
+                                if (!group.user) return null;
+                                const isExpanded = expandedUserId === group.user.id;
+                                const sortedTxs = [...group.txs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-                            return (
-                                <div key={group.user.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
-                                    {/* User Header Summary */}
-                                    <div 
-                                        onClick={() => toggleUserExpansion(group.user!.id)}
-                                        className={`p-5 flex justify-between items-center cursor-pointer transition-colors ${isExpanded ? 'bg-gray-50' : 'hover:bg-gray-50'}`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                                                    {group.user.name.charAt(0).toUpperCase()}
+                                return (
+                                    <div key={group.user.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+                                        {/* User Header Summary */}
+                                        <div 
+                                            onClick={() => toggleUserExpansion(group.user!.id)}
+                                            className={`p-5 flex justify-between items-center cursor-pointer transition-colors ${isExpanded ? 'bg-gray-50' : 'hover:bg-gray-50'}`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative">
+                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                                                        {group.user.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    {group.hasUnread && !isExpanded && (
+                                                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                                                    )}
                                                 </div>
-                                                {group.hasUnread && !isExpanded && (
-                                                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                                                )}
+                                                <div>
+                                                    <div className="font-bold text-gray-800 text-lg leading-tight">{group.user.name}</div>
+                                                    <div className="text-sm text-gray-500 font-medium">{group.user.phone}</div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <div className="font-bold text-gray-800 text-lg leading-tight">{group.user.name}</div>
-                                                <div className="text-sm text-gray-500 font-medium">{group.user.phone}</div>
+
+                                            <div className="text-right">
+                                                <div className="font-extrabold text-lg text-emerald-600">+{group.total} P</div>
+                                                <div className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
+                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="text-right">
-                                            <div className="font-extrabold text-lg text-emerald-600">+{group.total} P</div>
-                                            <div className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
-                                                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        {/* Expanded Transactions List & Refund Form */}
+                                        {isExpanded && (
+                                            <div className="bg-slate-50 border-t border-gray-100 px-4 py-4 animate-slide-up">
+                                                {/* Refund Action Section */}
+                                                <div className="mb-6 bg-red-50 p-4 rounded-xl border border-red-100">
+                                                    <h4 className="font-bold text-red-800 mb-3 flex items-center gap-2">
+                                                        <CornerUpLeft className="w-4 h-4" />
+                                                        Сделать возврат клиенту
+                                                    </h4>
+                                                    <div className="flex flex-col md:flex-row gap-3">
+                                                        <input 
+                                                            type="number" 
+                                                            placeholder="Сумма возврата (P)" 
+                                                            value={refundAmount}
+                                                            onChange={e => setRefundAmount(e.target.value)}
+                                                            className="flex-1 p-2.5 rounded-lg border border-red-200 text-sm focus:border-red-500 outline-none"
+                                                        />
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder="Причина (например, отмена услуги)" 
+                                                            value={refundReason}
+                                                            onChange={e => setRefundReason(e.target.value)}
+                                                            className="flex-[2] p-2.5 rounded-lg border border-red-200 text-sm focus:border-red-500 outline-none"
+                                                        />
+                                                        <button 
+                                                            onClick={() => handleRefund(group.user!.id)}
+                                                            className="bg-red-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-red-700 active:scale-95 transition-all"
+                                                        >
+                                                            Вернуть
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <h4 className="font-bold text-gray-400 text-xs uppercase mb-3">История покупок</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {sortedTxs.map(tx => (
+                                                        <div 
+                                                            key={tx.id} 
+                                                            onClick={(e) => handleMarkViewed(tx.id, e)}
+                                                            className={`p-4 rounded-xl border flex flex-col justify-between transition-all duration-300 relative cursor-pointer h-full ${
+                                                                tx.viewed ? 'bg-white/60 opacity-60 border-gray-200' : 'bg-white border-blue-100 shadow-sm hover:border-blue-300'
+                                                            }`}
+                                                        >
+                                                            <div className="mb-2">
+                                                                <div className="font-bold text-gray-800 text-sm">{tx.description}</div>
+                                                                <div className="text-xs text-gray-400 mt-1">{new Date(tx.date).toLocaleString()}</div>
+                                                            </div>
+                                                            <div className="flex justify-between items-end mt-auto">
+                                                                <div className="font-bold text-emerald-600 text-lg">+{tx.amount} P</div>
+                                                                {tx.viewed && <CheckCircle2 className="w-5 h-5 text-green-500 opacity-50" />}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
 
-                                    {/* Expanded Transactions List */}
-                                    {isExpanded && (
-                                        <div className="bg-slate-50 border-t border-gray-100 px-4 py-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-slide-up">
-                                            {sortedTxs.map(tx => (
-                                                <div 
-                                                    key={tx.id} 
-                                                    onClick={(e) => handleMarkViewed(tx.id, e)}
-                                                    className={`p-4 rounded-xl border flex flex-col justify-between transition-all duration-300 relative cursor-pointer h-full ${
-                                                        tx.viewed ? 'bg-white/60 opacity-60 border-gray-200' : 'bg-white border-blue-100 shadow-sm hover:border-blue-300'
-                                                    }`}
-                                                >
-                                                    <div className="mb-2">
-                                                        <div className="font-bold text-gray-800 text-sm">{tx.description}</div>
-                                                        <div className="text-xs text-gray-400 mt-1">{new Date(tx.date).toLocaleString()}</div>
-                                                    </div>
-                                                    <div className="flex justify-between items-end mt-auto">
-                                                        <div className="font-bold text-emerald-600 text-lg">+{tx.amount} P</div>
-                                                        {tx.viewed && <CheckCircle2 className="w-5 h-5 text-green-500 opacity-50" />}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
+                {/* 2. REFUND HISTORY Section */}
+                <div className="pt-8 border-t border-gray-200">
+                    <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4 flex items-center gap-2">
+                        <CornerUpLeft className="w-6 h-6 text-red-500" />
+                        История возвратов клиентам
+                    </h3>
+                    {refundsHistory.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl text-sm font-medium">История возвратов пуста</div>
+                    ) : (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
+                                    <tr>
+                                        <th className="p-4">Клиент</th>
+                                        <th className="p-4">Сумма</th>
+                                        <th className="p-4">Причина</th>
+                                        <th className="p-4">Дата</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 text-sm">
+                                    {refundsHistory.map(tx => {
+                                        const u = users.find(user => user.id === tx.userId);
+                                        return (
+                                            <tr key={tx.id} className="hover:bg-gray-50/50">
+                                                <td className="p-4 font-bold text-gray-800">{u ? u.name : 'Unknown'}</td>
+                                                <td className="p-4 font-bold text-red-500">-{tx.amount} P</td>
+                                                <td className="p-4 text-gray-600">{tx.description.replace('Возврат средств: ', '')}</td>
+                                                <td className="p-4 text-gray-400 text-xs">{new Date(tx.date).toLocaleString()}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </div>
         )}
 
@@ -486,26 +589,67 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold mb-4 text-lg">Добавить новый товар</h3>
                 <form onSubmit={handleAddItem} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input 
                             placeholder="Название" 
                             value={newItemTitle}
                             onChange={e => setNewItemTitle(e.target.value)}
-                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
+                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium w-full" 
                         />
-                        <input 
+                         <input 
                             placeholder="URL картинки" 
                             value={newItemImage}
                             onChange={e => setNewItemImage(e.target.value)}
-                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
+                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium w-full" 
                         />
-                        <input 
-                            placeholder="Цена (0=своб.)" 
-                            type="number"
-                            value={newItemPrice}
-                            onChange={e => setNewItemPrice(e.target.value)}
-                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
-                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        {/* Price Input with Tooltip */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase">Цена (RUB)</label>
+                                <div className="group relative">
+                                    <HelpCircle className="w-3 h-3 text-gray-400 cursor-help" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gray-800 text-white text-xs p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                        0 = Клиент сам вводит сумму (Донат/Свободная цена)
+                                    </div>
+                                </div>
+                            </div>
+                            <input 
+                                placeholder="0" 
+                                type="number"
+                                value={newItemPrice}
+                                onChange={e => setNewItemPrice(e.target.value)}
+                                className="border-2 border-white p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium w-full shadow-sm" 
+                            />
+                            <div className="text-[10px] text-gray-400 mt-1 pl-1">
+                                {parseFloat(newItemPrice) === 0 || !newItemPrice ? "Свободная цена" : "Фиксированная стоимость"}
+                            </div>
+                        </div>
+
+                        {/* Quantity Input with Tooltip */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <label className="text-xs font-bold text-gray-500 uppercase">Количество (Шт)</label>
+                                <div className="group relative">
+                                    <HelpCircle className="w-3 h-3 text-gray-400 cursor-help" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gray-800 text-white text-xs p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                        0 = Неограниченное количество (Товар всегда доступен)
+                                    </div>
+                                </div>
+                            </div>
+                            <input 
+                                placeholder="1" 
+                                type="number"
+                                value={newItemQuantity}
+                                onChange={e => setNewItemQuantity(e.target.value)}
+                                className="border-2 border-white p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium w-full shadow-sm" 
+                            />
+                            <div className="text-[10px] text-gray-400 mt-1 pl-1">
+                                {parseFloat(newItemQuantity) === 0 ? "Бесконечный товар" : "Ограниченный запас"}
+                            </div>
+                        </div>
                     </div>
                     
                     <textarea 
@@ -564,9 +708,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         {item.status === ItemStatus.RESERVED ? 'Бронь' : 
                                         item.status === ItemStatus.SOLD ? 'Продано' : 'Доступно'}
                                         </span>
+                                        
+                                        {/* Display Stock Info */}
+                                        {item.status === ItemStatus.AVAILABLE && (
+                                            <span className="font-bold px-2 py-1 rounded text-xs uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-100">
+                                                {item.quantity === 0 ? "∞ Безлимит" : `${item.quantity} шт.`}
+                                            </span>
+                                        )}
                                     </div>
                                     
-                                    {/* Client info block removed as per request */}
+                                    {/* Client info block (only shown if reserved) */}
+                                    {(item.status === ItemStatus.RESERVED || item.status === ItemStatus.SOLD) && owner && (
+                                        <div className="mt-3 pt-3 border-t border-gray-100 text-xs">
+                                            <div className="text-gray-400 font-bold uppercase mb-1">Клиент</div>
+                                            <div className="font-bold text-gray-800">{owner.name}</div>
+                                            <div className="text-gray-500">{owner.phone}</div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

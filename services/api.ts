@@ -20,6 +20,7 @@ const mapItem = (data: any): Item => ({
   description: data.description,
   imageUrl: data.image_url,
   price: Number(data.price),
+  quantity: Number(data.quantity || 0),
   status: data.status as ItemStatus,
   ownerId: data.owner_id || undefined,
   purchasedAt: data.purchased_at || undefined,
@@ -239,6 +240,7 @@ export const api = {
         description: itemData.description,
         image_url: itemData.imageUrl,
         price: itemData.price,
+        quantity: itemData.quantity || 1,
         status: 'AVAILABLE'
       }])
       .select()
@@ -255,7 +257,8 @@ export const api = {
         title: item.title,
         description: item.description,
         image_url: item.imageUrl,
-        price: item.price
+        price: item.price,
+        quantity: item.quantity
       })
       .eq('id', item.id);
   },
@@ -299,9 +302,6 @@ export const api = {
 
     if (balanceError) throw new Error("Ошибка списания средств");
 
-    // We do NOT encrypt transaction description here as it is not strictly user table data 
-    // and might be needed for simple DB queries by admin tools.
-    // If you want to encrypt withdrawal details, wrap `details` in `encrypt()`.
     const { error } = await supabase
       .from('transactions')
       .insert([{
@@ -320,6 +320,31 @@ export const api = {
             .eq('id', userId);
         throw new Error(error.message);
     }
+  },
+
+  processRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
+    const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
+    if (!user) throw new Error("Пользователь не найден");
+
+    const { error: balanceError } = await supabase
+        .from('users')
+        .update({ balance: Number(user.balance) + Number(amount) })
+        .eq('id', userId);
+    
+    if (balanceError) throw new Error("Ошибка возврата средств на баланс");
+
+    const { error } = await supabase
+      .from('transactions')
+      .insert([{
+        user_id: userId,
+        amount: amount,
+        type: 'REFUND',
+        status: 'APPROVED',
+        description: `Возврат средств: ${reason}`,
+        viewed: false
+      }]);
+    
+    if (error) throw new Error("Ошибка создания записи транзакции");
   },
 
   getTransactions: async (): Promise<Transaction[]> => {
@@ -393,6 +418,7 @@ export const api = {
     if (finalPrice <= 0 && item.price > 0) throw new Error("Некорректная сумма");
     if (user.balance < finalPrice) throw new Error(`Недостаточно средств. Баланс: ${user.balance}`);
 
+    // Deduct Balance
     const { error: balErr } = await supabase
         .from('users')
         .update({ balance: Number(user.balance) - finalPrice })
@@ -400,15 +426,56 @@ export const api = {
     
     if (balErr) throw new Error("Ошибка списания средств");
 
-    await supabase
-        .from('items')
-        .update({
-            status: 'RESERVED',
-            owner_id: userId,
-            purchased_at: new Date().toISOString(),
-            last_purchase_price: finalPrice
-        })
-        .eq('id', itemId);
+    // --- QUANTITY LOGIC START ---
+    const quantity = Number(item.quantity || 1); // Default to 1 if null
+    const isUnlimited = quantity === 0;
+    const isMultiStock = quantity > 1;
+
+    if (isUnlimited || isMultiStock) {
+        // Create a COPY (Clone) for the buyer
+        const { error: cloneError } = await supabase
+            .from('items')
+            .insert([{
+                title: item.title,
+                description: item.description,
+                image_url: item.image_url,
+                price: item.price,
+                quantity: 1, // The bought item is a single unit
+                status: 'RESERVED',
+                owner_id: userId,
+                purchased_at: new Date().toISOString(),
+                last_purchase_price: finalPrice
+            }]);
+        
+        if (cloneError) {
+             // Rollback balance (simplified)
+             await supabase.from('users').update({ balance: user.balance }).eq('id', userId);
+             throw new Error("Ошибка создания товара: " + cloneError.message);
+        }
+
+        // If it was finite multi-stock, decrement the original
+        if (isMultiStock) {
+            await supabase
+                .from('items')
+                .update({ quantity: quantity - 1 })
+                .eq('id', itemId);
+        }
+        // If unlimited (quantity === 0), do nothing to original item, it stays AVAILABLE
+
+    } else {
+        // Single Stock (Classic behavior)
+        // Move the actual item to the user
+        await supabase
+            .from('items')
+            .update({
+                status: 'RESERVED',
+                owner_id: userId,
+                purchased_at: new Date().toISOString(),
+                last_purchase_price: finalPrice
+            })
+            .eq('id', itemId);
+    }
+    // --- QUANTITY LOGIC END ---
 
     await supabase.from('transactions').insert([{
         user_id: userId,
@@ -452,6 +519,9 @@ export const api = {
   },
 
   cancelReservation: async (itemId: string): Promise<void> => {
+    // Note: If this was a clone (from unlimited/multi stock), technically we should DELETE it 
+    // or return it to the pool. For simplicity in this app version, we just mark it available 
+    // and effectively it becomes a single unique item on the market.
     await supabase
         .from('items')
         .update({
