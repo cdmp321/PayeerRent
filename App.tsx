@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { Auth } from './components/Auth';
 import { Wallet } from './components/Wallet';
@@ -36,7 +35,7 @@ create table public.items (
   quantity numeric default 1, -- 0 = Unlimited
   status text default 'AVAILABLE',
   owner_id uuid references public.users(id) on delete set null,
-  purchased_at timestamp with time zone,
+  purchased_at timestamp with time zone default timezone('utc'::text, now())
   last_purchase_price numeric,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
@@ -287,13 +286,16 @@ const App: React.FC = () => {
                  )}
                </button>
             )}
-            <button 
-              onClick={handleLogout}
-              className="p-2.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
-              title="Выйти"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            {/* Show Logout in Header ONLY for Admin View */}
+            {isAdminView && (
+                <button 
+                onClick={handleLogout}
+                className="p-2.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
+                title="Выйти"
+                >
+                <LogOut className="w-5 h-5" />
+                </button>
+            )}
           </div>
         </div>
       </header>
@@ -381,6 +383,18 @@ const App: React.FC = () => {
                         <WalletIcon className="w-8 h-8 stroke-[1.5px]" />
                     </div>
                     <span className={`text-[10px] font-bold transition-all duration-300 ${activeUserTab === 'wallet' ? 'opacity-100 translate-y-0 text-emerald-600' : 'opacity-0 translate-y-2 hidden'}`}>Кошелек</span>
+                </button>
+
+                {/* LOGOUT BUTTON - RED (New) */}
+                <button 
+                    onClick={handleLogout}
+                    className="flex flex-col items-center gap-1 p-2 rounded-2xl flex-1 transition-all duration-300 group text-slate-400 hover:text-red-500"
+                >
+                    <div className="p-2 rounded-2xl transition-all duration-300 group-hover:bg-red-50 group-active:scale-95">
+                        <LogOut className="w-8 h-8 stroke-[1.5px] group-hover:text-red-500 transition-colors" />
+                    </div>
+                    {/* Label is hidden by default to match inactive tabs style */}
+                    <span className="text-[10px] font-bold transition-all duration-300 opacity-0 translate-y-2 hidden">Выход</span>
                 </button>
             </nav>
           </>

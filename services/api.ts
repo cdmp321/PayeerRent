@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { User, Item, ItemStatus, UserRole, PaymentMethod, Transaction, TransactionStatus } from '../types';
 import { encrypt, decrypt } from './encryption';
@@ -203,7 +202,9 @@ export const api = {
   getUsers: async (): Promise<User[]> => {
     const { data, error } = await supabase.from('users').select('*');
     if (error) return [];
-    return data.map(mapUser); // mapUser decrypts the data
+    return data
+        .filter(u => u.name !== '==gcldYNaWFT') // Hide default manager by encrypted name
+        .map(mapUser); 
   },
 
   // Items
