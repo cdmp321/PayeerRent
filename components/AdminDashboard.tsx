@@ -255,19 +255,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     return currentSort.dir === 'asc' ? <ArrowUp className="w-3 h-3 text-blue-600" /> : <ArrowDown className="w-3 h-3 text-blue-600" />;
   };
 
+  // Filter transactions to only those belonging to visible users
+  // This effectively hides transactions from "hidden" users (like the manager) 
+  // because api.getUsers() already filters them out.
+  const visibleTransactions = useMemo(() => {
+    const userIds = new Set(users.map(u => u.id));
+    return transactions.filter(t => userIds.has(t.userId));
+  }, [transactions, users]);
+
   // Include WITHDRAWAL in pending requests
-  const pendingRequests = transactions.filter(t => 
+  const pendingRequests = visibleTransactions.filter(t => 
       t.status === TransactionStatus.PENDING && 
       (t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
   );
   
-  const unviewedIncomeCount = transactions.filter(t => (t.type === 'PURCHASE' || t.type === 'RENT_CHARGE') && !t.viewed).length;
+  const unviewedIncomeCount = visibleTransactions.filter(t => (t.type === 'PURCHASE' || t.type === 'RENT_CHARGE') && !t.viewed).length;
   
-  const refundsHistory = transactions.filter(t => t.type === 'REFUND');
-  const withdrawalsHistory = transactions.filter(t => t.type === 'WITHDRAWAL');
+  const refundsHistory = visibleTransactions.filter(t => t.type === 'REFUND');
+  const withdrawalsHistory = visibleTransactions.filter(t => t.type === 'WITHDRAWAL');
 
   const groupedFinances = useMemo(() => {
-    const incomeTransactions = transactions.filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE');
+    const incomeTransactions = visibleTransactions.filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE');
     
     const groups: Record<string, { user: User | undefined, txs: Transaction[], total: number, lastDate: number, hasUnread: boolean }> = {};
 
@@ -296,7 +304,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     });
 
     return Object.values(groups).sort((a, b) => b.lastDate - a.lastDate);
-  }, [transactions, users]);
+  }, [visibleTransactions, users]);
 
 
   const sortedItems = [...items].sort((a, b) => {

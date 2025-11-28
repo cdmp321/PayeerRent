@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -302,6 +301,14 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   </div>
                   
                   <div className="pt-2 border-t border-gray-200">
+                    <div className="bg-blue-50 text-blue-800 text-xs p-3 rounded-lg mb-3 leading-relaxed border border-blue-100">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Info className="w-4 h-4 shrink-0" />
+                            <p className="font-bold">Как подтвердить платеж:</p>
+                        </div>
+                        После совершения перевода сделайте скриншот чека или фото экрана. Загрузите его ниже. Администратор сверит данные и зачислит средства.
+                    </div>
+
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 mt-2">Чек перевода</label>
                     <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-3 px-2">
