@@ -538,7 +538,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                             key={tx.id} 
                                                             onClick={(e) => handleMarkViewed(tx.id, e)}
                                                             className={`p-4 rounded-xl border flex flex-col justify-between transition-all duration-300 relative cursor-pointer h-full ${
-                                                                tx.viewed ? 'bg-white/60 opacity-60 border-gray-200' : 'bg-white border-blue-100 shadow-sm hover:border-blue-300'
+                                                                tx.viewed ? 'bg-gray-50 border-gray-200' : 'bg-white border-blue-100 shadow-sm hover:border-blue-300'
                                                             }`}
                                                         >
                                                             <div className="mb-2">
@@ -547,7 +547,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                             </div>
                                                             <div className="flex justify-between items-end mt-auto">
                                                                 <div className="font-bold text-emerald-600 text-lg">+{tx.amount} P</div>
-                                                                {tx.viewed && <CheckCircle2 className="w-5 h-5 text-green-500 opacity-50" />}
+                                                                {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-600" />}
                                                             </div>
                                                         </div>
                                                     ))}
