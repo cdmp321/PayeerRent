@@ -78,7 +78,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             {isAdminMode ? 'Панель сотрудников' : 'PayeerRent'}
         </h2>
         <p className="text-center text-slate-500 mb-8 font-medium">
-            {isAdminMode ? 'Вход для Админа и Менеджера' : 'Бронирование и аренда'}
+            {isAdminMode ? 'Вход для Админа и Менеджера' : 'Магазин товаров и услуг'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
