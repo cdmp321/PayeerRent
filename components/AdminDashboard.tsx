@@ -546,8 +546,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                                 <div className="text-xs text-gray-400 mt-1">{new Date(tx.date).toLocaleString()}</div>
                                                             </div>
                                                             <div className="flex justify-between items-end mt-auto">
-                                                                <div className="font-bold text-emerald-600 text-lg">+{tx.amount} P</div>
-                                                                {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-600" />}
+                                                                <div className={`font-bold text-lg ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>+{tx.amount} P</div>
+                                                                {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-500" />}
                                                             </div>
                                                         </div>
                                                     ))}
