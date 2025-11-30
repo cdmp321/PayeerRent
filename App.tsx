@@ -298,13 +298,14 @@ const App: React.FC = () => {
                </button>
             )}
             
-            {/* Logout Button - Transparent Background, Bright Gray Icon */}
+            {/* Logout Button - Blue Filled Style */}
             <button 
               onClick={handleLogout}
-              className="p-2.5 bg-transparent hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-all"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-lg shadow-blue-200 font-bold text-sm transition-all flex items-center gap-2"
               title="Выйти"
             >
-              <LogOut className="w-6 h-6" />
+              <LogOut className="w-4 h-4" />
+              <span>Выйти</span>
             </button>
           </div>
         </div>

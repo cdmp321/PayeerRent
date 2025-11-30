@@ -197,25 +197,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMethodName || !newMethodInstr) return;
+    if (!newMethodName || !newMethodInstr) {
+        alert("Заполните название и инструкцию");
+        return;
+    }
     
-    const minVal = parseFloat(newMethodMin);
+    try {
+        const minVal = parseFloat(newMethodMin);
 
-    await api.addPaymentMethod({
-      name: newMethodName,
-      instruction: newMethodInstr,
-      isActive: true,
-      minAmount: isNaN(minVal) ? 0 : minVal,
-      imageUrl: newMethodImage.trim()
-    });
-    setNewMethodName('');
-    setNewMethodInstr('');
-    setNewMethodMin('');
-    setNewMethodImage('');
-    setNewMethodImageName('');
-    
-    alert('Метод оплаты добавлен!');
-    refreshAll();
+        await api.addPaymentMethod({
+        name: newMethodName,
+        instruction: newMethodInstr,
+        isActive: true,
+        minAmount: isNaN(minVal) ? 0 : minVal,
+        imageUrl: newMethodImage.trim()
+        });
+        
+        setNewMethodName('');
+        setNewMethodInstr('');
+        setNewMethodMin('');
+        setNewMethodImage('');
+        setNewMethodImageName('');
+        
+        alert('Метод оплаты добавлен!');
+        refreshAll();
+    } catch (e: any) {
+        alert("Ошибка добавления метода: " + e.message);
+    }
   };
 
   const handleUpdateManager = async (e: React.FormEvent) => {
@@ -686,13 +694,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         <h3 className="font-bold text-gray-700 text-lg md:text-2xl">
                             {showArchived ? 'Архив клиентов' : 'Поступления от клиентов'}
                         </h3>
-                        <button 
-                            onClick={() => setShowArchived(!showArchived)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${showArchived ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                        >
-                            {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                            {showArchived ? 'Показать активных' : 'Архив'}
-                        </button>
+                        
+                        {/* Only Manager can access Archive */}
+                        {user?.role === UserRole.MANAGER && (
+                            <button 
+                                onClick={() => setShowArchived(!showArchived)}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${showArchived ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                                {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                                {showArchived ? 'Показать активных' : 'Архив'}
+                            </button>
+                        )}
                     </div>
 
                     {groupedFinances.length === 0 ? (
@@ -736,18 +748,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                     </div>
                                                 </div>
                                                 
-                                                {/* Archive Action - INCREASED VISIBILITY */}
-                                                <button 
-                                                    onClick={(e) => toggleArchiveUser(group.user!.id, e)}
-                                                    className={`p-2 rounded-lg transition-colors ${
-                                                        showArchived 
-                                                            ? 'text-green-500 bg-green-50 hover:bg-green-100 hover:text-green-700' 
-                                                            : 'text-gray-300 hover:text-orange-500 hover:bg-orange-50'
-                                                    }`}
-                                                    title={showArchived ? "Восстановить из архива" : "Переместить в архив"}
-                                                >
-                                                    {showArchived ? <ArchiveRestore className="w-5 h-5" /> : <Archive className="w-5 h-5" />}
-                                                </button>
+                                                {/* Archive Action - Only for Manager */}
+                                                {user?.role === UserRole.MANAGER && (
+                                                    <button 
+                                                        onClick={(e) => toggleArchiveUser(group.user!.id, e)}
+                                                        className={`p-2 rounded-lg transition-colors ${
+                                                            showArchived 
+                                                                ? 'text-green-500 bg-green-50 hover:bg-green-100 hover:text-green-700' 
+                                                                : 'text-gray-300 hover:text-orange-500 hover:bg-orange-50'
+                                                        }`}
+                                                        title={showArchived ? "Восстановить из архива" : "Переместить в архив"}
+                                                    >
+                                                        {showArchived ? <ArchiveRestore className="w-5 h-5" /> : <Archive className="w-5 h-5" />}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
 

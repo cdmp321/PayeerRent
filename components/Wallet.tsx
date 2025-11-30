@@ -286,8 +286,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             </div>
                         </div>
                         <div className="text-right">
-                             {/* UPDATED STYLE: Dark Purple if refund */}
-                             <div className={`font-bold text-lg ${isRefund ? 'text-purple-900' : 'text-gray-800'}`}>
+                             {/* UPDATED STYLE: Black if refund */}
+                             <div className={`font-bold text-lg ${isRefund ? 'text-black' : 'text-gray-800'}`}>
                                  {isRefund ? '+' : '-'}{tx.amount} P
                              </div>
                              <div className={`text-xs font-bold uppercase ${
