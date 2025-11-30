@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -21,6 +22,9 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  
+  // Copy state
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -40,6 +44,14 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     if (e.target.files && e.target.files[0]) {
       setReceipt(e.target.files[0]);
     }
+  };
+
+  const copyInstruction = () => {
+      if (selectedMethod?.instruction) {
+          navigator.clipboard.writeText(selectedMethod.instruction);
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+      }
   };
 
   const handleTopUpRequest = async () => {
@@ -271,7 +283,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   {methods.map(method => (
                     <button
                       key={method.id}
-                      onClick={() => setSelectedMethod(method)}
+                      onClick={() => {
+                          setSelectedMethod(method);
+                          setIsCopied(false);
+                      }}
                       className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                     >
                       <div className="text-left flex items-center gap-4">
@@ -296,7 +311,16 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               {selectedMethod && (
                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 text-sm animate-fade-in">
                   <div className="mb-5">
-                      <p className="text-xs font-bold text-gray-500 uppercase mb-2">Реквизиты для перевода</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-xs font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
+                        <button 
+                            onClick={copyInstruction}
+                            className="flex items-center gap-1.5 text-xs font-bold bg-white border border-gray-200 px-3 py-1.5 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
+                        >
+                            {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {isCopied ? 'Скопировано' : 'Копировать'}
+                        </button>
+                      </div>
                       <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-4 rounded-xl border border-gray-200 select-all text-sm leading-relaxed shadow-sm font-medium">{selectedMethod.instruction}</p>
                   </div>
                   

@@ -47,6 +47,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [adminPass, setAdminPass] = useState('');
   const [msgAdmin, setMsgAdmin] = useState('');
 
+  // Receipt viewing state
+  const [viewingReceipt, setViewingReceipt] = useState<string | null>(null);
+
   useEffect(() => {
     refreshAll();
   }, []);
@@ -340,8 +343,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[80vh] gap-6 pb-24 md:pb-0">
+    <div className="flex flex-col md:flex-row min-h-[80vh] gap-6 pb-24 md:pb-0 relative">
       
+      {/* Receipt Modal */}
+      {viewingReceipt && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setViewingReceipt(null)}>
+            <div className="bg-white p-2 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col relative" onClick={e => e.stopPropagation()}>
+                <div className="absolute top-4 right-4 z-10">
+                    <button onClick={() => setViewingReceipt(null)} className="p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+                <div className="overflow-auto custom-scrollbar rounded-xl">
+                    <img src={viewingReceipt} alt="Receipt" className="w-full h-auto object-contain" />
+                </div>
+                <div className="p-4 text-center">
+                    <a href={viewingReceipt} download="receipt.png" className="text-indigo-600 font-bold hover:underline">Скачать изображение</a>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:flex flex-col w-64 shrink-0 gap-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-3 h-fit sticky top-24">
          <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Меню</div>
@@ -423,9 +445,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                     Чек/Скриншот
                                                 </div>
                                                 {tx.receiptUrl && (
-                                                    <a href={tx.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 font-bold underline cursor-pointer flex items-center gap-1 hover:text-blue-700">
+                                                    <button 
+                                                        onClick={() => setViewingReceipt(tx.receiptUrl || null)}
+                                                        className="text-sm text-blue-600 font-bold underline cursor-pointer flex items-center gap-1 hover:text-blue-700"
+                                                    >
                                                         Посмотреть <ExternalLink className="w-4 h-4" />
-                                                    </a>
+                                                    </button>
                                                 )}
                                             </div>
                                         )}
@@ -547,7 +572,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                             </div>
                                                             <div className="flex justify-between items-end mt-auto">
                                                                 <div className={`font-bold text-lg ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>+{tx.amount} P</div>
-                                                                {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-500" />}
+                                                                <CheckCircle2 className={`w-6 h-6 ${tx.viewed ? 'text-green-500' : 'text-gray-200'}`} />
                                                             </div>
                                                         </div>
                                                     ))}

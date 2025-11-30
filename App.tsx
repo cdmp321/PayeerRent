@@ -172,6 +172,18 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  // Auto-refresh interval (60 seconds)
+  useEffect(() => {
+    if (!user) return; // Don't run interval if not logged in
+
+    const intervalId = setInterval(() => {
+      handleRefresh();
+      console.log('Auto-refresh triggered');
+    }, 60000); // 60000 ms = 60 seconds
+
+    return () => clearInterval(intervalId);
+  }, [user, handleRefresh]);
+
   const copySchema = () => {
       navigator.clipboard.writeText(SCHEMA_SQL);
       setCopied(true);
@@ -390,5 +402,4 @@ const App: React.FC = () => {
     </div>
   );
 };
-
 export default App;
