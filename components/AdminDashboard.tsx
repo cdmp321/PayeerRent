@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -56,7 +56,7 @@ export const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
         }
     }
 
-    // Normal Image
+    // Normal Image (Base64 or URL)
     return (
         <div className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-0.5 overflow-hidden">
              <img src={imageUrl} alt="Method" className="w-full h-full object-contain" />
@@ -131,6 +131,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [newMethodMin, setNewMethodMin] = useState('');
   // Icon selector state
   const [selectedIconType, setSelectedIconType] = useState<string>('preset:card'); 
+  const [customMethodIcon, setCustomMethodIcon] = useState('');
 
   // Settings State
   const [managerLogin, setManagerLogin] = useState('');
@@ -210,6 +211,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     }
   };
 
+  const handleMethodIconFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setCustomMethodIcon(result);
+        setSelectedIconType('custom'); // Flag to use custom icon
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemTitle) {
@@ -253,18 +267,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     try {
         const minVal = parseFloat(newMethodMin);
 
+        // Determine Image URL: Custom or Preset
+        const finalImageUrl = (selectedIconType === 'custom' && customMethodIcon) ? customMethodIcon : selectedIconType;
+
         await api.addPaymentMethod({
         name: newMethodName,
         instruction: newMethodInstr,
         isActive: true,
         minAmount: isNaN(minVal) ? 0 : minVal,
-        imageUrl: selectedIconType // Store the preset string as the image_url
+        imageUrl: finalImageUrl
         });
         
         setNewMethodName('');
         setNewMethodInstr('');
         setNewMethodMin('');
         setSelectedIconType('preset:card');
+        setCustomMethodIcon('');
         
         alert('Метод оплаты добавлен!');
         refreshAll();
@@ -885,13 +903,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         ].map(type => (
                             <div 
                                 key={type.id}
-                                onClick={() => setSelectedIconType(type.id)}
+                                onClick={() => {
+                                    setSelectedIconType(type.id);
+                                    setCustomMethodIcon(''); // Clear custom file if preset selected
+                                }}
                                 className={`cursor-pointer rounded-xl p-3 border-2 transition-all flex flex-col items-center gap-2 min-w-[80px] ${selectedIconType === type.id ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-100 hover:bg-gray-50'}`}
                             >
                                 <div className="scale-125">{type.icon}</div>
                                 <span className={`text-[10px] font-bold uppercase ${selectedIconType === type.id ? 'text-indigo-700' : 'text-gray-400'}`}>{type.label}</span>
                             </div>
                         ))}
+                        
+                        {/* Custom Upload Tile */}
+                        <label className={`cursor-pointer rounded-xl p-3 border-2 border-dashed transition-all flex flex-col items-center gap-2 min-w-[80px] hover:bg-gray-50 ${selectedIconType === 'custom' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}>
+                            <div className="scale-125 relative">
+                                {customMethodIcon ? (
+                                    <PaymentIcon imageUrl={customMethodIcon} />
+                                ) : (
+                                    <div className="w-10 h-7 rounded bg-gray-100 flex items-center justify-center text-gray-400">
+                                        <Upload className="w-4 h-4" />
+                                    </div>
+                                )}
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase ${selectedIconType === 'custom' ? 'text-indigo-700' : 'text-gray-400'}`}>Своя</span>
+                            <input type="file" accept="image/*" onChange={handleMethodIconFileChange} className="hidden" />
+                        </label>
                     </div>
                 </div>
 

@@ -33,8 +33,9 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   // Copy state
   const [isCopied, setIsCopied] = useState(false);
 
-  // Ref for auto-focus
+  // Refs for auto-focus
   const amountInputRef = useRef<HTMLInputElement>(null);
+  const receiptUploadRef = useRef<HTMLLabelElement>(null);
 
   useEffect(() => {
     loadData();
@@ -83,6 +84,15 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     }
     if (!receipt) {
         setNotification({ type: 'error', msg: 'Прикрепите чек оплаты' });
+        // Auto-scroll to receipt upload section
+        if (receiptUploadRef.current) {
+            receiptUploadRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Add a temporary visual cue
+            receiptUploadRef.current.classList.add('ring-2', 'ring-red-400');
+            setTimeout(() => {
+                receiptUploadRef.current?.classList.remove('ring-2', 'ring-red-400');
+            }, 2000);
+        }
         return;
     }
 
@@ -393,9 +403,11 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             )}
                       </div>
                       
-                      {/* Icon on Right */}
-                      <div className="relative z-10 mr-2 opacity-80 group-hover:opacity-100 transition-opacity scale-125">
-                           <PaymentIcon imageUrl={method.imageUrl} />
+                      {/* Watermark Icon - Large, Faded, Right-aligned */}
+                      <div className="absolute right-0 bottom-0 top-0 w-24 overflow-hidden pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity">
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 scale-[1.5]">
+                                <PaymentIcon imageUrl={method.imageUrl} />
+                            </div>
                       </div>
                     </button>
                   ))}
@@ -428,7 +440,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                     </div>
 
                     <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 mt-2">Чек перевода</label>
-                    <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-colors">
+                    <label 
+                        ref={receiptUploadRef}
+                        className="flex flex-col items-center justify-center w-full h-16 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-all duration-300"
+                    >
                         <div className="flex items-center gap-2 px-2">
                             {receipt ? (
                                 <>
