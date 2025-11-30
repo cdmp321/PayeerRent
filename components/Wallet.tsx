@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { PaymentIcon } from './AdminDashboard'; // Import the new icon renderer
 
 interface WalletProps {
@@ -369,7 +369,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto space-y-4 custom-scrollbar flex-1">
+            <div className="p-4 overflow-y-auto space-y-5 custom-scrollbar flex-1">
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Сумма (PAYEER®)</label>
                 <input 
@@ -385,8 +385,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Способ оплаты</label>
-                <div className="grid grid-cols-1 gap-2">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Выберите способ оплаты</label>
+                <div className="grid grid-cols-2 gap-3">
                   {methods.map(method => (
                     <button
                       key={method.id}
@@ -394,21 +394,17 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           setSelectedMethod(method);
                           setIsCopied(false);
                       }}
-                      className={`relative overflow-hidden p-3 h-20 rounded-xl border transition-all group flex items-center justify-between ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500 shadow-sm' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
+                      className={`relative overflow-hidden p-3 h-24 rounded-xl border transition-all group flex flex-col items-center justify-center text-center gap-1 ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-500/20 shadow-sm' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                     >
-                      <div className="relative z-10 flex flex-col items-start h-full justify-center">
-                            <span className="font-bold text-gray-800 text-base truncate max-w-[80%]">{method.name}</span>
-                            {method.minAmount && method.minAmount > 0 && (
-                                <span className="text-[10px] text-orange-500 font-bold uppercase mt-0.5 block bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-100">От {method.minAmount} ®</span>
-                            )}
+                      <div className="relative z-10 scale-[1.3] mb-1">
+                            <PaymentIcon imageUrl={method.imageUrl} />
                       </div>
                       
-                      {/* Watermark Icon - Large, Faded, Right-aligned */}
-                      <div className="absolute right-0 bottom-0 top-0 w-24 overflow-hidden pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity">
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 scale-[1.5]">
-                                <PaymentIcon imageUrl={method.imageUrl} />
-                            </div>
-                      </div>
+                      <span className="font-bold text-gray-800 text-xs truncate max-w-full relative z-10 leading-tight px-1">{method.name}</span>
+                      
+                      {method.minAmount && method.minAmount > 0 && (
+                            <span className="text-[9px] text-orange-500 font-bold uppercase relative z-10 bg-white/50 px-1 rounded-sm">Min {method.minAmount}</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -430,30 +426,48 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">{selectedMethod.instruction}</p>
                   </div>
                   
-                  <div className="pt-2 border-t border-gray-200 relative z-10">
-                    <div className="bg-blue-50 text-blue-800 text-[10px] p-2.5 rounded-lg mb-2 leading-relaxed border border-blue-100">
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <Info className="w-3.5 h-3.5 shrink-0" />
-                            <p className="font-bold">Подтверждение:</p>
-                        </div>
-                        Сделайте скриншот чека и загрузите его ниже.
+                  {/* NEW INSTRUCTION BLOCK */}
+                  <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">
+                    <div className="flex items-start gap-3">
+                       <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0 mt-0.5">
+                          <Banknote className="w-4 h-4" />
+                       </div>
+                       <div>
+                          <h4 className="font-bold text-indigo-900 text-xs mb-1.5 uppercase tracking-wide">Как пополнить баланс?</h4>
+                          <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
+                             <li className="flex gap-1.5">
+                                <span className="font-bold text-indigo-500">1.</span>
+                                <span>Выполните перевод по реквизитам выше (номер карты или счета).</span>
+                             </li>
+                             <li className="flex gap-1.5">
+                                <span className="font-bold text-indigo-500">2.</span>
+                                <span>Сохраните чек или сделайте скриншот оплаты.</span>
+                             </li>
+                             <li className="flex gap-1.5">
+                                <span className="font-bold text-indigo-500">3.</span>
+                                <span>Загрузите чек в поле ниже и нажмите "Отправить заявку".</span>
+                             </li>
+                          </ol>
+                       </div>
                     </div>
+                  </div>
 
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 mt-2">Чек перевода</label>
+                  <div className="pt-2 border-t border-gray-200 relative z-10">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 mt-2">Загрузка чека</label>
                     <label 
                         ref={receiptUploadRef}
-                        className="flex flex-col items-center justify-center w-full h-16 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-all duration-300"
+                        className="flex flex-col items-center justify-center w-full h-16 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-all duration-300 relative overflow-hidden group"
                     >
-                        <div className="flex items-center gap-2 px-2">
+                        <div className="flex items-center gap-2 px-2 relative z-10">
                             {receipt ? (
                                 <>
                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                                    <span className="text-sm font-bold text-emerald-700 truncate">{receipt.name}</span>
+                                    <span className="text-sm font-bold text-emerald-700 truncate max-w-[180px]">{receipt.name}</span>
                                 </>
                             ) : (
                                 <>
-                                    <Upload className="w-5 h-5 text-gray-400" />
-                                    <span className="text-xs font-bold text-gray-500">Загрузить скриншот</span>
+                                    <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                                    <span className="text-xs font-bold text-gray-500 group-hover:text-gray-700 transition-colors">Нажмите для загрузки</span>
                                 </>
                             )}
                         </div>
