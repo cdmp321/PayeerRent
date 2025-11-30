@@ -22,7 +22,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
   // Refund State
   const [showRefundModal, setShowRefundModal] = useState(false);
-  const [refundReason, setRefundReason] = useState('');
 
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -135,19 +134,13 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
           return;
       }
-      // Note: We do NOT check user.balance for refund requests anymore, as it acts as a claim.
-      if (!refundReason.trim()) {
-          setNotification({ type: 'error', msg: 'Укажите причину и реквизиты' });
-          return;
-      }
-
+      
       setIsProcessing(true);
       try {
-          await api.requestUserRefund(user.id, val, refundReason);
+          await api.requestUserRefund(user.id, val, "Запрос пользователя");
           setNotification({ type: 'success', msg: 'Запрос на возврат отправлен!' });
           setShowRefundModal(false);
           setAmount('');
-          setRefundReason('');
           // Do NOT update local user balance here, as funds are added only on approval
           loadData();
       } catch (err: any) {
@@ -503,7 +496,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                    <AlertCircle className="w-6 h-6 shrink-0 mt-0.5 text-red-600" />
                    <div>
                        <p className="font-bold text-base">Запрос на возврат</p>
-                       <p className="text-xs opacity-80 mt-1 font-medium">Укажите сумму и причину возврата средств с вашего аккаунта.</p>
+                       <p className="text-xs opacity-80 mt-1 font-medium">Запрос на начисление средств (Кэшбэк / Возврат)</p>
                    </div>
                </div>
 
@@ -516,19 +509,15 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  // REMOVED MAX LIMIT because this is a claim request, not a withdrawal from balance
                   className="w-full text-2xl p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-mono text-gray-800 placeholder-gray-400 transition-all font-bold"
                 />
               </div>
 
+              {/* REPLACED Reason Textarea with Information Block */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Причина и Реквизиты</label>
-                <textarea 
-                  value={refundReason}
-                  onChange={(e) => setRefundReason(e.target.value)}
-                  placeholder="Опишите причину и укажите реквизиты для получения средств..."
-                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-gray-800 h-28 resize-none text-base font-medium"
-                />
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800 leading-relaxed font-medium">
+                      Укажите сумму возврата и отправьте запрос. После подтверждения ваша сумма пополнится в личном кошельке. Время возврата средств в среднем 5 мин.
+                  </div>
               </div>
             </div>
 
