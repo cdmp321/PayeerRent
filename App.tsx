@@ -86,6 +86,9 @@ create policy "Public access users" on public.users for all using (true);
 create policy "Public access items" on public.items for all using (true);
 create policy "Public access transactions" on public.transactions for all using (true);
 create policy "Public access payment_methods" on public.payment_methods for all using (true);
+
+-- ОБНОВЛЕНИЕ: Добавление колонки image_url, если её нет (для исправления ошибки)
+ALTER TABLE public.payment_methods ADD COLUMN IF NOT EXISTS image_url text;
 `;
 
 const App: React.FC = () => {
