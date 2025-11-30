@@ -78,6 +78,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   // Finances Group Expansion State
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [fullHistoryUserId, setFullHistoryUserId] = useState<string | null>(null);
   
   // Archive State for Finances
   const [archivedUsers, setArchivedUsers] = useState<Set<string>>(() => {
@@ -555,8 +556,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         const isExpanded = expandedUserId === userId;
                         const hasUnread = userTxs.some(t => !t.viewed);
                         const hasBalance = u.balance > 0;
+                        
+                        // History Expansion Logic
+                        const isFullHistory = fullHistoryUserId === userId;
+                        const txsToShow = isFullHistory ? userTxs : userTxs.slice(0, 5);
+                        
                         return (
-                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-50/60 border-emerald-100' : 'bg-white'}`}>
+                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-100 border-emerald-200' : 'bg-white'}`}>
                             <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors" onClick={() => toggleUserExpansion(userId)}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>{u.name.charAt(0).toUpperCase()}</div>
@@ -573,7 +579,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             </div>
                             {isExpanded && (
                                 <div className="border-t border-gray-100 bg-gray-50/30 p-2 space-y-2">
-                                    {userTxs.slice(0, 10).map(tx => (
+                                    {txsToShow.map(tx => (
                                         <div key={tx.id} onClick={(e) => !tx.viewed && handleMarkViewed(tx.id, e)} className={`p-4 rounded-xl flex items-center justify-between transition-all cursor-pointer ${tx.viewed ? 'bg-gray-50' : 'bg-white border-l-4 border-indigo-500 shadow-sm'}`}>
                                             <div className="flex items-center gap-3">
                                                 <div className={`p-2 rounded-full ${tx.viewed ? 'bg-gray-200 text-gray-400' : 'bg-emerald-100 text-emerald-600'}`}>{tx.description.includes('Донат') ? <ArrowDownLeft className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}</div>
@@ -582,6 +588,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             <div className="text-right"><div className={`font-black text-sm ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>+{tx.amount} ®</div>{tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-500 ml-auto mt-1" />}</div>
                                         </div>
                                     ))}
+                                    
+                                    {/* Show All / Collapse Button */}
+                                    {userTxs.length > 5 && (
+                                        <div className="pt-2 flex justify-center">
+                                            {isFullHistory ? (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setFullHistoryUserId(null); }}
+                                                    className="text-xs font-bold text-gray-400 hover:text-indigo-600 flex items-center gap-1 py-2 px-4 rounded-lg hover:bg-white transition-colors"
+                                                >
+                                                    Свернуть <ChevronUp className="w-3 h-3" />
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setFullHistoryUserId(userId); }}
+                                                    className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 flex items-center gap-1 py-2 px-4 rounded-lg transition-colors border border-indigo-100"
+                                                >
+                                                    Открыть остальные ({userTxs.length - 5}) <ChevronDown className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
