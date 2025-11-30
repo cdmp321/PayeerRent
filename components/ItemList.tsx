@@ -73,6 +73,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
 
     if (user.balance < amountToPay) {
       if (onNavigateToWallet) {
+        // Automatically redirect to wallet
         alert(`Недостаточно средств. Ваш баланс: ${user.balance} ®. Необходимо: ${amountToPay} ®.\n\nПереходим к пополнению баланса.`);
         onNavigateToWallet();
       } else {
@@ -110,7 +111,8 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
 
       if (user.balance < amountToPay) {
         if (onNavigateToWallet) {
-            alert(`Недостаточно средств. Ваш баланс: ${user.balance} ®.`);
+            // Automatically redirect to wallet
+            alert(`Недостаточно средств. Ваш баланс: ${user.balance} ®.\n\nПереходим к пополнению баланса.`);
             onNavigateToWallet();
         } else {
             alert('Недостаточно средств на балансе');

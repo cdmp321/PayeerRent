@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
 import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
@@ -33,6 +33,9 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   // Copy state
   const [isCopied, setIsCopied] = useState(false);
 
+  // Ref for auto-focus
+  const amountInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     loadData();
   }, [user]);
@@ -64,6 +67,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     const val = parseFloat(amount);
     if (!val || val <= 0) {
       setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
+      // Auto-focus the input field
+      if (amountInputRef.current) {
+          amountInputRef.current.focus();
+      }
       return;
     }
     if (!selectedMethod) {
@@ -332,6 +339,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Сумма (PAYEER®)</label>
                 <input 
+                  ref={amountInputRef}
                   type="number" 
                   min="1"
                   step="0.01"

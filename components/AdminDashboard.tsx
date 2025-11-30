@@ -113,7 +113,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   
   // Refund Form State
   const [refundAmount, setRefundAmount] = useState('');
-  const [refundReason, setRefundReason] = useState('Выплата клиенту на карту со списанием с внутренего кошелька');
+  // Initialize with empty string to force selection
+  const [refundReason, setRefundReason] = useState('');
   const [refundModalUser, setRefundModalUser] = useState<User | null>(null);
 
   // Form states - Items
@@ -274,7 +275,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleUpdateManager = async (e: React.FormEvent) => { e.preventDefault(); if(!managerLogin || !managerPass) return; try { await api.updateStaffCredentials('MANAGER', managerLogin, managerPass); setMsgManager('Обновлено!'); setManagerLogin(''); setManagerPass(''); } catch (err: any) { setMsgManager('Ошибка: ' + err.message); } };
   const handleUpdateAdmin = async (e: React.FormEvent) => { e.preventDefault(); if(!adminLogin || !adminPass) return; try { await api.updateStaffCredentials('ADMIN', adminLogin, adminPass); setMsgAdmin('Обновлено!'); setAdminLogin(''); setAdminPass(''); } catch (err: any) { setMsgAdmin('Ошибка: ' + err.message); } };
-  const handleRefundSubmit = async () => { if(!refundAmount || !refundReason || !refundModalUser) return; if(!window.confirm(`Вернуть ${refundAmount} ® клиенту ${refundModalUser.name}?`)) return; try { await api.processRefund(refundModalUser.id, parseFloat(refundAmount), refundReason); setRefundAmount(''); setRefundModalUser(null); alert("Возврат успешно выполнен!"); refreshAll(); } catch (e: any) { alert("Ошибка: " + e.message); } };
+  const handleRefundSubmit = async () => { 
+      if(!refundAmount || !refundModalUser) return; 
+      
+      // Validation: Reason must be selected
+      if (!refundReason) {
+          alert('Пожалуйста, выберите причину возврата.');
+          return;
+      }
+
+      if(!window.confirm(`Вернуть ${refundAmount} ® клиенту ${refundModalUser.name}?`)) return; 
+      try { 
+          await api.processRefund(refundModalUser.id, parseFloat(refundAmount), refundReason); 
+          setRefundAmount(''); 
+          setRefundReason(''); // Reset reason
+          setRefundModalUser(null); 
+          alert("Возврат успешно выполнен!"); 
+          refreshAll(); 
+      } catch (e: any) { 
+          alert("Ошибка: " + e.message); 
+      } 
+  };
   const deleteItem = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить?')) return; await api.deleteItem(id); await refreshAll(); };
   
   const handleCancelReservation = async (id: string) => {
@@ -793,7 +814,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 {filteredDeposits.length > 10 && <button onClick={() => setExpandDeposits(!expandDeposits)} className="w-full py-3 text-xs font-bold text-gray-400 hover:text-indigo-600 hover:bg-gray-50 transition-colors border-t border-gray-100 flex items-center justify-center gap-1">{expandDeposits ? <>Свернуть <ChevronUp className="w-3 h-3" /></> : <>Показать все ({filteredDeposits.length}) <ChevronDown className="w-3 h-3" /></>}</button>}
             </div>
             
-            {/* Modal for User Refund (unchanged) */}
+            {/* Modal for User Refund */}
             {refundModalUser && (
                 <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-zoom-in">
@@ -802,7 +823,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             <button onClick={() => setRefundModalUser(null)} className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-500"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <div><label className="block text-xs font-bold text-gray-400 uppercase mb-1">Причина / Тип возврата</label><select value={refundReason} onChange={(e) => setRefundReason(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-medium transition-all text-sm appearance-none"><option value="Выплата клиенту на карту со списанием с внутренего кошелька">Выплата клиенту на карту со списанием с внутренего кошелька</option><option value="Подарочный бонус">Подарочный бонус</option><option value="Сбой (претензия от клиента)">Сбой (претензия от клиента)</option></select></div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Причина / Тип возврата</label>
+                                <select 
+                                    value={refundReason} 
+                                    onChange={(e) => setRefundReason(e.target.value)} 
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-medium transition-all text-sm appearance-none"
+                                >
+                                    <option value="" disabled>Выберите причину...</option>
+                                    <option value="Выплата клиенту на карту со списанием с внутренего кошелька">Выплата клиенту на карту со списанием с внутренего кошелька</option>
+                                    <option value="Подарочный бонус">Подарочный бонус</option>
+                                    <option value="Сбой (претензия от клиента)">Сбой (претензия от клиента)</option>
+                                </select>
+                            </div>
                             <div><label className="block text-xs font-bold text-gray-400 uppercase mb-1">Сумма (®)</label><input type="number" placeholder="0.00" value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-900 transition-all text-2xl" /></div>
                             <div className="bg-gray-50 p-3 rounded-lg text-xs text-gray-500">Баланс клиента: <span className="font-bold text-gray-800">{refundModalUser.balance} ®</span></div>
                         </div>
