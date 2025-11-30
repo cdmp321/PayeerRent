@@ -23,6 +23,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Finances Group Expansion State
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   
+  // Refresh loading state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
   // Refund Form State
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
@@ -72,14 +75,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   }, []);
 
   const refreshAll = async () => {
-    const i = await api.getItems();
-    const u = await api.getUsers();
-    const m = await api.getPaymentMethods();
-    const t = await api.getTransactions();
-    setItems(i);
-    setUsers(u);
-    setMethods(m);
-    setTransactions(t);
+    setIsRefreshing(true);
+    try {
+        const [itemsData, usersData, methodsData, transactionsData] = await Promise.all([
+            api.getItems(),
+            api.getUsers(),
+            api.getPaymentMethods(),
+            api.getTransactions()
+        ]);
+        
+        setItems(itemsData);
+        setUsers(usersData);
+        setMethods(methodsData);
+        setTransactions(transactionsData);
+    } catch (e) {
+        console.error('Error refreshing data:', e);
+    } finally {
+        setIsRefreshing(false);
+    }
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -358,7 +371,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     });
 
   // Navigation Items Config
-  // SWAPPED USERS AND ITEMS as requested
   const navItems = [
       { id: 'deposits', label: 'Заявки', icon: FileText, count: pendingRequests.length },
       { id: 'finances', label: 'Финансы', icon: TrendingUp, count: unviewedIncomeCount },
@@ -413,7 +425,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
              </button>
          ))}
          <button onClick={refreshAll} className="mt-4 flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-blue-600 transition-colors text-sm font-bold border-t border-gray-100">
-             <RefreshCw className="w-5 h-5" />
+             <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
              Обновить данные
          </button>
       </aside>
@@ -422,7 +434,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       <div className="md:hidden bg-slate-800 text-white p-4 rounded-xl flex justify-between items-center mb-4">
         <h2 className="font-bold text-lg">Админ Панель</h2>
         <button onClick={refreshAll} className="p-2 hover:bg-slate-700 rounded-full">
-          <RefreshCw className="w-5 h-5" />
+          <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -605,7 +617,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                                 <div className="text-xs text-gray-400 mt-1">{new Date(tx.date).toLocaleString()}</div>
                                                             </div>
                                                             <div className="flex justify-between items-end mt-auto">
-                                                                <div className={`font-bold text-lg ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>+{tx.amount} P</div>
+                                                                <div className={`font-bold text-lg ${tx.viewed ? 'text-gray-400 opacity-50' : 'text-emerald-600'}`}>+{tx.amount} P</div>
                                                                 <CheckCircle2 className={`w-6 h-6 ${tx.viewed ? 'text-green-500' : 'text-gray-200'}`} />
                                                             </div>
                                                         </div>
