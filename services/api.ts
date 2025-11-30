@@ -307,41 +307,21 @@ export const api = {
   },
 
   requestUserRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
-    const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
-    if (!user) throw new Error("Пользователь не найден");
+    // For a refund/claim request, we DO NOT deduct funds initially.
+    // The funds are added (credited) only when Admin approves.
     
-    if (user.balance < amount) {
-        throw new Error("Недостаточно средств");
-    }
-
-    // Deduct balance immediately just like withdrawal
-    const { error: balanceError } = await supabase
-        .from('users')
-        .update({ balance: Number(user.balance) - Number(amount) })
-        .eq('id', userId);
-
-    if (balanceError) throw new Error("Ошибка списания средств");
-
-    // Create transaction with WITHDRAWAL type but specific description for admins
     const { error } = await supabase
       .from('transactions')
       .insert([{
         user_id: userId,
         amount: amount,
-        type: 'WITHDRAWAL', 
+        type: 'WITHDRAWAL', // Using WITHDRAWAL type so it appears in Admin requests list
         status: 'PENDING',
         description: `ЗАПРОС НА ВОЗВРАТ: ${reason}`,
         viewed: false
       }]);
 
-    if (error) {
-        // Rollback balance if tx creation fails
-        await supabase
-            .from('users')
-            .update({ balance: Number(user.balance) })
-            .eq('id', userId);
-        throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
   },
 
   processRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
@@ -393,8 +373,17 @@ export const api = {
         }
     } else if (tx.type === 'WITHDRAWAL') {
         if (tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:')) {
-            newDesc = `Возврат средств подтвержден (Списано): ${tx.amount} P`;
+            // REFUND REQUEST: ADD funds to user balance on approval
+            newDesc = `Возврат средств (Выполнено): ${tx.amount} P`;
+            const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
+            if (user) {
+                await supabase
+                    .from('users')
+                    .update({ balance: Number(user.balance) + Number(tx.amount) })
+                    .eq('id', tx.user_id);
+            }
         } else {
+            // STANDARD WITHDRAWAL: Funds were already deducted
             newDesc = `Вывод средств подтвержден (Списано): ${tx.amount} P`;
         }
     }
@@ -410,18 +399,24 @@ export const api = {
     if (!tx || tx.status !== 'PENDING') return;
 
     if (tx.type === 'WITHDRAWAL') {
-        const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
-        if (user) {
-            await supabase
-                .from('users')
-                .update({ balance: Number(user.balance) + Number(tx.amount) })
-                .eq('id', tx.user_id);
+        // Only return funds if it was a standard withdrawal (where we deducted funds)
+        // If it's a "Refund Request", we never deducted funds, so we don't return them.
+        const isRefundRequest = tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:');
+        
+        if (!isRefundRequest) {
+            const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
+            if (user) {
+                await supabase
+                    .from('users')
+                    .update({ balance: Number(user.balance) + Number(tx.amount) })
+                    .eq('id', tx.user_id);
+            }
         }
     }
 
     await supabase
       .from('transactions')
-      .update({ status: 'REJECTED', description: tx.type === 'WITHDRAWAL' ? 'Операция отклонена (Средства возвращены)' : 'Пополнение отклонено' })
+      .update({ status: 'REJECTED', description: tx.type === 'WITHDRAWAL' ? 'Операция отклонена' : 'Пополнение отклонено' })
       .eq('id', transactionId);
   },
 

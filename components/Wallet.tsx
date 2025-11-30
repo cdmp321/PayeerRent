@@ -135,10 +135,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
           return;
       }
-      if (val > user.balance) {
-          setNotification({ type: 'error', msg: 'Недостаточно средств' });
-          return;
-      }
+      // Note: We do NOT check user.balance for refund requests anymore, as it acts as a claim.
       if (!refundReason.trim()) {
           setNotification({ type: 'error', msg: 'Укажите причину и реквизиты' });
           return;
@@ -151,9 +148,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           setShowRefundModal(false);
           setAmount('');
           setRefundReason('');
-          // Update local user state immediately
-          const newUser = { ...user, balance: user.balance - val };
-          onUpdateUser(newUser);
+          // Do NOT update local user balance here, as funds are added only on approval
+          loadData();
       } catch (err: any) {
           setNotification({ type: 'error', msg: err.message || 'Ошибка запроса' });
       } finally {
@@ -221,26 +217,28 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       {/* PENDING TRANSACTIONS NOTIFICATION */}
       {pendingTransactions.length > 0 && (
           <div className="space-y-4 animate-fade-in">
-             {pendingTransactions.map(tx => (
-                 <div key={tx.id} className={`rounded-2xl p-5 relative overflow-hidden border-2 ${tx.type === 'DEPOSIT' ? 'bg-orange-50 border-orange-100' : 'bg-blue-50 border-blue-100'}`}>
+             {pendingTransactions.map(tx => {
+                 const isRefundRequest = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
+                 return (
+                 <div key={tx.id} className={`rounded-2xl p-5 relative overflow-hidden border-2 ${tx.type === 'DEPOSIT' || isRefundRequest ? 'bg-orange-50 border-orange-100' : 'bg-blue-50 border-blue-100'}`}>
                     <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full animate-pulse ${tx.type === 'DEPOSIT' ? 'bg-orange-200' : 'bg-blue-200'}`}>
-                            <Clock className={`w-7 h-7 ${tx.type === 'DEPOSIT' ? 'text-orange-700' : 'text-blue-700'}`} />
+                        <div className={`p-3 rounded-full animate-pulse ${tx.type === 'DEPOSIT' || isRefundRequest ? 'bg-orange-200' : 'bg-blue-200'}`}>
+                            <Clock className={`w-7 h-7 ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-700' : 'text-blue-700'}`} />
                         </div>
                         <div className="flex-1">
-                            <h3 className={`font-bold text-lg ${tx.type === 'DEPOSIT' ? 'text-orange-900' : 'text-blue-900'}`}>
-                                {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : (tx.description?.includes('ВОЗВРАТ') ? 'Обработка возврата' : 'Обработка вывода')}
+                            <h3 className={`font-bold text-lg ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-900' : 'text-blue-900'}`}>
+                                {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : (isRefundRequest ? 'Обработка возврата' : 'Обработка вывода')}
                             </h3>
-                            <div className={`text-sm mt-0.5 font-bold ${tx.type === 'DEPOSIT' ? 'text-orange-600/70' : 'text-blue-600/70'}`}>
+                            <div className={`text-sm mt-0.5 font-bold ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-600/70' : 'text-blue-600/70'}`}>
                                 {new Date(tx.date).toLocaleDateString()}
                             </div>
                         </div>
-                        <div className={`font-black text-2xl ${tx.type === 'DEPOSIT' ? 'text-orange-600' : 'text-blue-600'}`}>
-                            {tx.type === 'DEPOSIT' ? '+' : '-'}{tx.amount} P
+                        <div className={`font-black text-2xl ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-600' : 'text-blue-600'}`}>
+                            {tx.type === 'DEPOSIT' || isRefundRequest ? '+' : '-'}{tx.amount} P
                         </div>
                     </div>
                  </div>
-             ))}
+             )})}
           </div>
       )}
 
@@ -252,29 +250,37 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 История операций
             </h3>
             <div className="space-y-4">
-                {withdrawalHistory.map(tx => (
+                {withdrawalHistory.map(tx => {
+                    const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств');
+                    const isApproved = tx.status === TransactionStatus.APPROVED;
+                    
+                    return (
                     <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-4 last:border-0 last:pb-0">
                         <div className="flex items-center gap-3">
                             <div className={`p-2.5 rounded-xl ${
+                                isRefund && isApproved ? 'bg-blue-100 text-blue-600' :
                                 tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-600' :
                                 tx.status === TransactionStatus.REJECTED ? 'bg-red-100 text-red-600' :
                                 'bg-gray-100 text-gray-500'
                             }`}>
-                                {tx.description?.includes('ВОЗВРАТ') ? <RotateCcw className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                                {isRefund ? <RotateCcw className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                             </div>
                             <div>
                                 <div className="font-bold text-gray-800">
-                                    {tx.description?.includes('ВОЗВРАТ') ? 'Возврат средств' : 'Вывод средств'}
+                                    {isRefund ? 'Возврат средств' : 'Вывод средств'}
                                 </div>
                                 <div className="text-xs text-gray-400 font-medium">{new Date(tx.date).toLocaleString()}</div>
                                 {tx.status === TransactionStatus.REJECTED && (
-                                    <div className="text-xs text-red-500 mt-0.5 font-bold">Отклонено (Возврат)</div>
+                                    <div className="text-xs text-red-500 mt-0.5 font-bold">Отклонено</div>
                                 )}
                             </div>
                         </div>
                         <div className="text-right">
-                             <div className="font-bold text-gray-800 text-lg">-{tx.amount} P</div>
+                             <div className={`font-bold text-lg ${isRefund ? 'text-blue-600' : 'text-gray-800'}`}>
+                                 {isRefund ? '+' : '-'}{tx.amount} P
+                             </div>
                              <div className={`text-xs font-bold uppercase ${
+                                 isRefund && isApproved ? 'text-blue-600' :
                                  tx.status === TransactionStatus.APPROVED ? 'text-green-600' :
                                  tx.status === TransactionStatus.REJECTED ? 'text-red-500' :
                                  'text-orange-500'
@@ -284,7 +290,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                              </div>
                         </div>
                     </div>
-                ))}
+                )})}
             </div>
         </div>
       )}
@@ -510,7 +516,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  max={user.balance}
+                  // REMOVED MAX LIMIT because this is a claim request, not a withdrawal from balance
                   className="w-full text-2xl p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-mono text-gray-800 placeholder-gray-400 transition-all font-bold"
                 />
               </div>
