@@ -562,7 +562,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         const txsToShow = isFullHistory ? userTxs : userTxs.slice(0, 5);
                         
                         return (
-                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-green-200 border-green-300' : 'bg-white'}`}>
+                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-100 border-emerald-200' : 'bg-white'}`}>
                             <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors" onClick={() => toggleUserExpansion(userId)}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>{u.name.charAt(0).toUpperCase()}</div>
@@ -631,7 +631,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             <tbody className="divide-y divide-gray-50">
                                 {withdrawalsHistory.map(tx => {
                                     const u = users.find(u => u.id === tx.userId); 
-                                    // Fix: check for approved refund text as well
                                     const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств');
                                     return (
                                     <tr key={tx.id} className="group hover:bg-gray-50/50">
