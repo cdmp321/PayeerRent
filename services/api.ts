@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { User, Item, ItemStatus, UserRole, PaymentMethod, Transaction, TransactionStatus } from '../types';
 import { encrypt, decrypt } from './encryption';
@@ -249,6 +248,14 @@ export const api = {
 
   deleteItem: async (id: string): Promise<void> => {
     const { error } = await supabase.from('items').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  },
+
+  restockItem: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('items')
+      .update({ status: 'AVAILABLE', owner_id: null, purchased_at: null })
+      .eq('id', id);
     if (error) throw new Error(error.message);
   },
 
@@ -535,28 +542,13 @@ export const api = {
         amount: finalPrice,
         type: 'RENT_CHARGE',
         status: 'APPROVED',
-        description: item.price > 0 ? `Аренда/Продление: ${item.title}` : `Донат/Продление: ${item.title}`,
+        description: item.price > 0 ? `Оплата аренды: ${item.title}` : `Взнос (Free Price): ${item.title}`,
         viewed: false
     }]);
   },
 
   cancelReservation: async (itemId: string): Promise<void> => {
-    // Note: If this was a clone (from unlimited/multi stock), technically we should DELETE it 
-    // or return it to the pool. For simplicity in this app version, we just mark it available 
-    // and effectively it becomes a single unique item on the market.
-    await supabase
-        .from('items')
-        .update({
-            status: 'AVAILABLE',
-            owner_id: null,
-            purchased_at: null,
-            last_purchase_price: null
-        })
-        .eq('id', itemId);
-  },
-
-  restockItem: async (itemId: string): Promise<void> => {
-      return api.cancelReservation(itemId);
+    await supabase.from('items').update({ status: 'AVAILABLE', owner_id: null, purchased_at: null }).eq('id', itemId);
   },
 
   // Payment Methods
@@ -566,18 +558,35 @@ export const api = {
     return data.map(mapMethod);
   },
 
-  addPaymentMethod: async (method: Omit<PaymentMethod, 'id'>) => {
-    const { error } = await supabase.from('payment_methods').insert([{
-        name: method.name,
-        instruction: method.instruction,
-        is_active: method.isActive,
-        min_amount: method.minAmount,
-        image_url: method.imageUrl
-    }]);
-    if (error) throw new Error(error.message);
+  addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
+    try {
+        const { error } = await supabase.from('payment_methods').insert([{
+          name: methodData.name,
+          instruction: methodData.instruction,
+          is_active: methodData.isActive,
+          min_amount: methodData.minAmount,
+          image_url: methodData.imageUrl
+        }]);
+        if (error) throw error;
+    } catch (err: any) {
+        // Fallback: If image_url column doesn't exist (Error 42703 or message text)
+        if (err.code === '42703' || err.message?.includes('image_url')) {
+            console.warn("Schema mismatch: 'image_url' column missing in payment_methods. Retrying without image.");
+            const { error: retryError } = await supabase.from('payment_methods').insert([{
+              name: methodData.name,
+              instruction: methodData.instruction,
+              is_active: methodData.isActive,
+              min_amount: methodData.minAmount
+            }]);
+            if (retryError) throw new Error(retryError.message);
+        } else {
+            throw new Error(err.message);
+        }
+    }
   },
 
-  deletePaymentMethod: async (id: string) => {
-    await supabase.from('payment_methods').delete().eq('id', id);
+  deletePaymentMethod: async (id: string): Promise<void> => {
+    const { error } = await supabase.from('payment_methods').delete().eq('id', id);
+    if (error) throw new Error(error.message);
   }
 };
