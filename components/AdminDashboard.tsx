@@ -26,6 +26,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // Transaction processing state
+  const [processingTxId, setProcessingTxId] = useState<string | null>(null);
+  
   // Refund Form State
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
@@ -252,27 +255,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   };
 
   const handleApproveTx = async (id: string) => {
+      setProcessingTxId(id);
       try {
         await api.approveTransaction(id);
         await refreshAll();
       } catch (e: any) {
         alert('Ошибка: ' + e.message);
+      } finally {
+        setProcessingTxId(null);
       }
   };
 
   const handleRejectTx = async (id: string) => {
       if(!window.confirm('Вы действительно хотите отклонить заявку? Если это вывод средств, деньги вернутся на баланс пользователя.')) return;
+      setProcessingTxId(id);
       try {
         await api.rejectTransaction(id);
         await refreshAll();
       } catch (e: any) {
          alert('Ошибка: ' + e.message);
+      } finally {
+        setProcessingTxId(null);
       }
   };
 
   const handleMarkViewed = async (id: string, e: React.MouseEvent) => {
       e.stopPropagation(); 
+      // Optimistic UI Update
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, viewed: true } : t));
+      
       await api.markTransactionAsViewed(id);
+      // Background refresh to sync
       refreshAll();
   };
 
@@ -455,6 +468,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             const user = users.find(u => u.id === tx.userId);
                             const isWithdrawal = tx.type === 'WITHDRAWAL';
                             const isRefundRequest = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
+                            const isProcessing = processingTxId === tx.id;
                             
                             return (
                                 <div key={tx.id} className={`bg-white p-5 rounded-2xl shadow-sm border border-l-4 flex flex-col h-full ${isWithdrawal ? (isRefundRequest ? 'border-l-red-500' : 'border-l-indigo-500') : 'border-l-emerald-500'}`}>
@@ -505,15 +519,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     <div className="flex gap-3">
                                         <button 
                                             onClick={() => handleApproveTx(tx.id)}
-                                            className={`flex-1 text-white py-3 rounded-xl font-extrabold text-sm flex justify-center items-center gap-2 active:scale-[0.98] transition-all shadow-md ${isWithdrawal ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100'}`}
+                                            disabled={isProcessing}
+                                            className={`flex-1 text-white py-3 rounded-xl font-extrabold text-sm flex justify-center items-center gap-2 active:scale-[0.98] transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${isWithdrawal ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100'}`}
                                         >
-                                            <Check className="w-4 h-4" /> {isWithdrawal ? 'Подтвердить' : 'Принять'}
+                                            {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                            {isWithdrawal ? 'Подтвердить' : 'Принять'}
                                         </button>
                                         <button 
                                             onClick={() => handleRejectTx(tx.id)}
-                                            className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-extrabold text-sm flex justify-center items-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all"
+                                            disabled={isProcessing}
+                                            className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-extrabold text-sm flex justify-center items-center gap-2 hover:bg-red-100 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            <X className="w-4 h-4" /> {isWithdrawal ? 'Вернуть средства' : 'Отклонить'}
+                                            {isProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                                            {isWithdrawal ? 'Вернуть средства' : 'Отклонить'}
                                         </button>
                                     </div>
                                 </div>
@@ -655,15 +673,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 <tbody className="divide-y divide-gray-100 text-sm">
                                     {withdrawalsHistory.map(tx => {
                                         const u = users.find(user => user.id === tx.userId);
-                                        const isRefundReq = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
+                                        const isRefundReq = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств');
+                                        
                                         return (
                                             <tr key={tx.id} className="hover:bg-gray-50/50">
                                                 <td className="p-4">
                                                     <div className="font-bold text-gray-800">{u ? u.name : 'Unknown'}</div>
                                                     <div className="text-xs text-gray-400 md:hidden">{new Date(tx.date).toLocaleDateString()}</div>
                                                 </td>
-                                                <td className={`p-4 font-bold ${isRefundReq ? 'text-red-500' : 'text-indigo-600'}`}>-{tx.amount} P</td>
-                                                <td className="p-4 text-gray-600 font-mono text-xs hidden md:table-cell">{tx.description.replace(/Заявка на вывод: |ЗАПРОС НА ВОЗВРАТ: /g, '')}</td>
+                                                {/* STYLE UPDATE: Blue for Refund, Green for Withdrawal, Larger Text */}
+                                                <td className={`p-4 font-extrabold text-lg ${isRefundReq ? 'text-blue-600' : 'text-green-600'}`}>
+                                                    {isRefundReq ? '+' : '-'}{tx.amount} P
+                                                </td>
+                                                <td className={`p-4 font-mono text-xs hidden md:table-cell ${isRefundReq ? 'text-blue-600 font-bold' : 'text-green-600 font-bold'}`}>
+                                                    {tx.description.replace(/Заявка на вывод: |ЗАПРОС НА ВОЗВРАТ: /g, '')}
+                                                </td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
                                                         tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-700' :

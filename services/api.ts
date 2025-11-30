@@ -374,7 +374,7 @@ export const api = {
     } else if (tx.type === 'WITHDRAWAL') {
         if (tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:')) {
             // REFUND REQUEST: ADD funds to user balance on approval
-            newDesc = `Возврат средств (Выполнено): ${tx.amount} P`;
+            newDesc = `Возврат средств (Выполнено)`;
             const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
             if (user) {
                 await supabase
@@ -384,7 +384,7 @@ export const api = {
             }
         } else {
             // STANDARD WITHDRAWAL: Funds were already deducted
-            newDesc = `Вывод средств подтвержден (Списано): ${tx.amount} P`;
+            newDesc = `Вывод средств подтвержден (Списано)`;
         }
     }
 

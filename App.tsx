@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { Auth } from './components/Auth';
 import { Wallet } from './components/Wallet';
@@ -285,17 +286,13 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && (
+            {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && !isAdminView && (
                <button 
-                 onClick={() => setIsAdminView(!isAdminView)}
-                 className={`p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 ${isAdminView ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'hover:bg-slate-100 text-slate-500'}`}
-                 title={isAdminView ? "Перейти в магазин" : "Панель управления"}
+                 onClick={() => setIsAdminView(true)}
+                 className="p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 hover:bg-slate-100 text-slate-500"
+                 title="Панель управления"
                >
-                 {isAdminView ? (
-                    <Home className="w-5 h-5" />
-                 ) : (
-                    <Settings className="w-5 h-5" />
-                 )}
+                  <Settings className="w-5 h-5" />
                </button>
             )}
             
