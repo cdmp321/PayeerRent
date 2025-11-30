@@ -950,17 +950,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <div className={`font-extrabold text-xs ${isRefund ? 'text-blue-600' : 'text-green-600'}`}>
+                                            <div className={`font-extrabold text-xs ${isRefund ? 'text-purple-600' : 'text-green-600'}`}>
                                                 {tx.amount} P
                                             </div>
-                                            <div className={`text-[10px] font-bold uppercase ${isRefund ? 'text-blue-600' : 'text-green-600'}`}>
+                                            <div className={`text-[10px] font-bold uppercase ${isRefund ? 'text-purple-600' : 'text-green-600'}`}>
                                                 {isRefund ? 'Возврат' : 'Вывод'}
                                             </div>
                                         </td>
                                         <td className="p-4">
                                             <div className="flex flex-col">
                                                 {tx.status === TransactionStatus.APPROVED && (
-                                                    <span className={`text-[10px] font-bold uppercase mb-1 ${isRefund ? 'text-blue-600' : 'text-green-600'}`}>
+                                                    <span className={`text-[10px] font-bold uppercase mb-1 ${isRefund ? 'text-purple-600' : 'text-green-600'}`}>
                                                         {isRefund ? 'Выполнено' : 'Списано'}
                                                     </span>
                                                 )}
@@ -1017,9 +1017,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             {tx.amount} P
                                         </td>
                                         <td className="py-4">
-                                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] font-bold uppercase whitespace-nowrap">
-                                                Выполнено
-                                            </span>
+                                            <div className="flex flex-col items-start gap-1">
+                                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] font-bold uppercase whitespace-nowrap">
+                                                    Выполнено
+                                                </span>
+                                                <span className="text-xs text-gray-500 font-medium whitespace-normal max-w-[200px]">
+                                                    {tx.description.replace('Возврат средств: ', '')}
+                                                </span>
+                                            </div>
                                         </td>
                                     </tr>
                                 )})}
