@@ -572,7 +572,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors ${index % 2 !== 0 ? 'bg-purple-50' : 'bg-white'}`}>
                                 <td className="p-4 font-bold text-gray-800">{u.name}</td>
                                 <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
-                                <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} ®</td>
+                                <td className="p-4 font-mono font-bold text-emerald-600">{u.balance}</td>
                                 <td className="p-4"><span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${u.role === 'ADMIN' ? 'bg-slate-800 text-white' : u.role === 'MANAGER' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-600'}`}>{u.role}</span></td>
                                 <td className="p-4 text-right">
                                     {user?.role === UserRole.MANAGER && u.role === UserRole.USER && (

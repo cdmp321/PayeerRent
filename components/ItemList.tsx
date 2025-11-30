@@ -74,7 +74,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
     if (user.balance < amountToPay) {
       if (onNavigateToWallet) {
         // Automatically redirect to wallet
-        alert(`Недостаточно средств. Ваш баланс: ${user.balance} ®. Необходимо: ${amountToPay} ®.\n\nПереходим к пополнению баланса.`);
+        alert(`Недостаточно средств. Ваш баланс: ${user.balance} ®.\n\nПереходим к пополнению баланса.`);
         onNavigateToWallet();
       } else {
         alert(`Недостаточно средств. Необходимо: ${amountToPay} ®`);
@@ -344,7 +344,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
               )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             {filteredAvailableItems.map(item => {
                 const currentInputAmount = parseFloat(customAmounts[item.id] || '0');
                 const isFreePrice = item.price === 0;
@@ -354,8 +354,8 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                     
                     {/* Compact Image Container */}
                     {item.imageUrl ? (
-                        <div className="h-32 sm:h-40 bg-slate-100 relative shrink-0 w-full overflow-hidden">
-                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="h-40 sm:h-56 bg-slate-100 relative shrink-0 w-full overflow-hidden">
+                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             
                             {/* Price Badge */}
                             <div className="absolute top-2 right-2 z-20">
@@ -364,15 +364,15 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                         {item.price} <span className="text-[10px]">®</span>
                                     </div>
                                 ) : (
-                                    <div className="bg-blue-600/90 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm border border-white/10 uppercase">
-                                        Free
+                                    <div className="bg-emerald-600/90 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm border border-white/10 uppercase">
+                                        Свободен
                                     </div>
                                 )}
                             </div>
                         </div>
                     ) : (
                         // Fallback pattern
-                        <div className="h-24 sm:h-32 bg-gradient-to-br from-slate-50 to-indigo-50 relative w-full flex items-center justify-center">
+                        <div className="h-28 sm:h-36 bg-gradient-to-br from-slate-50 to-indigo-50 relative w-full flex items-center justify-center">
                             <Package className="w-8 h-8 text-indigo-200" />
                              <div className="absolute top-2 right-2">
                                 {item.price > 0 ? (
@@ -380,17 +380,17 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                         {item.price} ®
                                     </div>
                                 ) : (
-                                    <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-[10px] font-bold uppercase">
-                                        Free
+                                    <div className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-[10px] font-bold uppercase">
+                                        Свободен
                                     </div>
                                 )}
                             </div>
                         </div>
                     )}
 
-                    <div className="p-3 flex flex-col flex-grow min-w-0 bg-white relative z-20">
-                        <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1 line-clamp-1">{item.title}</h4>
-                        <p className="text-[10px] text-slate-400 mb-3 line-clamp-2 leading-relaxed">{item.description}</p>
+                    <div className="p-4 flex flex-col flex-grow min-w-0 bg-white relative z-20">
+                        <h4 className="font-bold text-slate-800 text-base leading-tight mb-1 line-clamp-1">{item.title}</h4>
+                        <p className="text-xs text-slate-500 mb-4 line-clamp-2 leading-relaxed">{item.description}</p>
                         
                         {/* Control Area */}
                         <div className="mt-auto w-full space-y-2">
@@ -401,17 +401,17 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                         placeholder="Сумма"
                                         value={customAmounts[item.id] || ''}
                                         onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
-                                        className="w-full pl-2 pr-5 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
+                                        className="w-full pl-2 pr-5 py-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
                                     />
-                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-900 text-xs font-black">®</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-900 text-sm font-black">®</span>
                                 </div>
                             )}
                             
                             <button 
                                 onClick={() => handleReserve(item)}
-                                className="w-full py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg active:scale-95"
+                                className="w-full py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-1.5 transition-all bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg active:scale-95"
                             >
-                                <CreditCard className="w-3.5 h-3.5" />
+                                <CreditCard className="w-4 h-4" />
                                 <span>
                                 {isFreePrice 
                                     ? (currentInputAmount > 0 ? `Оплат. ${currentInputAmount}` : 'Купить') 
