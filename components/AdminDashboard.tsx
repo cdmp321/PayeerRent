@@ -210,6 +210,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     setNewMethodImage('');
     setNewMethodImageName('');
     
+    alert('Метод оплаты добавлен!');
     refreshAll();
   };
 
@@ -727,11 +728,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                     </div>
                                                 </div>
                                                 
-                                                {/* Archive Action */}
+                                                {/* Archive Action - INCREASED VISIBILITY */}
                                                 <button 
                                                     onClick={(e) => toggleArchiveUser(group.user!.id, e)}
-                                                    className="p-2 text-gray-300 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
-                                                    title={showArchived ? "Восстановить" : "В архив"}
+                                                    className={`p-2 rounded-lg transition-colors ${
+                                                        showArchived 
+                                                            ? 'text-green-500 bg-green-50 hover:bg-green-100 hover:text-green-700' 
+                                                            : 'text-gray-300 hover:text-orange-500 hover:bg-orange-50'
+                                                    }`}
+                                                    title={showArchived ? "Восстановить из архива" : "Переместить в архив"}
                                                 >
                                                     {showArchived ? <ArchiveRestore className="w-5 h-5" /> : <Archive className="w-5 h-5" />}
                                                 </button>
@@ -1209,7 +1214,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         />
                         <div className="text-xs text-gray-400 mt-2 ml-1">Если 0 или пусто - лимит отсутствует</div>
                     </div>
-                    <button className="bg-green-600 text-white p-4 rounded-xl font-extrabold text-lg flex justify-center items-center gap-2 shadow-lg active:scale-[0.98] transition-all">
+                    {/* Explicitly set type="submit" */}
+                    <button type="submit" className="bg-green-600 text-white p-4 rounded-xl font-extrabold text-lg flex justify-center items-center gap-2 shadow-lg active:scale-[0.98] transition-all">
                         <Plus className="w-6 h-6" /> Добавить
                     </button>
                     </form>

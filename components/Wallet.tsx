@@ -200,14 +200,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         onClick={() => setShowTopUpModal(true)}
                         className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white h-16 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20 leading-none text-center"
                     >
-                        <Plus className="w-6 h-6 shrink-0" />
                         Пополнить
                     </button>
                     <button 
                         onClick={() => setShowWithdrawModal(true)}
                         className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white h-16 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors border border-slate-600 leading-none text-center"
                     >
-                        <ArrowUpRight className="w-6 h-6 text-slate-300 shrink-0" />
                         Вывести
                     </button>
                 </div>
@@ -451,7 +449,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 disabled={isProcessing}
                 className="w-full bg-slate-900 text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2.5"
               >
-                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-6 h-6" />}
+                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
                 {isProcessing ? 'Обработка...' : 'Отправить заявку'}
               </button>
             </div>
@@ -511,7 +509,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 disabled={isProcessing}
                 className="w-full bg-slate-900 text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2.5"
               >
-                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Banknote className="w-6 h-6" />}
+                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
                 {isProcessing ? 'Создание заявки...' : 'Создать заявку'}
               </button>
             </div>
