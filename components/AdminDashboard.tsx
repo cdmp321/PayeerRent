@@ -514,7 +514,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                         {sortedUsers.filter(u => user?.role === UserRole.MANAGER ? u.role !== UserRole.ADMIN : true).map((u, index) => (
-                            <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors ${index % 2 !== 0 ? 'bg-emerald-50/40' : 'bg-white'}`}>
+                            <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors ${index % 2 !== 0 ? 'bg-purple-50/40' : 'bg-white'}`}>
                                 <td className="p-4 font-bold text-gray-800">{u.name}</td>
                                 <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
                                 <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} ®</td>
@@ -565,7 +565,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         return (
                         <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 group p-5 flex flex-col gap-4 h-full relative">
                             {isReserved && (
-                                <div className="absolute top-0 right-0 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase shadow-md">
+                                <div className="absolute top-0 right-0 z-10 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase shadow-md">
                                     Зарезервирован
                                 </div>
                             )}
@@ -578,13 +578,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 <div className="flex items-center gap-2 mb-3">{item.quantity === 0 ? <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded">Unlimited</span> : <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">x{item.quantity}</span>}</div>
                                 
                                 {isReserved && (
-                                    <div className="bg-orange-50 border border-orange-100 rounded-lg p-2.5 mb-3">
-                                        <div className="text-[10px] font-bold text-orange-400 uppercase tracking-wide mb-1">Резерв за:</div>
-                                        <div className="text-sm font-bold text-orange-800 flex items-center justify-between">
+                                    <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5 mb-3">
+                                        <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-wide mb-1">Резерв за:</div>
+                                        <div className="text-sm font-bold text-emerald-800 flex items-center justify-between">
                                             {ownerName || 'Unknown User'}
                                             <button 
                                                 onClick={() => handleCancelReservation(item.id)}
-                                                className="bg-white hover:bg-orange-100 text-orange-600 px-2 py-1.5 rounded-md border border-orange-200 transition-colors text-xs flex items-center gap-1"
+                                                className="bg-white hover:bg-emerald-100 text-emerald-600 px-2 py-1.5 rounded-md border border-emerald-200 transition-colors text-xs flex items-center gap-1"
                                                 title="Снять резерв"
                                             >
                                                 <Unlock className="w-3 h-3" /> Снять
@@ -637,7 +637,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         const txsToShow = isFullHistory ? userTxs : userTxs.slice(0, 5);
                         
                         return (
-                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-100 border-emerald-200' : 'bg-white'}`}>
+                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-purple-100 border-purple-200' : 'bg-white'}`}>
                             <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors" onClick={() => toggleUserExpansion(userId)}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>{u.name.charAt(0).toUpperCase()}</div>

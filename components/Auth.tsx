@@ -92,7 +92,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           </button>
           
           <h2 className="text-4xl font-black text-slate-800 tracking-tight text-center">
-            {isAdminMode ? 'Служебный вход' : 'Добро пожаловать'}
+            {isAdminMode ? 'Служебный вход' : 'PayeerRent'}
           </h2>
           <p className="text-slate-500 font-medium mt-2 text-center">
             {isAdminMode ? 'Только для персонала' : 'Магазин товаров и услуг'}
@@ -108,7 +108,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={isAdminMode ? "Логин сотрудника" : "Номер телефона"}
-                className="peer w-full pl-14 pr-4 py-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
+                className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
                 required
               />
             </div>
@@ -121,7 +121,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ваше имя"
-                  className="peer w-full pl-14 pr-4 py-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
+                  className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
                   required
                 />
               </div>
@@ -135,7 +135,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Пароль доступа"
-                  className="peer w-full pl-14 pr-4 py-6 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
+                  className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
                   required
                 />
               </div>
