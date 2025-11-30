@@ -369,19 +369,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           <div className="flex gap-2 flex-wrap">
               <button 
                   onClick={() => setFilterType('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${filterType === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border hover:bg-gray-50'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${filterType === 'all' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
               >
                   Все
               </button>
               <button 
                   onClick={() => { setFilterType('client'); setFilterValue(''); }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${filterType === 'client' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border hover:bg-gray-50'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${filterType === 'client' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
               >
                   По клиенту
               </button>
               <button 
                   onClick={() => { setFilterType('date'); setFilterValue(''); }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${filterType === 'date' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 border hover:bg-gray-50'}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${filterType === 'date' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
               >
                   По дате
               </button>
@@ -476,10 +476,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Navigation Items
   const navItems = [
     { id: 'deposits', label: 'Заявки', icon: <FileText className="w-5 h-5" />, count: pendingRequests.length },
+    { id: 'finances', label: 'Финансы', icon: <TrendingUp className="w-5 h-5" />, count: unviewedIncomeCount },
     { id: 'users', label: 'Пользователи', icon: <Users className="w-5 h-5" /> }, // Swapped
     { id: 'items', label: 'Товары', icon: <Package className="w-5 h-5" /> }, // Swapped
-    { id: 'finances', label: 'Финансы', icon: <TrendingUp className="w-5 h-5" />, count: unviewedIncomeCount },
-    { id: 'payments', label: 'Методы', icon: <CreditCard className="w-5 h-5" /> },
+    { id: 'payments', label: 'Метод оплаты', icon: <CreditCard className="w-5 h-5" /> },
     { id: 'settings', label: 'Настройки', icon: <Settings className="w-5 h-5" /> },
   ];
   
@@ -639,8 +639,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <tbody className="divide-y divide-gray-50">
                         {sortedUsers
                             .filter(u => user?.role === UserRole.MANAGER ? u.role !== UserRole.ADMIN : true)
-                            .map(u => (
-                            <tr key={u.id} className="hover:bg-gray-50/50 transition-colors group">
+                            .map((u, index) => (
+                            <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors group ${index % 2 !== 0 ? 'bg-emerald-50/40' : 'bg-white'}`}>
                                 <td className="p-4 font-bold text-gray-800">{u.name}</td>
                                 <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
                                 <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} P</td>
@@ -865,19 +865,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     {/* Action: Refund Button specific for this user */}
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setRefundModalUser(u); }}
-                                        className="p-2 text-orange-600 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors shadow-sm"
+                                        className="p-3 text-orange-600 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors shadow-sm"
                                         title="Сделать возврат"
                                     >
-                                        <RotateCcw className="w-4 h-4" />
+                                        <RotateCcw className="w-5 h-5" />
                                     </button>
 
                                     {user?.role === UserRole.MANAGER && (
                                         <button 
                                             onClick={(e) => toggleArchiveUser(userId, e)}
-                                            className="p-2 text-gray-300 hover:text-indigo-600 rounded-full hover:bg-indigo-50 transition-colors"
+                                            className="p-3 text-gray-300 hover:text-indigo-600 rounded-full hover:bg-indigo-50 transition-colors"
                                             title={showArchived ? "Вернуть из архива" : "В архив"}
                                         >
-                                            {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                                            {showArchived ? <ArchiveRestore className="w-5 h-5" /> : <Archive className="w-5 h-5" />}
                                         </button>
                                     )}
                                     {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
