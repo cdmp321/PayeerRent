@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
 import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { PaymentIcon } from './AdminDashboard'; // Import the new icon renderer
 
 interface WalletProps {
   user: User;
-  onUpdateUser: (user: User) => void; // Used to trigger refresh
+  onUpdateUser: (user: User) => void; 
 }
 
 export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
@@ -34,14 +35,13 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
   useEffect(() => {
     loadData();
-  }, [user]); // Reload when user changes (after balance update)
+  }, [user]);
 
   const loadData = async () => {
     const methodsData = await api.getPaymentMethods();
     setMethods(methodsData.filter(m => m.isActive));
 
     const allTxs = await api.getTransactions();
-    // Filter transactions for this user
     const userTxs = allTxs.filter(t => t.userId === user.id);
     setTransactions(userTxs);
   };
@@ -120,9 +120,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           setShowWithdrawModal(false);
           setAmount('');
           setWithdrawDetails('');
-          // Update local user state immediately for better UX
           const newUser = { ...user, balance: user.balance - val };
-          onUpdateUser(newUser); // This triggers loadData too
+          onUpdateUser(newUser); 
       } catch (err: any) {
           setNotification({ type: 'error', msg: err.message || 'Ошибка вывода' });
       } finally {
@@ -144,7 +143,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           setNotification({ type: 'success', msg: 'Запрос на возврат отправлен!' });
           setShowRefundModal(false);
           setAmount('');
-          // Do NOT update local user balance here, as funds are added only on approval
           loadData();
       } catch (err: any) {
           setNotification({ type: 'error', msg: err.message || 'Ошибка запроса' });
@@ -159,7 +157,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     (t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
   );
 
-  // Filter: Withdrawal history for the last 3 days
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
@@ -168,7 +165,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       new Date(t.date) >= threeDaysAgo
   );
 
-  // Logic: Show 5 items if collapsed, or all if expanded
   const displayedHistory = isHistoryExpanded 
       ? fullWithdrawalHistory 
       : fullWithdrawalHistory.slice(0, 5);
@@ -177,7 +173,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     <div className="space-y-6 pb-36">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white relative overflow-hidden">
-            {/* Abstract decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
             
             <div className="flex items-center justify-between mb-4 relative z-10">
@@ -209,7 +204,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         Вывести
                     </button>
                 </div>
-                {/* Updated Button Color: Dark Purple (bg-purple-900) */}
                 <button 
                     onClick={() => setShowRefundModal(true)}
                     className="w-full bg-purple-900 hover:bg-purple-800 active:bg-purple-700 text-purple-100 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-purple-800"
@@ -221,7 +215,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         </div>
         </div>
 
-      {/* PENDING TRANSACTIONS NOTIFICATION */}
       {pendingTransactions.length > 0 && (
           <div className="space-y-4 animate-fade-in">
              {pendingTransactions.map(tx => {
@@ -249,7 +242,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           </div>
       )}
 
-      {/* WITHDRAWAL HISTORY */}
       {fullWithdrawalHistory.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300">
             <div className="flex items-center justify-between mb-5">
@@ -303,7 +295,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 )})}
             </div>
 
-            {/* Expand/Collapse Button */}
             {fullWithdrawalHistory.length > 5 && (
                 <button 
                     onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
@@ -319,7 +310,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         </div>
       )}
 
-      {/* Notification Toast */}
       {notification && (
         <div className={`mx-4 mt-4 p-4 rounded-xl flex items-center gap-3 text-base font-bold animate-fade-in border-2 ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
@@ -327,12 +317,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         </div>
       )}
 
-      {/* Top Up Modal Overlay */}
       {showTopUpModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] animate-slide-up sm:animate-zoom-in shadow-2xl overflow-hidden">
             
-            {/* Header */}
             <div className="flex justify-between items-center p-5 border-b border-gray-100 shrink-0 bg-white z-10">
               <h3 className="text-xl font-extrabold text-gray-900">Пополнение кошелька</h3>
               <button onClick={() => setShowTopUpModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -340,7 +328,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               </button>
             </div>
 
-            {/* Scrollable Content */}
             <div className="p-5 overflow-y-auto space-y-5 custom-scrollbar flex-1">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Сумма (PAYEER®)</label>
@@ -368,19 +355,11 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                     >
                       <div className="text-left flex items-center gap-4 w-full">
-                        {method.imageUrl ? (
-                             <div className="w-16 h-16 shrink-0 rounded-lg bg-white flex items-center justify-center p-0.5 overflow-hidden">
-                                <img 
-                                    src={method.imageUrl} 
-                                    alt={method.name} 
-                                    className="w-full h-full object-contain"
-                                />
-                             </div>
-                        ) : (
-                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${selectedMethod?.id === method.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400 group-hover:bg-white'}`}>
-                                <CreditCard className="w-6 h-6" />
-                            </div>
-                        )}
+                         {/* Replaced img tag with new PaymentIcon component that handles presets */}
+                         <div className="w-16 h-16 shrink-0 flex items-center justify-center p-0.5 overflow-hidden scale-110">
+                            <PaymentIcon imageUrl={method.imageUrl} />
+                         </div>
+
                         <div className="flex-1 min-w-0">
                              <span className="font-bold text-gray-800 block text-base truncate">{method.name}</span>
                              {method.minAmount && method.minAmount > 0 && (
@@ -443,7 +422,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               )}
             </div>
 
-            {/* Footer Action */}
             <div className="p-5 pb-8 sm:pb-5 border-t border-gray-100 bg-white shrink-0 z-10">
               <button 
                 onClick={handleTopUpRequest}
@@ -459,7 +437,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         </div>
       )}
 
-      {/* Withdraw Modal */}
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl flex flex-col animate-slide-up sm:animate-zoom-in shadow-2xl overflow-hidden">
@@ -518,7 +495,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         </div>
       )}
 
-      {/* Refund Modal */}
       {showRefundModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl flex flex-col animate-slide-up sm:animate-zoom-in shadow-2xl overflow-hidden border border-red-100">
@@ -554,7 +530,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 />
               </div>
 
-              {/* REPLACED Reason Textarea with Information Block */}
               <div>
                   <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm text-blue-800 leading-relaxed font-medium">
                       Укажите сумму возврата и отправьте запрос. После подтверждения ваша сумма пополнится в личном кошельке. Время возврата средств в среднем 5 мин.

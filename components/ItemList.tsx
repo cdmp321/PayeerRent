@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Item, ItemStatus, User } from '../types';
-import { ShoppingBag, ShoppingCart, CreditCard, Package, RefreshCcw, CheckCircle2, Wallet, Search, ArrowUpDown, X, Loader2 } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, CreditCard, Package, RefreshCcw, CheckCircle2, Wallet, Search, ArrowUpDown, X, Loader2, Star } from 'lucide-react';
 
 interface ItemListProps {
   user: User;
@@ -49,7 +49,6 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
     const isFreePrice = item.price === 0;
     
     // Logic: Limit 3 items only if price is 0 (Free Price)
-    // If price > 0 (Fixed Price), there is no limit.
     if (isFreePrice) {
         const reservedFreeCount = items.filter(i => 
             i.ownerId === user.id && 
@@ -63,7 +62,6 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
         }
     }
 
-    // If free price item, use input value
     if (isFreePrice) {
         const inputVal = parseFloat(customAmounts[item.id] || '0');
         if (isNaN(inputVal) || inputVal <= 0) {
@@ -83,16 +81,12 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
       return;
     }
     
-    // Auto-pay without confirmation dialog
-
     try {
       await api.reserveItem(user.id, item.id, amountToPay);
-      // Clear input
       if (isFreePrice) {
           setCustomAmounts(prev => ({...prev, [item.id]: ''}));
       }
       onRentAction();
-      // Navigate to My Purchases tab automatically
       if (onNavigateToPurchases) {
           onNavigateToPurchases();
       }
@@ -101,7 +95,6 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
     }
   };
 
-  // Logic for recurring payments (Rent/Extend)
   const handlePayRent = async (item: Item) => {
       let amountToPay = item.price;
       const isFreePrice = item.price === 0;
@@ -145,11 +138,9 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   };
 
   const handleUnreserve = async (item: Item) => {
-    // Removed confirmation for smoother user flow
     try {
       await api.cancelReservation(item.id);
       onRentAction();
-      // Redirect back to Market (Showcase)
       if (onNavigateToMarket) {
           onNavigateToMarket();
       }
@@ -161,18 +152,15 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-        <div className="text-gray-400 font-medium">Загрузка витрины...</div>
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <div className="text-slate-400 font-bold tracking-wide">Загрузка витрины...</div>
       </div>
     );
   }
 
-  // Separate active purchases and available items
   const myReservations = items.filter(i => i.ownerId === user.id && (i.status === ItemStatus.RESERVED || i.status === ItemStatus.SOLD));
   const availableItems = items.filter(i => i.status === ItemStatus.AVAILABLE);
-  const otherReserved = items.filter(i => (i.status === ItemStatus.RESERVED || i.status === ItemStatus.SOLD) && i.ownerId !== user.id);
 
-  // Filter and Sort Available Items
   const filteredAvailableItems = availableItems
     .filter(item => {
       if (!searchQuery) return true;
@@ -182,8 +170,6 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
     .sort((a, b) => {
       if (sortType === 'price_asc') return a.price - b.price;
       if (sortType === 'price_desc') return b.price - a.price;
-      // Default 'newest' relies on API order or could be explicit:
-      // return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       return 0; 
     });
 
@@ -191,51 +177,52 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   if (viewMode === 'purchases') {
       return (
         <div className="space-y-6 pb-24 w-full">
-            <h3 className="text-xl font-bold text-gray-800 px-2 flex items-center gap-3">
-                <ShoppingBag className="w-8 h-8 text-indigo-600" />
-                Мои покупки и резервы
+            <h3 className="text-xl font-extrabold text-slate-800 px-2 flex items-center gap-3">
+                <ShoppingBag className="w-8 h-8 text-indigo-600 stroke-[2.5]" />
+                Мои покупки
             </h3>
             
             {myReservations.length === 0 ? (
-                 <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
-                    <Package className="w-16 h-16 mb-4 opacity-50 text-indigo-200" />
-                    <p className="text-lg font-medium">У вас пока нет товаров</p>
+                 <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
+                    <Package className="w-20 h-20 mb-4 opacity-30 text-indigo-400" />
+                    <p className="text-lg font-bold">У вас пока нет товаров</p>
                     {onNavigateToMarket && (
-                        <button onClick={onNavigateToMarket} className="text-base mt-3 text-indigo-600 font-bold hover:underline">
-                            Перейти в магазин
+                        <button onClick={onNavigateToMarket} className="text-base mt-4 text-white bg-indigo-600 px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">
+                            В магазин
                         </button>
                     )}
                  </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {myReservations.map(item => {
                         const isFreePrice = item.price === 0;
                         const currentInputAmount = customAmounts[item.id] || '';
                         const isProcessing = processingIds.has(item.id);
 
                         return (
-                        <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+                        <div key={item.id} className="bg-white p-6 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-emerald-400 to-emerald-600"></div>
                             <div className="pl-4">
-                                <div className="flex justify-between items-start mb-4">
-                                <div className="w-full min-w-0">
-                                    <h4 className="font-bold text-gray-800 break-words pr-2 text-xl">{item.title}</h4>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded">ЗАРЕЗЕРВИРОВАНО</span>
-                                        {item.purchasedAt && <span className="text-xs text-gray-400">{new Date(item.purchasedAt).toLocaleDateString()}</span>}
+                                <div className="flex justify-between items-start mb-5">
+                                    <div className="w-full min-w-0">
+                                        <h4 className="font-extrabold text-slate-900 break-words pr-2 text-xl leading-tight">{item.title}</h4>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <span className="bg-emerald-100/80 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center gap-1">
+                                                <CheckCircle2 className="w-3 h-3" /> Активен
+                                            </span>
+                                            {item.purchasedAt && <span className="text-xs font-bold text-slate-400">{new Date(item.purchasedAt).toLocaleDateString()}</span>}
+                                        </div>
                                     </div>
                                 </div>
-                                </div>
                                 
-                                <div className="flex flex-col gap-3">
-                                    {/* Rent / Recurring Payment Block */}
-                                    <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                                        <div className="text-xs font-bold text-emerald-700 uppercase mb-2 flex items-center gap-1">
-                                            <Wallet className="w-4 h-4" />
-                                            Пополнение средств
+                                <div className="flex flex-col gap-4">
+                                    <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-100">
+                                        <div className="text-xs font-black text-slate-500 uppercase mb-3 flex items-center gap-1.5 tracking-wide">
+                                            <Wallet className="w-4 h-4 text-emerald-500" />
+                                            Пополнение баланса
                                         </div>
                                         {isFreePrice ? (
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-3">
                                                 <div className="relative flex-1">
                                                     <input 
                                                         type="number" 
@@ -243,30 +230,30 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                                         value={currentInputAmount}
                                                         onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
                                                         disabled={isProcessing}
-                                                        className="w-full pl-3 pr-8 py-2.5 border border-emerald-200 rounded-lg text-sm focus:ring-1 focus:ring-emerald-500 outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                                                        className="w-full pl-4 pr-8 py-3.5 border-2 border-slate-200 rounded-xl text-base focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none disabled:bg-gray-100 disabled:text-gray-400 font-bold bg-white transition-all"
                                                     />
-                                                    <span className="absolute right-3 top-2.5 text-black font-bold text-sm">®</span>
+                                                    <span className="absolute right-3.5 top-3.5 text-slate-900 font-black text-base">®</span>
                                                 </div>
                                                 <button 
                                                     onClick={() => handlePayRent(item)}
                                                     disabled={isProcessing}
-                                                    className={`px-4 rounded-lg font-bold shadow-sm transition-all flex items-center justify-center ${
+                                                    className={`px-5 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center ${
                                                         isProcessing 
-                                                        ? 'bg-gray-400 cursor-not-allowed' 
-                                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
+                                                        ? 'bg-slate-300 cursor-not-allowed text-white' 
+                                                        : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200 active:scale-95'
                                                     }`}
                                                 >
-                                                    {isProcessing ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : <CheckCircle2 className="w-6 h-6" />}
+                                                    {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
                                                 </button>
                                             </div>
                                         ) : (
                                             <button 
                                                 onClick={() => handlePayRent(item)}
                                                 disabled={isProcessing}
-                                                className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
+                                                className={`w-full py-3.5 rounded-xl font-extrabold text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
                                                     isProcessing 
-                                                    ? 'bg-gray-400 text-white cursor-not-allowed shadow-none' 
-                                                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200 active:scale-95'
+                                                    ? 'bg-slate-300 text-white cursor-not-allowed shadow-none' 
+                                                    : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-200 active:scale-95'
                                                 }`}
                                             >
                                                 {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
@@ -277,9 +264,9 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
 
                                     <button 
                                         onClick={() => handleUnreserve(item)}
-                                        className="w-full bg-white text-red-500 py-3 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-bold text-sm active:scale-[0.98] border-2 border-red-50"
+                                        className="w-full bg-white text-rose-500 py-3.5 rounded-xl hover:bg-rose-50 transition-all flex items-center justify-center gap-2 font-bold text-sm active:scale-[0.98] border-2 border-rose-100 hover:border-rose-200"
                                     >
-                                        <RefreshCcw className="w-5 h-5" />
+                                        <RefreshCcw className="w-4 h-4 stroke-[2.5]" />
                                         Вернуть в магазин
                                     </button>
                                 </div>
@@ -294,31 +281,31 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
 
   // VIEW MODE: MARKET (Default)
   return (
-    <div className="space-y-6 pb-24 w-full">
+    <div className="space-y-8 pb-24 w-full">
       {/* Available Items */}
       <div>
-        <h3 className="text-xl font-bold text-gray-800 mb-4 px-2 flex items-center gap-3">
-            <ShoppingCart className="w-8 h-8 text-blue-600" />
+        <h3 className="text-xl font-extrabold text-slate-800 mb-5 px-2 flex items-center gap-3">
+            <ShoppingCart className="w-8 h-8 text-blue-600 stroke-[2.5]" />
             Витрина
         </h3>
 
         {/* Search & Sort Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6 px-1">
-            <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-3.5 h-6 w-6 text-indigo-500" />
+        <div className="flex flex-col sm:flex-row gap-3 mb-8 px-1">
+            <div className="relative flex-1 group">
+                <Search className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors stroke-[2.5]" />
                 <input 
                     type="text"
                     placeholder="Поиск товаров..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-10 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white shadow-sm font-medium"
+                    className="w-full pl-12 pr-10 py-4 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all bg-white shadow-sm font-bold text-slate-800 placeholder-slate-400"
                 />
                 {searchQuery && (
                     <button 
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-3.5 p-0.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500"
+                        className="absolute right-4 top-4 p-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4 stroke-[3]" />
                     </button>
                 )}
             </div>
@@ -328,9 +315,9 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                     if (current === 'price_asc') return 'price_desc';
                     return 'newest';
                 })}
-                className="px-4 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm min-w-[140px]"
+                className="px-5 py-4 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm active:scale-95 min-w-[140px]"
             >
-                <ArrowUpDown className="w-6 h-6 text-indigo-600" />
+                <ArrowUpDown className="w-5 h-5 text-indigo-500 stroke-[2.5]" />
                 <span className="text-sm">
                     {sortType === 'newest' && 'Новые'}
                     {sortType === 'price_asc' && 'Дешевле'}
@@ -340,86 +327,104 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
         </div>
         
         {filteredAvailableItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-500">
+          <div className="flex flex-col items-center justify-center py-24 bg-white/50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400">
               {searchQuery ? (
                   <>
-                    <Search className="w-12 h-12 mb-2 opacity-30" />
-                    <p>По запросу "{searchQuery}" ничего не найдено</p>
-                    <button onClick={() => setSearchQuery('')} className="text-indigo-600 font-bold mt-2 text-sm">Очистить поиск</button>
+                    <Search className="w-16 h-16 mb-4 opacity-20" />
+                    <p className="font-bold">Ничего не найдено</p>
+                    <button onClick={() => setSearchQuery('')} className="text-indigo-600 font-extrabold mt-3 hover:underline">Очистить поиск</button>
                   </>
               ) : (
                   <>
-                     <Package className="w-12 h-12 mb-2 opacity-30" />
-                     <p>Нет доступных товаров</p>
+                     <Package className="w-16 h-16 mb-4 opacity-20" />
+                     <p className="font-bold">Витрина пуста</p>
                   </>
               )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-8">
             {filteredAvailableItems.map(item => {
                 const currentInputAmount = parseFloat(customAmounts[item.id] || '0');
                 const isFreePrice = item.price === 0;
 
                 return (
-                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col w-full group">
+                <div key={item.id} className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50 hover:border-indigo-100 overflow-hidden flex flex-col w-full group transform transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-100/50 relative">
                     
-                    {/* Conditionally render image if URL exists */}
-                    {item.imageUrl && (
-                        <div className="h-64 bg-gray-200 relative shrink-0 w-full overflow-hidden">
-                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                        {item.price > 0 ? (
-                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur text-gray-900 px-4 py-2 rounded-xl text-base font-extrabold shadow-md">
-                                {item.price} ®
+                    {/* Modern Image Container with Glassmorphic Badges */}
+                    {item.imageUrl ? (
+                        <div className="h-72 bg-slate-100 relative shrink-0 w-full overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 z-10" />
+                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            
+                            {/* Price Badge */}
+                            <div className="absolute bottom-4 right-4 z-20">
+                                {item.price > 0 ? (
+                                    <div className="bg-white/95 backdrop-blur-md text-slate-900 px-5 py-2.5 rounded-2xl text-lg font-black shadow-lg flex items-center gap-1">
+                                        {item.price} <span className="text-sm">®</span>
+                                    </div>
+                                ) : (
+                                    <div className="bg-blue-600/90 backdrop-blur-md text-white px-5 py-2.5 rounded-2xl text-sm font-black shadow-lg border border-white/20 uppercase tracking-wide">
+                                        Свободная цена
+                                    </div>
+                                )}
                             </div>
-                        ) : (
-                            <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">
-                                Свободная цена
+                        </div>
+                    ) : (
+                        // Fallback pattern if no image
+                        <div className="h-40 bg-gradient-to-br from-slate-50 to-indigo-50 relative w-full border-b border-slate-100 flex items-center justify-center">
+                            <div className="text-slate-200 group-hover:text-indigo-200 transition-colors duration-500">
+                                <Package className="w-20 h-20" />
                             </div>
-                        )}
+                            <div className="absolute top-4 right-4">
+                                {item.price > 0 ? (
+                                    <div className="bg-white text-slate-900 px-4 py-2 rounded-xl text-base font-black shadow-sm border border-slate-100">
+                                        {item.price} ®
+                                    </div>
+                                ) : (
+                                    <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl text-xs font-black uppercase">
+                                        Свободная цена
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    <div className="p-6 flex flex-col flex-grow min-w-0">
-                    <div className="flex justify-between items-start">
-                        <h4 className="font-bold text-gray-900 text-2xl leading-tight mb-2 break-words">{item.title}</h4>
-                        {/* Show price badge here if no image */}
-                        {!item.imageUrl && (
-                            <div className={`px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap ml-2 ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                {item.price > 0 ? `${item.price} ®` : 'Свободная цена'}
-                            </div>
-                        )}
-                    </div>
-                    
-                    <p className="text-base text-gray-500 mb-6 break-words leading-relaxed">{item.description}</p>
-                    
-                    {/* Control Area */}
-                    <div className="space-y-4 mt-auto w-full">
-                        {isFreePrice && (
-                            <div className="relative w-full">
-                                <input 
-                                    type="number" 
-                                    placeholder="Пополнение средств"
-                                    value={customAmounts[item.id] || ''}
-                                    onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
-                                    className="w-full pl-4 pr-10 py-4 border-2 border-gray-100 rounded-xl text-lg outline-none focus:border-indigo-500 focus:ring-0 transition-all bg-gray-50 focus:bg-white font-bold text-gray-800 placeholder-gray-400"
-                                />
-                                <span className="absolute right-4 top-4 text-black text-lg font-bold">®</span>
-                            </div>
-                        )}
+                    <div className="p-7 flex flex-col flex-grow min-w-0 bg-white relative z-20">
+                        <div className="flex justify-between items-start mb-3">
+                            <h4 className="font-extrabold text-slate-900 text-2xl leading-tight break-words tracking-tight">{item.title}</h4>
+                        </div>
                         
-                        <button 
-                            onClick={() => handleReserve(item)}
-                            className="w-full py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2.5 transition-all bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 active:scale-[0.98]"
-                        >
-                            <CreditCard className="w-7 h-7 shrink-0" />
-                            <span className="truncate">
-                            {isFreePrice 
-                                ? (currentInputAmount > 0 ? `Оплатить ${currentInputAmount} ®` : 'Оплатить') 
-                                : `Оплатить ${item.price} ®`
-                            }
-                            </span>
-                        </button>
-                    </div>
+                        <p className="text-base text-slate-500 mb-8 break-words leading-relaxed font-medium">{item.description}</p>
+                        
+                        {/* Control Area */}
+                        <div className="space-y-4 mt-auto w-full">
+                            {isFreePrice && (
+                                <div className="relative w-full group/input">
+                                    <input 
+                                        type="number" 
+                                        placeholder="Сумма пополнения"
+                                        value={customAmounts[item.id] || ''}
+                                        onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
+                                        className="w-full pl-5 pr-12 py-4 border-2 border-slate-100 rounded-2xl text-lg outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
+                                    />
+                                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-900 text-lg font-black">®</span>
+                                </div>
+                            )}
+                            
+                            <button 
+                                onClick={() => handleReserve(item)}
+                                className="w-full py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 transition-all bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-200 hover:shadow-2xl hover:shadow-slate-400/50 active:scale-[0.98] relative overflow-hidden group/btn"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+                                <CreditCard className="w-6 h-6 shrink-0 stroke-[2.5]" />
+                                <span className="relative z-10">
+                                {isFreePrice 
+                                    ? (currentInputAmount > 0 ? `Оплатить ${currentInputAmount} ®` : 'Перейти к оплате') 
+                                    : `Оплатить ${item.price} ®`
+                                }
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 );
@@ -427,35 +432,5 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
           </div>
         )}
       </div>
-
-      {/* Other Reserved Items */}
-      {otherReserved.length > 0 && (
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <h3 className="text-lg font-bold text-gray-400 mb-4 px-2 uppercase tracking-wide text-xs">Недавно куплено</h3>
-          <div className="grid grid-cols-1 gap-3 opacity-60 grayscale hover:grayscale-0 transition-all">
-            {otherReserved.map(item => (
-              <div key={item.id} className="bg-gray-50 p-3 rounded-xl flex items-center gap-4 overflow-hidden w-full border border-gray-100">
-                {item.imageUrl ? (
-                    <div className="w-14 h-14 bg-gray-200 rounded-lg overflow-hidden shrink-0">
-                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                    </div>
-                ) : (
-                    <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-                        <ShoppingBag className="w-6 h-6 text-gray-400" />
-                    </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-gray-600 truncate text-base">{item.title}</h4>
-                  <div className="flex items-center gap-1 text-[10px] text-orange-500 font-bold uppercase mt-1">
-                    <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
-                    Продано
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 };

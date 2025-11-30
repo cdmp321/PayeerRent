@@ -80,86 +80,95 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-fade-in">
-      <div className="glass-panel p-8 sm:p-10 rounded-3xl w-full max-w-sm transition-all duration-300">
+      <div className="glass-panel p-8 sm:p-10 rounded-[2.5rem] w-full max-w-sm transition-all duration-300 shadow-2xl border border-white/60 relative overflow-hidden">
         
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
         {/* Header Icon - Secret Trigger */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-10 relative z-10">
           <div 
             onClick={handleSecretClick}
-            className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl rotate-3 transition-all duration-300 cursor-pointer active:scale-95 ${isAdminMode ? 'bg-slate-800 shadow-slate-300/50' : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-300/50'}`}
+            className={`w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-xl rotate-3 transition-all duration-300 cursor-pointer active:scale-95 border-4 border-white ${isAdminMode ? 'bg-slate-900 shadow-slate-400/50' : 'bg-gradient-to-br from-blue-600 to-indigo-700 shadow-indigo-300/50'}`}
           >
-            {isAdminMode ? <Briefcase className="w-9 h-9 text-white" /> : <ShieldCheck className="w-10 h-10 text-white" />}
+            {isAdminMode ? <Briefcase className="w-10 h-10 text-white stroke-[2]" /> : <ShieldCheck className="w-12 h-12 text-white stroke-[2]" />}
           </div>
         </div>
         
-        <h2 className="text-3xl font-extrabold text-center text-slate-800 mb-2 tracking-tight">
+        <h2 className="text-3xl font-extrabold text-center text-slate-900 mb-2 tracking-tight">
             {isAdminMode ? 'Панель сотрудников' : 'PayeerRent'}
         </h2>
-        <p className="text-center text-slate-500 mb-8 font-medium">
+        <p className="text-center text-slate-500 mb-10 font-medium text-sm tracking-wide uppercase">
             {isAdminMode ? 'Вход для Админа и Менеджера' : 'Магазин товаров и услуг'}
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10" autoComplete="off">
           {/* Fake inputs to disable autocomplete more effectively in some browsers */}
           <input type="text" style={{display: 'none'}} />
           <input type="password" style={{display: 'none'}} />
 
           {!isAdminMode && (
             <div className="relative group">
-              <UserIcon className="absolute left-4 top-4 h-5 w-5 text-slate-800 group-focus-within:text-indigo-500 transition-colors" />
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors">
+                <UserIcon className="h-6 w-6 text-slate-800 stroke-[2.5]" />
+              </div>
               <input
                 type="text"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
+                className="w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm"
               />
             </div>
           )}
           
           <div className="relative group">
-            <Phone className="absolute left-4 top-4 h-5 w-5 text-slate-800 group-focus-within:text-indigo-500 transition-colors" />
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors">
+                <Phone className="h-6 w-6 text-slate-800 stroke-[2.5]" />
+            </div>
             <input
               type="text" 
               placeholder={isAdminMode ? (isDefaultAdmin ? "Логин (000 или 001)" : "Логин сотрудника") : "Номер телефона"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="off"
-              className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
+              className="w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm"
             />
           </div>
 
           {isAdminMode && (
               <div className="relative group">
-                <Lock className="absolute left-4 top-4 h-5 w-5 text-slate-800 group-focus-within:text-slate-600 transition-colors" />
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors">
+                    <Lock className="h-6 w-6 text-slate-800 stroke-[2.5]" />
+                </div>
                 <input
                     type="password"
                     placeholder={isDefaultAdmin ? "Пароль (admin или manager)" : "Пароль"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
-                    className="w-full pl-12 pr-4 py-3.5 border border-slate-200 bg-white/50 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent outline-none transition-all text-slate-800 placeholder-slate-400 font-medium"
+                    className="w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm"
                 />
               </div>
           )}
 
-          {error && <p className="text-red-500 text-sm text-center font-bold bg-red-50 py-2 rounded-lg border border-red-100">{error}</p>}
+          {error && <p className="text-red-600 text-sm text-center font-bold bg-red-50 py-3 rounded-xl border border-red-100 animate-fade-in">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex justify-center items-center gap-2 mt-4 ${
+            className={`w-full text-white py-4.5 rounded-2xl font-extrabold text-lg shadow-xl hover:shadow-2xl active:scale-[0.98] transition-all flex justify-center items-center gap-2 mt-4 ${
                 isAdminMode 
-                ? 'bg-slate-800 shadow-slate-200 hover:bg-slate-700' 
-                : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-indigo-200 hover:to-indigo-700'
+                ? 'bg-slate-900 shadow-slate-300 hover:bg-slate-800' 
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-indigo-300 hover:to-indigo-700'
             }`}
           >
             {loading && <Loader2 className="w-5 h-5 animate-spin" />}
             {loading ? 'Вход...' : (isAdminMode ? 'Войти' : 'Продолжить')}
           </button>
         </form>
-        
-        {/* Removed Visible Switch Button */}
       </div>
     </div>
   );
