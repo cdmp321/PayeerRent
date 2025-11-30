@@ -106,7 +106,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
           {!isAdminMode && (
             <div className="relative group">
-              <UserIcon className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <UserIcon className="absolute left-4 top-4 h-5 w-5 text-slate-800 group-focus-within:text-indigo-500 transition-colors" />
               <input
                 type="text"
                 placeholder="Ваше имя"
@@ -118,7 +118,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           )}
           
           <div className="relative group">
-            <Phone className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+            <Phone className="absolute left-4 top-4 h-5 w-5 text-slate-800 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="text" 
               placeholder={isAdminMode ? (isDefaultAdmin ? "Логин (000 или 001)" : "Логин сотрудника") : "Номер телефона"}
@@ -131,7 +131,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
           {isAdminMode && (
               <div className="relative group">
-                <Lock className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-slate-600 transition-colors" />
+                <Lock className="absolute left-4 top-4 h-5 w-5 text-slate-800 group-focus-within:text-slate-600 transition-colors" />
                 <input
                     type="password"
                     placeholder={isDefaultAdmin ? "Пароль (admin или manager)" : "Пароль"}

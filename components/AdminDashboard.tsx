@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
@@ -266,7 +267,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           alert("Заполните все поля");
           return;
       }
-      if(!window.confirm(`Вернуть ${refundAmount} Ⓡ клиенту ${refundModalUser.name}?`)) return;
+      if(!window.confirm(`Вернуть ${refundAmount} ® клиенту ${refundModalUser.name}?`)) return;
 
       try {
           await api.processRefund(refundModalUser.id, parseFloat(refundAmount), refundReason);
@@ -567,7 +568,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         </div>
                         
                         <div className="flex items-baseline gap-2 mb-1">
-                            <span className="text-2xl font-black text-gray-800">{tx.amount} Ⓡ</span>
+                            <span className="text-2xl font-black text-gray-800">{tx.amount} ®</span>
                             <span className="text-sm text-gray-500 font-medium">от {u?.name || 'Unknown'}</span>
                         </div>
                         
@@ -642,7 +643,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors group ${index % 2 !== 0 ? 'bg-emerald-50/40' : 'bg-white'}`}>
                                 <td className="p-4 font-bold text-gray-800">{u.name}</td>
                                 <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
-                                <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} Ⓡ</td>
+                                <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} ®</td>
                                 <td className="p-4">
                                     <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
                                         u.role === 'ADMIN' ? 'bg-slate-800 text-white' : 
@@ -783,7 +784,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                 <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
                                             )}
                                             <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                                {item.price > 0 ? `${item.price} Ⓡ` : 'Свободная цена'}
+                                                {item.price > 0 ? `${item.price} ®` : 'Свободная цена'}
                                             </span>
                                         </div>
                                     )}
@@ -798,7 +799,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
                                         )}
                                         <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                            {item.price > 0 ? `${item.price} Ⓡ` : 'Свободная цена'}
+                                            {item.price > 0 ? `${item.price} ®` : 'Свободная цена'}
                                         </span>
                                     </div>
                                 )}
@@ -941,7 +942,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             </div>
                                             <div className="text-right">
                                                 <div className={`font-black text-sm ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>
-                                                    +{tx.amount} Ⓡ
+                                                    +{tx.amount} ®
                                                 </div>
                                                 {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-500 ml-auto mt-1" />}
                                             </div>
@@ -990,7 +991,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         </td>
                                         <td className="p-4">
                                             <div className={`font-extrabold text-xs ${isRefund ? 'text-purple-600' : 'text-green-600'}`}>
-                                                {tx.amount} Ⓡ
+                                                {tx.amount} ®
                                             </div>
                                             <div className={`text-[10px] font-bold uppercase ${isRefund ? 'text-purple-600' : 'text-green-600'}`}>
                                                 {isRefund ? 'Возврат' : 'Вывод'}
@@ -1053,7 +1054,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             <div className="text-[10px] font-normal text-gray-400">{new Date(tx.date).toLocaleDateString()}</div>
                                         </td>
                                         <td className="py-4 font-extrabold text-xs text-red-800">
-                                            {tx.amount} Ⓡ
+                                            {tx.amount} ®
                                         </td>
                                         <td className="py-4">
                                             <div className="flex flex-col items-start gap-1">
@@ -1118,7 +1119,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             </div>
                             
                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Сумма (Ⓡ)</label>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Сумма (®)</label>
                                 <input 
                                     type="number" 
                                     placeholder="0.00"
@@ -1129,7 +1130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             </div>
                             
                             <div className="bg-gray-50 p-3 rounded-lg text-xs text-gray-500">
-                                Баланс клиента: <span className="font-bold text-gray-800">{refundModalUser.balance} Ⓡ</span>
+                                Баланс клиента: <span className="font-bold text-gray-800">{refundModalUser.balance} ®</span>
                             </div>
                         </div>
                         
