@@ -47,16 +47,6 @@ const mapTransaction = (data: any): Transaction => ({
   viewed: data.viewed
 });
 
-// Helper to convert File to Base64
-const toBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
-};
-
 // API Implementation with Supabase
 export const api = {
   // Auth
@@ -263,22 +253,8 @@ export const api = {
 
   // Wallet & Transactions
   requestTopUp: async (userId: string, amount: number, receiptFile?: File): Promise<void> => {
-    let receiptUrl = '';
-    
-    // If a file is provided, convert it to Base64 to store in the text column
-    // This allows images to be viewed without a separate storage bucket
-    if (receiptFile) {
-        try {
-            receiptUrl = await toBase64(receiptFile);
-        } catch (e) {
-            console.error("Failed to convert receipt to base64", e);
-            // Fallback
-            receiptUrl = 'error_converting_image'; 
-        }
-    } else {
-        // Fallback placeholder if no file (shouldn't happen with UI validation)
-        receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=No+Receipt'; 
-    }
+    // Reverted to placeholder logic as originally designed
+    const receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=Receipt';
 
     const { error } = await supabase
       .from('transactions')
