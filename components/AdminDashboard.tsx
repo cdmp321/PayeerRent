@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
@@ -736,7 +735,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </form>
             </div>
 
-            {/* Items List (GRID LAYOUT) */}
+            {/* Items List (GRID/LIST HYBRID LAYOUT) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="font-bold text-gray-400 text-sm uppercase tracking-wider">Список товаров ({items.length})</h3>
@@ -745,55 +744,89 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </button>
                 </div>
                 
-                {/* CHANGED TO GRID */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {sortedItems.map(item => (
-                        <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 group h-full">
-                            {item.imageUrl ? (
-                                <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+                    {sortedItems.map(item => {
+                        // Check if item has image to decide layout
+                        const hasImage = !!item.imageUrl;
+                        
+                        return (
+                        <div 
+                            key={item.id} 
+                            className={`bg-white rounded-2xl shadow-sm border border-gray-100 group ${
+                                hasImage 
+                                ? 'p-5 flex flex-col gap-4 h-full' // Tile Layout
+                                : 'col-span-full p-4 flex items-center gap-6 hover:bg-gray-50/50 transition-colors' // List Layout (Full Width)
+                            }`}
+                        >
+                            {hasImage ? (
+                                // TILE IMAGE
+                                <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
                                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 </div>
                             ) : (
-                                <div className="w-full h-40 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 text-gray-300">
-                                    <Package className="w-12 h-12" />
+                                // LIST ICON
+                                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 text-gray-300">
+                                    <Package className="w-6 h-6" />
                                 </div>
                             )}
                             
                             <div className="flex-1 min-w-0 flex flex-col">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-bold text-lg text-gray-800 truncate pr-2 w-full">{item.title}</h4>
-                                </div>
-                                <div className="flex items-center gap-2 mb-3">
-                                    {item.quantity === 0 ? (
-                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
-                                    ) : (
-                                        <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
+                                <div className={`flex justify-between ${hasImage ? 'items-start mb-2' : 'items-center gap-4'}`}>
+                                    <h4 className={`font-bold text-gray-800 truncate ${hasImage ? 'text-lg w-full' : 'text-base flex-1'}`}>{item.title}</h4>
+                                    
+                                    {/* Price/Quantity Badge for List View */}
+                                    {!hasImage && (
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {item.quantity === 0 ? (
+                                                <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
+                                            )}
+                                            <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
+                                                {item.price > 0 ? `${item.price} Ⓡ` : 'Свободная цена'}
+                                            </span>
+                                        </div>
                                     )}
-                                    <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                        {item.price > 0 ? `${item.price} Ⓡ` : 'Free'}
-                                    </span>
                                 </div>
-                                <p className="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">{item.description}</p>
                                 
-                                <div className="flex items-center gap-3 mt-auto">
+                                {/* Info Row for Tile View */}
+                                {hasImage && (
+                                    <div className="flex items-center gap-2 mb-3">
+                                        {item.quantity === 0 ? (
+                                            <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
+                                        ) : (
+                                            <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
+                                        )}
+                                        <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
+                                            {item.price > 0 ? `${item.price} Ⓡ` : 'Свободная цена'}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Description - Hide completely in List view for compactness, show in Tile */}
+                                {hasImage && (
+                                    <p className="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">{item.description}</p>
+                                )}
+                                
+                                <div className={`flex items-center gap-3 ${hasImage ? 'mt-auto' : 'ml-auto'}`}>
                                     {item.status !== 'AVAILABLE' && (
                                         <button 
                                             onClick={() => forceRestock(item.id)}
-                                            className="text-xs font-bold text-orange-500 hover:text-orange-600 bg-orange-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 flex-1 justify-center"
+                                            className="text-xs font-bold text-orange-500 hover:text-orange-600 bg-orange-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center"
                                         >
-                                            <RefreshCw className="w-3 h-3" /> Вернуть
+                                            <RefreshCw className="w-3 h-3" /> {hasImage ? 'Вернуть' : ''}
                                         </button>
                                     )}
                                     <button 
                                         onClick={(e) => deleteItem(item.id, e)}
-                                        className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 ml-auto flex-1 justify-center"
+                                        className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center"
                                     >
-                                        <Trash2 className="w-3 h-3" /> Удалить
+                                        <Trash2 className="w-3 h-3" /> {hasImage ? 'Удалить' : ''}
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             </div>
             </div>

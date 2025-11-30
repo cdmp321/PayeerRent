@@ -47,6 +47,15 @@ const mapTransaction = (data: any): Transaction => ({
   viewed: data.viewed
 });
 
+const toBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
 // API Implementation with Supabase
 export const api = {
   // Auth
@@ -261,8 +270,19 @@ export const api = {
 
   // Wallet & Transactions
   requestTopUp: async (userId: string, amount: number, receiptFile?: File): Promise<void> => {
-    // Reverted to placeholder logic as originally designed
-    const receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=Receipt';
+    let receiptUrl = '';
+    
+    // Store image directly as base64 string in database
+    if (receiptFile) {
+        try {
+            receiptUrl = await toBase64(receiptFile);
+        } catch (e) {
+            console.error("Error converting receipt", e);
+            receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=Error';
+        }
+    } else {
+        receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=No+Receipt';
+    }
 
     const { error } = await supabase
       .from('transactions')
