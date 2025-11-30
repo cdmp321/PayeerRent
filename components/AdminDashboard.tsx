@@ -47,6 +47,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Refund Form State
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('Выплата клиенту на карту с обнулением кошелька');
+  const [refundModalUser, setRefundModalUser] = useState<User | null>(null);
 
   // Form states - Items
   const [newItemTitle, setNewItemTitle] = useState('');
@@ -260,16 +261,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       }
   };
 
-  const handleRefund = async (userId: string) => {
-      if(!refundAmount || !refundReason) {
-          alert("Заполните сумму и выберите причину возврата");
+  const handleRefundSubmit = async () => {
+      if(!refundAmount || !refundReason || !refundModalUser) {
+          alert("Заполните все поля");
           return;
       }
-      if(!window.confirm(`Вернуть ${refundAmount} P клиенту?`)) return;
+      if(!window.confirm(`Вернуть ${refundAmount} P клиенту ${refundModalUser.name}?`)) return;
 
       try {
-          await api.processRefund(userId, parseFloat(refundAmount), refundReason);
+          await api.processRefund(refundModalUser.id, parseFloat(refundAmount), refundReason);
           setRefundAmount('');
+          setRefundModalUser(null);
           // Do not clear reason so it stays on last selected
           alert("Возврат успешно выполнен!");
           refreshAll();
@@ -795,58 +797,120 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         {activeTab === 'finances' && (
             <div className="space-y-8 animate-fade-in">
             
-            {/* Action: Refund */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100">
-                <h3 className="text-lg font-bold text-red-800 mb-4 flex items-center gap-2">
-                    <RotateCcw className="w-5 h-5" />
-                    Сделать возврат клиенту
-                </h3>
-                <div className="space-y-4">
-                    {/* Replaced Textarea with Select */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Причина / Тип возврата</label>
-                        <select 
-                            value={refundReason}
-                            onChange={(e) => setRefundReason(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-medium transition-all text-sm appearance-none"
-                        >
-                            <option value="Выплата клиенту на карту с обнулением кошелька">Выплата клиенту на карту с обнулением кошелька</option>
-                            <option value="Подарочный бонус">Подарочный бонус</option>
-                            <option value="Сбой (претензия от клиента)">Сбой (претензия от клиента)</option>
-                        </select>
-                    </div>
+            {/* Messages / Purchase History - MOVED TO TOP */}
+            <div className="space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xl font-bold text-gray-800">История покупок (Сообщения)</h3>
                     
-                    <div className="flex gap-4 items-end">
-                        <div className="flex-1">
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Сумма (P)</label>
-                            <input 
-                                type="number" 
-                                placeholder="0.00"
-                                value={refundAmount}
-                                onChange={(e) => setRefundAmount(e.target.value)}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-900 transition-all"
-                            />
+                    {user?.role === UserRole.MANAGER && (
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setShowArchived(!showArchived)}
+                                className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${showArchived ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                            >
+                                {showArchived ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                                {showArchived ? 'Активные' : 'Архив'}
+                            </button>
                         </div>
-                        <div className="flex-1">
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Клиент</label>
-                            <div className="relative">
-                                <select 
-                                    onChange={(e) => {
-                                        if(e.target.value) handleRefund(e.target.value);
-                                        e.target.value = ''; // Reset select
-                                    }}
-                                    className="w-full px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 transition-all cursor-pointer appearance-none"
-                                >
-                                    <option value="">Выбрать и вернуть...</option>
-                                    {sortedUsers.filter(u => u.role === UserRole.USER).map(u => (
-                                        <option key={u.id} value={u.id} className="bg-white text-gray-900">{u.name} ({u.balance} P)</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-4 top-3.5 w-5 h-5 text-white pointer-events-none" />
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
+                
+                {Object.keys(groupedFinances).length === 0 ? (
+                    <div className="text-center py-10 text-gray-400">Нет покупок</div>
+                ) : (
+                    Object.entries(groupedFinances)
+                    .filter(([userId]) => {
+                        // Filter active/archived
+                        const isArchived = archivedUsers.has(userId);
+                        return showArchived ? isArchived : !isArchived;
+                    })
+                    .map(([userId, userTxsRaw]) => {
+                        const userTxs = userTxsRaw as Transaction[];
+                        const u = users.find(user => user.id === userId);
+                        if (!u) return null;
+                        
+                        const isExpanded = expandedUserId === userId;
+                        const hasUnread = userTxs.some(t => !t.viewed);
+                        const latestTx = userTxs[0]; // Already sorted by date desc in api
+
+                        return (
+                        <div key={userId} className={`bg-white rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'}`}>
+                            <div 
+                                className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors"
+                                onClick={() => toggleUserExpansion(userId)}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+                                        {u.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-gray-800 flex items-center gap-2">
+                                            {u.name}
+                                            {hasUnread && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+                                        </div>
+                                        <div className="text-xs text-gray-400 font-medium">
+                                            {userTxs.length} покупок • Последняя: {new Date(latestTx.date).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center gap-3">
+                                    {/* Action: Refund Button specific for this user */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setRefundModalUser(u); }}
+                                        className="p-2 text-gray-300 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
+                                        title="Сделать возврат"
+                                    >
+                                        <RotateCcw className="w-4 h-4" />
+                                    </button>
+
+                                    {user?.role === UserRole.MANAGER && (
+                                        <button 
+                                            onClick={(e) => toggleArchiveUser(userId, e)}
+                                            className="p-2 text-gray-300 hover:text-indigo-600 rounded-full hover:bg-indigo-50 transition-colors"
+                                            title={showArchived ? "Вернуть из архива" : "В архив"}
+                                        >
+                                            {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                                        </button>
+                                    )}
+                                    {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                                </div>
+                            </div>
+                            
+                            {isExpanded && (
+                                <div className="border-t border-gray-100 bg-gray-50/30 p-2 space-y-2">
+                                    {userTxs.map(tx => (
+                                        <div 
+                                            key={tx.id} 
+                                            onClick={(e) => !tx.viewed && handleMarkViewed(tx.id, e)}
+                                            className={`p-4 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                                                tx.viewed 
+                                                ? 'bg-gray-50 border border-transparent' 
+                                                : 'bg-white border-l-4 border-indigo-500 shadow-sm hover:shadow-md'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-full ${tx.viewed ? 'bg-gray-200 text-gray-400' : 'bg-emerald-100 text-emerald-600'}`}>
+                                                    {tx.description.includes('Донат') ? <ArrowDownLeft className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
+                                                </div>
+                                                <div>
+                                                    <div className={`font-bold text-sm ${tx.viewed ? 'text-gray-500' : 'text-gray-900'}`}>{tx.description}</div>
+                                                    <div className="text-xs text-gray-400">{new Date(tx.date).toLocaleString()}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className={`font-black text-sm ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>
+                                                    +{tx.amount} P
+                                                </div>
+                                                {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-500 ml-auto mt-1" />}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )})
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -971,113 +1035,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     )}
                 </div>
             </div>
-
-            {/* Messages / Purchase History */}
-            <div className="space-y-4">
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xl font-bold text-gray-800">История покупок (Сообщения)</h3>
-                    
-                    {user?.role === UserRole.MANAGER && (
-                        <div className="flex items-center gap-2">
+            
+            {/* Modal for User Refund */}
+            {refundModalUser && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-zoom-in">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-red-50">
+                            <h3 className="font-bold text-lg text-red-800 flex items-center gap-2">
+                                <RotateCcw className="w-5 h-5" />
+                                Возврат для {refundModalUser.name}
+                            </h3>
                             <button 
-                                onClick={() => setShowArchived(!showArchived)}
-                                className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${showArchived ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                                onClick={() => setRefundModalUser(null)}
+                                className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-500"
                             >
-                                {showArchived ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
-                                {showArchived ? 'Активные' : 'Архив'}
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
-                    )}
-                </div>
-                
-                {Object.keys(groupedFinances).length === 0 ? (
-                    <div className="text-center py-10 text-gray-400">Нет покупок</div>
-                ) : (
-                    Object.entries(groupedFinances)
-                    .filter(([userId]) => {
-                        // Filter active/archived
-                        const isArchived = archivedUsers.has(userId);
-                        return showArchived ? isArchived : !isArchived;
-                    })
-                    .map(([userId, userTxsRaw]) => {
-                        const userTxs = userTxsRaw as Transaction[];
-                        const u = users.find(user => user.id === userId);
-                        if (!u) return null;
                         
-                        const isExpanded = expandedUserId === userId;
-                        const hasUnread = userTxs.some(t => !t.viewed);
-                        const latestTx = userTxs[0]; // Already sorted by date desc in api
-
-                        return (
-                        <div key={userId} className={`bg-white rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'}`}>
-                            <div 
-                                className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors"
-                                onClick={() => toggleUserExpansion(userId)}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>
-                                        {u.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div className="font-bold text-gray-800 flex items-center gap-2">
-                                            {u.name}
-                                            {hasUnread && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-                                        </div>
-                                        <div className="text-xs text-gray-400 font-medium">
-                                            {userTxs.length} покупок • Последняя: {new Date(latestTx.date).toLocaleDateString()}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex items-center gap-3">
-                                    {user?.role === UserRole.MANAGER && (
-                                        <button 
-                                            onClick={(e) => toggleArchiveUser(userId, e)}
-                                            className="p-2 text-gray-300 hover:text-indigo-600 rounded-full hover:bg-indigo-50 transition-colors"
-                                            title={showArchived ? "Вернуть из архива" : "В архив"}
-                                        >
-                                            {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                                        </button>
-                                    )}
-                                    {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                                </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Причина / Тип возврата</label>
+                                <select 
+                                    value={refundReason}
+                                    onChange={(e) => setRefundReason(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-medium transition-all text-sm appearance-none"
+                                >
+                                    <option value="Выплата клиенту на карту с обнулением кошелька">Выплата клиенту на карту с обнулением кошелька</option>
+                                    <option value="Подарочный бонус">Подарочный бонус</option>
+                                    <option value="Сбой (претензия от клиента)">Сбой (претензия от клиента)</option>
+                                </select>
                             </div>
                             
-                            {isExpanded && (
-                                <div className="border-t border-gray-100 bg-gray-50/30 p-2 space-y-2">
-                                    {userTxs.map(tx => (
-                                        <div 
-                                            key={tx.id} 
-                                            onClick={(e) => !tx.viewed && handleMarkViewed(tx.id, e)}
-                                            className={`p-4 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
-                                                tx.viewed 
-                                                ? 'bg-gray-50 border border-transparent' 
-                                                : 'bg-white border-l-4 border-indigo-500 shadow-sm hover:shadow-md'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-full ${tx.viewed ? 'bg-gray-200 text-gray-400' : 'bg-emerald-100 text-emerald-600'}`}>
-                                                    {tx.description.includes('Донат') ? <ArrowDownLeft className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
-                                                </div>
-                                                <div>
-                                                    <div className={`font-bold text-sm ${tx.viewed ? 'text-gray-500' : 'text-gray-900'}`}>{tx.description}</div>
-                                                    <div className="text-xs text-gray-400">{new Date(tx.date).toLocaleString()}</div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`font-black text-sm ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>
-                                                    +{tx.amount} P
-                                                </div>
-                                                {tx.viewed && <CheckCircle2 className="w-6 h-6 text-green-500 ml-auto mt-1" />}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Сумма (P)</label>
+                                <input 
+                                    type="number" 
+                                    placeholder="0.00"
+                                    value={refundAmount}
+                                    onChange={(e) => setRefundAmount(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-900 transition-all text-2xl"
+                                />
+                            </div>
+                            
+                            <div className="bg-gray-50 p-3 rounded-lg text-xs text-gray-500">
+                                Баланс клиента: <span className="font-bold text-gray-800">{refundModalUser.balance} P</span>
+                            </div>
                         </div>
-                    )})
-                )}
-            </div>
+                        
+                        <div className="p-6 pt-0">
+                            <button 
+                                onClick={handleRefundSubmit}
+                                className="w-full bg-red-600 text-white py-3.5 rounded-xl font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-200"
+                            >
+                                Подтвердить возврат
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             </div>
         )}
 

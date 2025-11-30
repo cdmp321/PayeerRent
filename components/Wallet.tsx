@@ -286,7 +286,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             </div>
                         </div>
                         <div className="text-right">
-                             {/* UPDATED STYLE: Black if refund */}
                              <div className={`font-bold text-lg ${isRefund ? 'text-black' : 'text-gray-800'}`}>
                                  {isRefund ? '+' : '-'}{tx.amount} P
                              </div>
@@ -368,27 +367,29 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       }}
                       className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                     >
-                      <div className="text-left flex items-center gap-4">
+                      <div className="text-left flex items-center gap-4 w-full">
                         {method.imageUrl ? (
-                             <img 
-                                src={method.imageUrl} 
-                                alt={method.name} 
-                                className={`w-10 h-10 object-contain rounded-lg border bg-white ${selectedMethod?.id === method.id ? 'border-emerald-200' : 'border-gray-200'}`}
-                             />
+                             <div className={`w-14 h-14 shrink-0 rounded-lg border bg-white flex items-center justify-center p-1 ${selectedMethod?.id === method.id ? 'border-emerald-200' : 'border-gray-200'}`}>
+                                <img 
+                                    src={method.imageUrl} 
+                                    alt={method.name} 
+                                    className="w-full h-full object-contain"
+                                />
+                             </div>
                         ) : (
-                            <div className={`p-3 rounded-xl transition-colors ${selectedMethod?.id === method.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400 group-hover:bg-white'}`}>
+                            <div className={`p-3 rounded-xl transition-colors shrink-0 ${selectedMethod?.id === method.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400 group-hover:bg-white'}`}>
                                 <CreditCard className="w-6 h-6" />
                             </div>
                         )}
-                        <div>
-                             <span className="font-bold text-gray-800 block text-base">{method.name}</span>
+                        <div className="flex-1 min-w-0">
+                             <span className="font-bold text-gray-800 block text-base truncate">{method.name}</span>
                              {method.minAmount && method.minAmount > 0 && (
                                 <span className="text-xs text-orange-500 font-bold uppercase">От {method.minAmount} P</span>
                              )}
                         </div>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selectedMethod?.id === method.id ? 'border-emerald-500' : 'border-gray-300'}`}>
-                        {selectedMethod?.id === method.id && <div className="w-3 h-3 bg-emerald-500 rounded-full" />}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ml-2 ${selectedMethod?.id === method.id ? 'border-emerald-500' : 'border-gray-300'}`}>
+                            {selectedMethod?.id === method.id && <div className="w-3 h-3 bg-emerald-500 rounded-full" />}
+                        </div>
                       </div>
                     </button>
                   ))}
