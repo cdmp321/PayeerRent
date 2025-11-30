@@ -886,7 +886,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             
                             {isExpanded && (
                                 <div className="border-t border-gray-100 bg-gray-50/30 p-2 space-y-2">
-                                    {userTxs.map(tx => (
+                                    {/* SLICED TO 10 ITEMS */}
+                                    {userTxs.slice(0, 10).map(tx => (
                                         <div 
                                             key={tx.id} 
                                             onClick={(e) => !tx.viewed && handleMarkViewed(tx.id, e)}
@@ -913,6 +914,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             </div>
                                         </div>
                                     ))}
+                                    {userTxs.length > 10 && (
+                                        <div className="text-center py-2 text-xs font-bold text-gray-400">
+                                            Показаны последние 10 действий
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -1166,14 +1172,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <div className="mb-4">
                     <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-3">
+                            {/* Updated Image Display: Prominent, Left, Replaces Card Icon */}
                             {m.imageUrl ? (
-                                <img src={m.imageUrl} alt={m.name} className="w-10 h-10 object-contain" />
+                                <div className="w-12 h-12 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-1 shrink-0">
+                                     <img src={m.imageUrl} alt={m.name} className="w-full h-full object-contain" />
+                                </div>
                             ) : (
-                                <div className="p-2 bg-gray-100 rounded-lg">
+                                <div className="p-3 bg-gray-100 rounded-lg shrink-0">
                                     <CreditCard className="w-6 h-6 text-gray-400" />
                                 </div>
                             )}
-                            <h4 className="font-bold text-gray-800 text-lg">{m.name}</h4>
+                            <h4 className="font-bold text-gray-800 text-lg self-center">{m.name}</h4>
                         </div>
                         {m.minAmount && m.minAmount > 0 && (
                             <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase">
@@ -1181,7 +1190,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-gray-500 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100">{m.instruction}</p>
+                    <p className="text-sm text-gray-500 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100 mt-2">{m.instruction}</p>
                     </div>
                     <button 
                     onClick={(e) => deleteMethod(m.id, e)}

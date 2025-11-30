@@ -142,13 +142,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         </form>
         
         <div className="mt-8 text-center">
-            {isAdminMode && isDefaultAdmin && (
-                 <div className="mb-4 text-xs text-slate-400 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <p>Админ: <b>000</b> / <b>admin</b></p>
-                    <p>Менеджер: <b>001</b> / <b>manager</b></p>
-                 </div>
-            )}
-
             <button 
                 type="button"
                 onClick={toggleMode}
