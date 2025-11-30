@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw, Filter, XCircle } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -23,6 +23,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Finances Group Expansion State
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   
+  // Withdrawal/Refund History Filters
+  const [filterType, setFilterType] = useState<'all' | 'client' | 'date'>('all');
+  const [filterValue, setFilterValue] = useState<string>('');
+
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -335,8 +339,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   
   const unviewedIncomeCount = visibleTransactions.filter(t => (t.type === 'PURCHASE' || t.type === 'RENT_CHARGE') && !t.viewed).length;
   
-  const refundsHistory = visibleTransactions.filter(t => t.type === 'REFUND');
-  const withdrawalsHistory = visibleTransactions.filter(t => t.type === 'WITHDRAWAL');
+  // Filter Logic
+  const getFilteredList = (list: Transaction[]) => {
+      if (filterType === 'all') return list;
+      if (filterType === 'client') return list.filter(t => t.userId === filterValue);
+      if (filterType === 'date') return list.filter(t => t.date.startsWith(filterValue));
+      return list;
+  };
+
+  const refundsHistory = getFilteredList(visibleTransactions.filter(t => t.type === 'REFUND'));
+  const withdrawalsHistory = getFilteredList(visibleTransactions.filter(t => t.type === 'WITHDRAWAL'));
 
   const groupedFinances = useMemo(() => {
     const incomeTransactions = visibleTransactions.filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE');
@@ -402,6 +414,64 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       navItems.push({ id: 'payments', label: 'Метод оплаты', icon: CreditCard } as any);
       navItems.push({ id: 'settings', label: 'Настр.', icon: Settings } as any);
   }
+
+  // Helper for filter UI
+  const FilterControls = () => (
+      <div className="flex flex-wrap items-center gap-2 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-500 mr-2">
+              <Filter className="w-4 h-4" />
+              Фильтр:
+          </div>
+          
+          <button 
+            onClick={() => { setFilterType('all'); setFilterValue(''); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${filterType === 'all' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-200'}`}
+          >
+              Все
+          </button>
+
+          <select 
+            value={filterType === 'client' ? filterValue : ''}
+            onChange={(e) => {
+                if (e.target.value) {
+                    setFilterType('client');
+                    setFilterValue(e.target.value);
+                } else {
+                    setFilterType('all');
+                }
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border-none outline-none ring-2 ring-transparent transition-all ${filterType === 'client' ? 'bg-indigo-50 text-indigo-700 ring-indigo-200' : 'bg-white text-gray-600'}`}
+          >
+              <option value="">По Клиенту</option>
+              {sortedUsers.map(u => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+          </select>
+
+          <input 
+            type="date"
+            value={filterType === 'date' ? filterValue : ''}
+            onChange={(e) => {
+                if (e.target.value) {
+                    setFilterType('date');
+                    setFilterValue(e.target.value);
+                } else {
+                    setFilterType('all');
+                }
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border-none outline-none ring-2 ring-transparent transition-all ${filterType === 'date' ? 'bg-indigo-50 text-indigo-700 ring-indigo-200' : 'bg-white text-gray-600'}`}
+          />
+          
+          {(filterType !== 'all') && (
+              <button 
+                onClick={() => { setFilterType('all'); setFilterValue(''); }}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                  <XCircle className="w-5 h-5" />
+              </button>
+          )}
+      </div>
+  );
 
   return (
     <div className="flex flex-col md:flex-row min-h-[80vh] gap-6 pb-24 md:pb-0 relative">
@@ -658,10 +728,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
                 {/* 2. WITHDRAWAL HISTORY Section */}
                 <div className="pt-8 border-t border-gray-200">
-                    <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4 flex items-center gap-2">
-                        <ArrowUpRight className="w-6 h-6 text-indigo-500" />
-                        История выводов (Отправлено клиентам)
-                    </h3>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                        <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl flex items-center gap-2">
+                            <ArrowUpRight className="w-6 h-6 text-indigo-500" />
+                            История выводов (Отправлено клиентам)
+                        </h3>
+                    </div>
+                    
+                    <FilterControls />
+
                     {withdrawalsHistory.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl text-sm font-medium">История выводов пуста</div>
                     ) : (
@@ -717,10 +792,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
                 {/* 3. REFUND HISTORY Section */}
                 <div className="pt-8 border-t border-gray-200">
-                    <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4 flex items-center gap-2">
-                        <CornerUpLeft className="w-6 h-6 text-red-500" />
-                        История возвратов клиентам
-                    </h3>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                         <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl flex items-center gap-2">
+                            <CornerUpLeft className="w-6 h-6 text-red-500" />
+                            История возвратов клиентам
+                        </h3>
+                    </div>
+
+                    <FilterControls />
+
                     {refundsHistory.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl text-sm font-medium">История возвратов пуста</div>
                     ) : (

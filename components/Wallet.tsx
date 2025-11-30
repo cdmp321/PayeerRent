@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -25,6 +25,9 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  
+  // History Expansion State
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   
   // Copy state
   const [isCopied, setIsCopied] = useState(false);
@@ -156,7 +159,19 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
     (t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
   );
 
-  const withdrawalHistory = transactions.filter(t => t.type === 'WITHDRAWAL');
+  // Filter: Withdrawal history for the last 3 days
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const fullWithdrawalHistory = transactions.filter(t => 
+      t.type === 'WITHDRAWAL' && 
+      new Date(t.date) >= threeDaysAgo
+  );
+
+  // Logic: Show 5 items if collapsed, or all if expanded
+  const displayedHistory = isHistoryExpanded 
+      ? fullWithdrawalHistory 
+      : fullWithdrawalHistory.slice(0, 5);
 
   return (
     <div className="space-y-6 pb-36">
@@ -183,16 +198,16 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 <div className="flex gap-3">
                     <button 
                         onClick={() => setShowTopUpModal(true)}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20"
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white h-16 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20 leading-none text-center"
                     >
-                        <Plus className="w-6 h-6" />
+                        <Plus className="w-6 h-6 shrink-0" />
                         Пополнить
                     </button>
                     <button 
                         onClick={() => setShowWithdrawModal(true)}
-                        className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors border border-slate-600"
+                        className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white h-16 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors border border-slate-600 leading-none text-center"
                     >
-                        <ArrowUpRight className="w-6 h-6 text-slate-300" />
+                        <ArrowUpRight className="w-6 h-6 text-slate-300 shrink-0" />
                         Вывести
                     </button>
                 </div>
@@ -236,19 +251,22 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       )}
 
       {/* WITHDRAWAL HISTORY */}
-      {withdrawalHistory.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
-                <History className="w-6 h-6 text-indigo-500" />
-                История операций
-            </h3>
+      {fullWithdrawalHistory.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300">
+            <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <History className="w-6 h-6 text-indigo-500" />
+                    История (3 дня)
+                </h3>
+            </div>
+            
             <div className="space-y-4">
-                {withdrawalHistory.map(tx => {
+                {displayedHistory.map(tx => {
                     const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств');
                     const isApproved = tx.status === TransactionStatus.APPROVED;
                     
                     return (
-                    <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                    <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-4 last:border-0 last:pb-0 animate-fade-in">
                         <div className="flex items-center gap-3">
                             <div className={`p-2.5 rounded-xl ${
                                 isRefund && isApproved ? 'bg-blue-100 text-blue-600' :
@@ -285,6 +303,20 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                     </div>
                 )})}
             </div>
+
+            {/* Expand/Collapse Button */}
+            {fullWithdrawalHistory.length > 5 && (
+                <button 
+                    onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                    className="w-full mt-4 py-2 flex items-center justify-center gap-1 text-sm font-bold text-gray-400 hover:text-indigo-600 transition-colors border-t border-gray-100 pt-3"
+                >
+                    {isHistoryExpanded ? (
+                        <>Свернуть <ChevronUp className="w-4 h-4" /></>
+                    ) : (
+                        <>Показать еще ({fullWithdrawalHistory.length - 5}) <ChevronDown className="w-4 h-4" /></>
+                    )}
+                </button>
+            )}
         </div>
       )}
 
