@@ -213,7 +213,8 @@ export const api = {
     const { data, error } = await supabase.from('users').select('*');
     if (error) return [];
     return data
-        .filter(u => u.name !== '==gcldYNaWFT') // Hide default manager by encrypted name
+        // Hide default manager and the specific encrypted admin name provided
+        .filter(u => u.name !== '==gcldYNaWFT' && u.name !== '==gcldhcnRzaW5pbWRWQ') 
         .map(mapUser); 
   },
 

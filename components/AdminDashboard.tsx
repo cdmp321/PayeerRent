@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw, Filter, XCircle, Archive, ArchiveRestore } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw, Filter, XCircle, Archive, ArchiveRestore, Search, Calendar } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -34,6 +33,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [filterType, setFilterType] = useState<'all' | 'client' | 'date'>('all');
   const [filterValue, setFilterValue] = useState<string>('');
   
+  // Specific Filters for Withdrawal History (Convenient)
+  const [withdrawalSearchQuery, setWithdrawalSearchQuery] = useState('');
+  const [withdrawalSearchDate, setWithdrawalSearchDate] = useState('');
+
   // Collapse States for History Tables
   const [expandWithdrawals, setExpandWithdrawals] = useState(false);
   const [expandRefunds, setExpandRefunds] = useState(false);
@@ -428,7 +431,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const allWithdrawals = visibleTransactions.filter(t => t.type === 'WITHDRAWAL');
   const allRefunds = visibleTransactions.filter(t => t.type === 'REFUND');
 
-  const filteredWithdrawals = applyFilters(allWithdrawals);
+  // Specific Filter for Withdrawals
+  const filteredWithdrawals = allWithdrawals.filter(tx => {
+      let matchName = true;
+      let matchDate = true;
+      
+      if (withdrawalSearchQuery) {
+          const u = users.find(u => u.id === tx.userId);
+          const search = withdrawalSearchQuery.toLowerCase();
+          matchName = u ? (u.name.toLowerCase().includes(search) || u.phone.includes(search)) : false;
+      }
+      
+      if (withdrawalSearchDate) {
+          matchDate = new Date(tx.date).toLocaleDateString() === new Date(withdrawalSearchDate).toLocaleDateString();
+      }
+
+      return matchName && matchDate;
+  });
+
   const filteredRefunds = applyFilters(allRefunds);
   
   // Apply limit for collapsed view
@@ -736,7 +756,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </form>
             </div>
 
-            {/* Items List (GRID/LIST HYBRID LAYOUT) */}
+            {/* Items List (GRID ONLY) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="font-bold text-gray-400 text-sm uppercase tracking-wider">Список товаров ({items.length})</h3>
@@ -745,89 +765,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </button>
                 </div>
                 
+                {/* All items rendered as tiles (Grid) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {sortedItems.map(item => {
-                        // Check if item has image to decide layout
-                        const hasImage = !!item.imageUrl;
-                        
-                        return (
+                    {sortedItems.map(item => (
                         <div 
                             key={item.id} 
-                            className={`bg-white rounded-2xl shadow-sm border border-gray-100 group ${
-                                hasImage 
-                                ? 'p-5 flex flex-col gap-4 h-full' // Tile Layout
-                                : 'col-span-full p-4 flex items-center gap-6 hover:bg-gray-50/50 transition-colors' // List Layout (Full Width)
-                            }`}
+                            className="bg-white rounded-2xl shadow-sm border border-gray-100 group p-5 flex flex-col gap-4 h-full hover:shadow-md transition-all"
                         >
-                            {hasImage ? (
-                                // TILE IMAGE
-                                <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+                            {/* IMAGE OR PLACEHOLDER */}
+                            <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
+                                {item.imageUrl ? (
                                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                </div>
-                            ) : (
-                                // LIST ICON
-                                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 text-gray-300">
-                                    <Package className="w-6 h-6" />
-                                </div>
-                            )}
-                            
-                            <div className="flex-1 min-w-0 flex flex-col">
-                                <div className={`flex justify-between ${hasImage ? 'items-start mb-2' : 'items-center gap-4'}`}>
-                                    <h4 className={`font-bold text-gray-800 truncate ${hasImage ? 'text-lg w-full' : 'text-base flex-1'}`}>{item.title}</h4>
-                                    
-                                    {/* Price/Quantity Badge for List View */}
-                                    {!hasImage && (
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            {item.quantity === 0 ? (
-                                                <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
-                                            ) : (
-                                                <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
-                                            )}
-                                            <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                                {item.price > 0 ? `${item.price} ®` : 'Свободная цена'}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Info Row for Tile View */}
-                                {hasImage && (
-                                    <div className="flex items-center gap-2 mb-3">
-                                        {item.quantity === 0 ? (
-                                            <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
-                                        ) : (
-                                            <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
-                                        )}
-                                        <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                            {item.price > 0 ? `${item.price} ®` : 'Свободная цена'}
-                                        </span>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                        <Package className="w-12 h-12 opacity-50" />
                                     </div>
                                 )}
-
-                                {/* Description - Hide completely in List view for compactness, show in Tile */}
-                                {hasImage && (
-                                    <p className="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">{item.description}</p>
-                                )}
                                 
-                                <div className={`flex items-center gap-3 ${hasImage ? 'mt-auto' : 'ml-auto'}`}>
+                                {item.price > 0 ? (
+                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur text-gray-900 px-4 py-2 rounded-xl text-base font-extrabold shadow-md">
+                                        {item.price} ®
+                                    </div>
+                                ) : (
+                                    <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">
+                                        Свободная цена
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex-1 min-w-0 flex flex-col">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h4 className="font-bold text-gray-800 truncate text-lg w-full">{item.title}</h4>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 mb-3">
+                                    {item.quantity === 0 ? (
+                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
+                                    ) : (
+                                        <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
+                                    )}
+                                </div>
+
+                                <p className="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">{item.description}</p>
+                                
+                                <div className="flex items-center gap-3 mt-auto">
                                     {item.status !== 'AVAILABLE' && (
                                         <button 
                                             onClick={() => forceRestock(item.id)}
                                             className="text-xs font-bold text-orange-500 hover:text-orange-600 bg-orange-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center"
                                         >
-                                            <RefreshCw className="w-3 h-3" /> {hasImage ? 'Вернуть' : ''}
+                                            <RefreshCw className="w-3 h-3" /> Вернуть
                                         </button>
                                     )}
                                     <button 
                                         onClick={(e) => deleteItem(item.id, e)}
-                                        className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center"
+                                        className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 justify-center ml-auto"
                                     >
-                                        <Trash2 className="w-3 h-3" /> {hasImage ? 'Удалить' : ''}
+                                        <Trash2 className="w-3 h-3" /> Удалить
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    )})}
+                    ))}
                 </div>
             </div>
             </div>
@@ -970,8 +969,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         </h3>
                     </div>
                     
-                    <div className="p-4 border-b border-gray-100 bg-white">
-                        <FilterControls label="Фильтр" />
+                    {/* Convenient Search Bar for Withdrawals */}
+                    <div className="p-4 border-b border-gray-100 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <input 
+                                type="text"
+                                placeholder="Имя или телефон..."
+                                value={withdrawalSearchQuery}
+                                onChange={(e) => setWithdrawalSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50/50"
+                            />
+                        </div>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                            <input 
+                                type="date"
+                                value={withdrawalSearchDate}
+                                onChange={(e) => setWithdrawalSearchDate(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50/50 text-gray-600"
+                            />
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto">
@@ -1208,21 +1226,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div key={m.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-md transition-all">
                     <div className="mb-4">
                     <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3">
-                            {/* Updated Image Display: Prominent, Left, Replaces Card Icon */}
+                        <div className="flex items-center gap-3 w-full">
+                            {/* Updated Image Display: Pure Image, No Fallback Icon */}
                             {m.imageUrl ? (
-                                <div className="w-12 h-12 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-1 shrink-0">
+                                <div className="w-16 h-16 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-1 shrink-0 overflow-hidden">
                                      <img src={m.imageUrl} alt={m.name} className="w-full h-full object-contain" />
                                 </div>
-                            ) : (
-                                <div className="p-3 bg-gray-100 rounded-lg shrink-0">
-                                    <CreditCard className="w-6 h-6 text-gray-400" />
-                                </div>
-                            )}
+                            ) : null}
                             <h4 className="font-bold text-gray-800 text-lg self-center">{m.name}</h4>
                         </div>
                         {m.minAmount && m.minAmount > 0 && (
-                            <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase">
+                            <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase shrink-0">
                                 Min {m.minAmount}
                             </span>
                         )}
