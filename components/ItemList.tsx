@@ -432,5 +432,6 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
           </div>
         )}
       </div>
-    );
+    </div>
+  );
 };
