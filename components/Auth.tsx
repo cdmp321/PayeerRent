@@ -111,22 +111,22 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
           {!isAdminMode && (
             <div className="relative group">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors">
-                <UserIcon className="h-6 w-6 text-slate-800 stroke-[2.5]" />
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-all duration-200 peer-focus:opacity-0 pointer-events-none z-10">
+                <UserIcon className="h-6 w-6 text-indigo-600 stroke-[2.5]" />
               </div>
               <input
                 type="text"
                 placeholder="Ваше имя"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm"
+                className="peer w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm focus:pl-5"
               />
             </div>
           )}
           
           <div className="relative group">
-            <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors">
-                <Phone className="h-6 w-6 text-slate-800 stroke-[2.5]" />
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-all duration-200 peer-focus:opacity-0 pointer-events-none z-10">
+                <Phone className="h-6 w-6 text-indigo-600 stroke-[2.5]" />
             </div>
             <input
               type="text" 
@@ -134,14 +134,14 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="off"
-              className="w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm"
+              className="peer w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm focus:pl-5"
             />
           </div>
 
           {isAdminMode && (
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors">
-                    <Lock className="h-6 w-6 text-slate-800 stroke-[2.5]" />
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-all duration-200 peer-focus:opacity-0 pointer-events-none z-10">
+                    <Lock className="h-6 w-6 text-indigo-600 stroke-[2.5]" />
                 </div>
                 <input
                     type="password"
@@ -149,7 +149,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
-                    className="w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm"
+                    className="peer w-full pl-14 pr-5 py-4.5 border-2 border-slate-100 bg-slate-50/50 backdrop-blur-md rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all text-slate-900 placeholder-slate-400 font-bold text-lg shadow-sm focus:pl-5"
                 />
               </div>
           )}

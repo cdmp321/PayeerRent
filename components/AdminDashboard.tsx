@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -93,10 +94,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Refund History Filters
   const [refundSearchQuery, setRefundSearchQuery] = useState('');
   const [refundSearchDate, setRefundSearchDate] = useState('');
+  
+  // Deposit History Filters (New)
+  const [depositSearchQuery, setDepositSearchQuery] = useState('');
+  const [depositSearchDate, setDepositSearchDate] = useState('');
 
   // Collapse States for History Tables
   const [expandWithdrawals, setExpandWithdrawals] = useState(false);
   const [expandRefunds, setExpandRefunds] = useState(false);
+  const [expandDeposits, setExpandDeposits] = useState(false);
 
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -270,7 +276,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const handleUpdateAdmin = async (e: React.FormEvent) => { e.preventDefault(); if(!adminLogin || !adminPass) return; try { await api.updateStaffCredentials('ADMIN', adminLogin, adminPass); setMsgAdmin('Обновлено!'); setAdminLogin(''); setAdminPass(''); } catch (err: any) { setMsgAdmin('Ошибка: ' + err.message); } };
   const handleRefundSubmit = async () => { if(!refundAmount || !refundReason || !refundModalUser) return; if(!window.confirm(`Вернуть ${refundAmount} ® клиенту ${refundModalUser.name}?`)) return; try { await api.processRefund(refundModalUser.id, parseFloat(refundAmount), refundReason); setRefundAmount(''); setRefundModalUser(null); alert("Возврат успешно выполнен!"); refreshAll(); } catch (e: any) { alert("Ошибка: " + e.message); } };
   const deleteItem = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить?')) return; await api.deleteItem(id); await refreshAll(); };
-  const handleDeleteUser = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить пользователя?')) return; await api.deleteUser(id); refreshAll(); };
+  
+  const handleCancelReservation = async (id: string) => {
+      if(!window.confirm('Снять резерв с этого товара?')) return;
+      try {
+          await api.cancelReservation(id);
+          alert('Резерв снят!');
+          refreshAll();
+      } catch (e: any) {
+          alert('Ошибка: ' + e.message);
+      }
+  };
+
+  const handleDeleteUser = async (id: string, e: React.MouseEvent) => { 
+      e.stopPropagation(); 
+      
+      const targetUser = users.find(u => u.id === id);
+      if (targetUser && targetUser.balance > 0) {
+          alert(`Невозможно удалить пользователя ${targetUser.name}, так как у него есть средства на балансе (${targetUser.balance} ®).`);
+          return;
+      }
+
+      if (!window.confirm('Удалить пользователя?')) return; 
+      await api.deleteUser(id); 
+      refreshAll(); 
+  };
+
   const deleteMethod = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить метод?')) return; await api.deletePaymentMethod(id); await refreshAll(); };
   const handleApproveTx = async (id: string) => { setProcessingTxId(id); try { await api.approveTransaction(id); await refreshAll(); } catch (e: any) { alert('Ошибка: ' + e.message); } finally { setProcessingTxId(null); } };
   const handleRejectTx = async (id: string) => { if(!window.confirm('Отклонить заявку?')) return; setProcessingTxId(id); try { await api.rejectTransaction(id); await refreshAll(); } catch (e: any) { alert('Ошибка: ' + e.message); } finally { setProcessingTxId(null); } };
@@ -290,6 +321,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const pendingRequests = visibleTransactions.filter(t => t.status === TransactionStatus.PENDING && t.type !== 'PURCHASE' && t.type !== 'RENT_CHARGE');
   const allWithdrawals = visibleTransactions.filter(t => t.type === 'WITHDRAWAL');
   const allRefunds = visibleTransactions.filter(t => t.type === 'REFUND');
+  const allDeposits = visibleTransactions.filter(t => t.type === 'DEPOSIT' && t.status === TransactionStatus.APPROVED);
 
   // Filter Withdrawals
   const filteredWithdrawals = allWithdrawals.filter(tx => {
@@ -306,7 +338,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       return matchName && matchDate;
   });
 
-  // Filter Refunds (Duplicated logic from Withdrawals per request)
+  // Filter Refunds
   const filteredRefunds = allRefunds.filter(tx => {
       let matchName = true;
       let matchDate = true;
@@ -321,8 +353,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       return matchName && matchDate;
   });
   
+  // Filter Deposits (New)
+  const filteredDeposits = allDeposits.filter(tx => {
+      let matchName = true;
+      let matchDate = true;
+      if (depositSearchQuery) {
+          const u = users.find(u => u.id === tx.userId);
+          const search = depositSearchQuery.toLowerCase();
+          matchName = u ? (u.name.toLowerCase().includes(search) || u.phone.includes(search)) : false;
+      }
+      if (depositSearchDate) {
+          matchDate = new Date(tx.date).toLocaleDateString() === new Date(depositSearchDate).toLocaleDateString();
+      }
+      return matchName && matchDate;
+  });
+  
   const withdrawalsHistory = expandWithdrawals ? filteredWithdrawals : filteredWithdrawals.slice(0, 10);
   const refundsHistory = expandRefunds ? filteredRefunds : filteredRefunds.slice(0, 10);
+  const depositsHistory = expandDeposits ? filteredDeposits : filteredDeposits.slice(0, 10);
 
   const unviewedIncomeCount = visibleTransactions.filter(t => (t.type === 'PURCHASE' || t.type === 'RENT_CHARGE') && !t.viewed).length;
   
@@ -413,7 +461,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       </aside>
 
       <div className="flex-1 min-w-0 w-full">
-        {/* DEPOSITS TAB (unchanged logic, abbreviated display) */}
+        {/* DEPOSITS TAB */}
         {activeTab === 'deposits' && (
             <div className="space-y-6 animate-fade-in">
             {pendingRequests.length === 0 ? (
@@ -449,7 +497,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
         )}
 
-        {/* USERS TAB (unchanged) */}
+        {/* USERS TAB */}
         {activeTab === 'users' && (
             <div className="space-y-6 animate-fade-in">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
@@ -485,7 +533,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
         )}
 
-        {/* ITEMS TAB (unchanged) */}
+        {/* ITEMS TAB */}
         {activeTab === 'items' && (
             <div className="space-y-8 animate-fade-in">
             <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-gray-100">
@@ -509,8 +557,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
             <div className="space-y-4">
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {sortedItems.map(item => (
-                        <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 group p-5 flex flex-col gap-4 h-full">
+                    {sortedItems.map(item => {
+                        // Check if item is reserved
+                        const isReserved = item.ownerId && (item.status === 'RESERVED' || item.status === 'SOLD');
+                        const ownerName = isReserved ? users.find(u => u.id === item.ownerId)?.name : null;
+
+                        return (
+                        <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 group p-5 flex flex-col gap-4 h-full relative">
+                            {isReserved && (
+                                <div className="absolute top-0 right-0 z-10 bg-orange-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase shadow-md">
+                                    Зарезервирован
+                                </div>
+                            )}
                             <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative">
                                 {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Package className="w-12 h-12 opacity-50" /></div>}
                                 <div className="absolute top-4 right-4 bg-white/95 px-4 py-2 rounded-xl text-base font-extrabold shadow-md">{item.price > 0 ? `${item.price} ®` : 'Свободная цена'}</div>
@@ -518,12 +576,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             <div className="flex-1 min-w-0 flex flex-col">
                                 <h4 className="font-bold text-gray-800 truncate text-lg">{item.title}</h4>
                                 <div className="flex items-center gap-2 mb-3">{item.quantity === 0 ? <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded">Unlimited</span> : <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">x{item.quantity}</span>}</div>
+                                
+                                {isReserved && (
+                                    <div className="bg-orange-50 border border-orange-100 rounded-lg p-2.5 mb-3">
+                                        <div className="text-[10px] font-bold text-orange-400 uppercase tracking-wide mb-1">Резерв за:</div>
+                                        <div className="text-sm font-bold text-orange-800 flex items-center justify-between">
+                                            {ownerName || 'Unknown User'}
+                                            <button 
+                                                onClick={() => handleCancelReservation(item.id)}
+                                                className="bg-white hover:bg-orange-100 text-orange-600 p-1.5 rounded-md border border-orange-200 transition-colors"
+                                                title="Снять резерв"
+                                            >
+                                                <Unlock className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex items-center gap-3 mt-auto">
                                     <button onClick={(e) => deleteItem(item.id, e)} className="text-xs font-bold text-red-500 bg-red-50 px-3 py-2 rounded-lg ml-auto"><Trash2 className="w-3 h-3" /> Удалить</button>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             </div>
             </div>
@@ -650,7 +725,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <div className="p-5 border-b border-gray-100 bg-gray-50/50">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2"><RotateCcw className="w-5 h-5 text-purple-500" /> История возвратов клиентам от администратора</h3>
                     </div>
-                    {/* ADDED SEARCH FOR REFUNDS */}
+                    {/* SEARCH FOR REFUNDS */}
                     <div className="p-4 border-b border-gray-100 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="relative"><Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" /><input type="text" placeholder="Имя или телефон..." value={refundSearchQuery} onChange={(e) => setRefundSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50/50" /></div>
                         <div className="relative"><Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" /><input type="date" value={refundSearchDate} onChange={(e) => setRefundSearchDate(e.target.value)} className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50/50 text-gray-600" /></div>
@@ -673,6 +748,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </div>
                     {filteredRefunds.length > 10 && <button onClick={() => setExpandRefunds(!expandRefunds)} className="w-full py-3 text-xs font-bold text-gray-400 hover:text-indigo-600 hover:bg-gray-50 transition-colors border-t border-gray-100 flex items-center justify-center gap-1">{expandRefunds ? <>Свернуть <ChevronUp className="w-3 h-3" /></> : <>Показать все ({filteredRefunds.length}) <ChevronDown className="w-3 h-3" /></>}</button>}
                 </div>
+            </div>
+
+            {/* NEW SECTION: Deposit History */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mt-6">
+                <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2"><ArrowDownLeft className="w-5 h-5 text-emerald-500" /> История пополнений (Одобрено)</h3>
+                </div>
+                <div className="p-4 border-b border-gray-100 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="relative"><Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" /><input type="text" placeholder="Имя или телефон..." value={depositSearchQuery} onChange={(e) => setDepositSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-gray-50/50" /></div>
+                    <div className="relative"><Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" /><input type="date" value={depositSearchDate} onChange={(e) => setDepositSearchDate(e.target.value)} className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-gray-50/50 text-gray-600" /></div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <tbody className="divide-y divide-gray-50">
+                            {depositsHistory.map(tx => {
+                                const u = users.find(u => u.id === tx.userId);
+                                return (
+                                <tr key={tx.id} className="hover:bg-gray-50/50 group">
+                                    <td className="py-4 px-4 font-bold text-gray-700 text-xs">{u?.name}<div className="text-[10px] font-normal text-gray-400">{new Date(tx.date).toLocaleDateString()}</div></td>
+                                    <td className="py-4 font-extrabold text-xs text-emerald-600">+{tx.amount} ®</td>
+                                    <td className="py-4">
+                                        <div className="flex flex-col items-start gap-1">
+                                            <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px] font-bold uppercase whitespace-nowrap">Одобрено</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 text-right pr-4">
+                                         {tx.receiptUrl && (
+                                            <button 
+                                                onClick={() => setViewingReceipt(tx.receiptUrl || null)}
+                                                className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1 justify-end"
+                                            >
+                                                <FileText className="w-3 h-3" /> Чек
+                                            </button>
+                                         )}
+                                    </td>
+                                </tr>
+                            )})}
+                        </tbody>
+                    </table>
+                </div>
+                {filteredDeposits.length > 10 && <button onClick={() => setExpandDeposits(!expandDeposits)} className="w-full py-3 text-xs font-bold text-gray-400 hover:text-indigo-600 hover:bg-gray-50 transition-colors border-t border-gray-100 flex items-center justify-center gap-1">{expandDeposits ? <>Свернуть <ChevronUp className="w-3 h-3" /></> : <>Показать все ({filteredDeposits.length}) <ChevronDown className="w-3 h-3" /></>}</button>}
             </div>
             
             {/* Modal for User Refund (unchanged) */}
