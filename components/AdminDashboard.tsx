@@ -33,6 +33,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // Withdrawal/Refund History Filters
   const [filterType, setFilterType] = useState<'all' | 'client' | 'date'>('all');
   const [filterValue, setFilterValue] = useState<string>('');
+  
+  // Collapse States for History Tables
+  const [expandWithdrawals, setExpandWithdrawals] = useState(false);
+  const [expandRefunds, setExpandRefunds] = useState(false);
 
   // Refresh loading state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -391,6 +395,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const refundsHistory = getFilteredList(visibleTransactions.filter(t => t.type === 'REFUND'));
   const withdrawalsHistory = getFilteredList(visibleTransactions.filter(t => t.type === 'WITHDRAWAL'));
+
+  // Pagination / Collapsing Logic
+  const displayedWithdrawals = expandWithdrawals ? withdrawalsHistory : withdrawalsHistory.slice(0, 10);
+  const displayedRefunds = expandRefunds ? refundsHistory : refundsHistory.slice(0, 10);
 
   const groupedFinances = useMemo(() => {
     const incomeTransactions = visibleTransactions.filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE');
@@ -832,7 +840,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-sm">
-                                    {withdrawalsHistory.map(tx => {
+                                    {displayedWithdrawals.map(tx => {
                                         const u = users.find(user => user.id === tx.userId);
                                         const isRefundReq = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств');
                                         
@@ -842,11 +850,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                     <div className="font-bold text-gray-800">{u ? u.name : 'Unknown'}</div>
                                                     <div className="text-xs text-gray-400 md:hidden">{new Date(tx.date).toLocaleDateString()}</div>
                                                 </td>
-                                                {/* STYLE UPDATE: Consistent Font Size text-lg font-extrabold */}
-                                                <td className={`p-4 font-extrabold text-lg ${isRefundReq ? 'text-blue-600' : 'text-green-600'}`}>
+                                                {/* STYLE UPDATE: Reduced font size ~30% (from text-lg to text-xs) */}
+                                                <td className={`p-4 font-extrabold text-xs ${isRefundReq ? 'text-blue-600' : 'text-green-600'}`}>
                                                     {isRefundReq ? '+' : '-'}{tx.amount} P
                                                 </td>
-                                                <td className={`p-4 font-mono text-xs hidden md:table-cell ${isRefundReq ? 'text-blue-600 font-bold' : 'text-green-600 font-bold'}`}>
+                                                {/* STYLE UPDATE: Increased font size ~10% (from text-xs to text-sm) */}
+                                                <td className={`p-4 font-mono text-sm hidden md:table-cell ${isRefundReq ? 'text-blue-600 font-bold' : 'text-green-600 font-bold'}`}>
                                                     {tx.description.replace(/Заявка на вывод: |ЗАПРОС НА ВОЗВРАТ: /g, '')}
                                                 </td>
                                                 <td className="p-4">
@@ -866,6 +875,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     })}
                                 </tbody>
                             </table>
+                             {/* Collapse Toggle */}
+                             {withdrawalsHistory.length > 10 && (
+                                <button 
+                                    onClick={() => setExpandWithdrawals(!expandWithdrawals)}
+                                    className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-gray-400 hover:text-indigo-600 transition-colors bg-gray-50 hover:bg-gray-100 border-t border-gray-100"
+                                >
+                                    {expandWithdrawals ? (
+                                        <>Свернуть <ChevronUp className="w-4 h-4" /></>
+                                    ) : (
+                                        <>Показать все ({withdrawalsHistory.length}) <ChevronDown className="w-4 h-4" /></>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
@@ -896,13 +918,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 text-sm">
-                                    {refundsHistory.map(tx => {
+                                    {displayedRefunds.map(tx => {
                                         const u = users.find(user => user.id === tx.userId);
                                         return (
                                             <tr key={tx.id} className="hover:bg-gray-50/50">
                                                 <td className="p-4 font-bold text-gray-800">{u ? u.name : 'Unknown'}</td>
-                                                {/* STYLE UPDATE: Dark Purple and consistent size */}
-                                                <td className="p-4 font-extrabold text-lg text-purple-900">-{tx.amount} P</td>
+                                                {/* STYLE UPDATE: Reduced font size ~30% (from text-lg to text-xs) */}
+                                                <td className="p-4 font-extrabold text-xs text-purple-900">-{tx.amount} P</td>
                                                 <td className="p-4 text-gray-600">{tx.description.replace('Возврат средств: ', '')}</td>
                                                 <td className="p-4">
                                                      <span className="px-2 py-1 rounded-md text-xs font-bold uppercase bg-purple-100 text-purple-900">
@@ -915,6 +937,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     })}
                                 </tbody>
                             </table>
+                            {/* Collapse Toggle */}
+                            {refundsHistory.length > 10 && (
+                                <button 
+                                    onClick={() => setExpandRefunds(!expandRefunds)}
+                                    className="w-full py-3 flex items-center justify-center gap-2 text-sm font-bold text-gray-400 hover:text-indigo-600 transition-colors bg-gray-50 hover:bg-gray-100 border-t border-gray-100"
+                                >
+                                    {expandRefunds ? (
+                                        <>Свернуть <ChevronUp className="w-4 h-4" /></>
+                                    ) : (
+                                        <>Показать все ({refundsHistory.length}) <ChevronDown className="w-4 h-4" /></>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
