@@ -415,9 +415,9 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                             
                             <button 
                                 onClick={() => handleReserve(item)}
-                                className="w-full py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 transition-all bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-200 hover:shadow-2xl hover:shadow-slate-400/50 active:scale-[0.98] relative overflow-hidden group/btn"
+                                className="w-full py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 transition-all bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-500 hover:to-blue-500 shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-[0.98] relative overflow-hidden group/btn"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
                                 <CreditCard className="w-6 h-6 shrink-0 stroke-[2.5]" />
                                 <span className="relative z-10">
                                 {isFreePrice 

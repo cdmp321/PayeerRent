@@ -467,15 +467,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
              </nav>
          </div>
 
-         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl lg:rounded-3xl p-4 lg:p-6 text-white shadow-lg shadow-indigo-200 flex flex-row lg:flex-col items-center justify-between lg:justify-start gap-4">
+         <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl lg:rounded-3xl p-4 lg:p-6 text-slate-800 shadow-xl flex flex-row lg:flex-col items-center justify-between lg:justify-start gap-4">
              <div className="text-left">
-                <h3 className="font-bold text-sm lg:text-lg mb-0 lg:mb-1">Панель</h3>
-                <p className="text-indigo-100 text-[10px] lg:text-xs opacity-80">Управление</p>
+                <h3 className="font-extrabold text-sm lg:text-lg mb-0 lg:mb-1">Панель</h3>
+                <p className="text-slate-500 text-[10px] lg:text-xs font-bold">Управление</p>
              </div>
              <button 
                 onClick={refreshAll} 
                 disabled={isRefreshing}
-                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 lg:w-full lg:py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shrink-0"
+                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-4 py-2 lg:w-full lg:py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shrink-0 border border-indigo-100"
              >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline lg:inline">{isRefreshing ? 'Обновление...' : 'Обновить'}</span>

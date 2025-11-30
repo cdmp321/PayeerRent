@@ -301,14 +301,13 @@ const App: React.FC = () => {
                </button>
             )}
             
-            {/* Logout Button - Blue Filled Style */}
+            {/* Logout Button - Transparent without text */}
             <button 
               onClick={handleLogout}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-lg shadow-blue-200 font-bold text-sm transition-all flex items-center gap-2"
+              className="p-3 bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
               title="Выйти"
             >
-              <LogOut className="w-4 h-4" />
-              <span>Выйти</span>
+              <LogOut className="w-6 h-6" />
             </button>
           </div>
         </div>
