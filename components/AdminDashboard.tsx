@@ -584,10 +584,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             {ownerName || 'Unknown User'}
                                             <button 
                                                 onClick={() => handleCancelReservation(item.id)}
-                                                className="bg-white hover:bg-orange-100 text-orange-600 p-1.5 rounded-md border border-orange-200 transition-colors"
+                                                className="bg-white hover:bg-orange-100 text-orange-600 px-2 py-1.5 rounded-md border border-orange-200 transition-colors text-xs flex items-center gap-1"
                                                 title="Снять резерв"
                                             >
-                                                <Unlock className="w-3.5 h-3.5" />
+                                                <Unlock className="w-3 h-3" /> Снять
                                             </button>
                                         </div>
                                     </div>
@@ -752,8 +752,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             {/* NEW SECTION: Deposit History */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mt-6">
-                <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+                <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                     <h3 className="font-bold text-gray-800 flex items-center gap-2"><ArrowDownLeft className="w-5 h-5 text-emerald-500" /> История пополнений (Одобрено)</h3>
+                    <div className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg">Всего: {filteredDeposits.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)} ®</div>
                 </div>
                 <div className="p-4 border-b border-gray-100 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="relative"><Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" /><input type="text" placeholder="Имя или телефон..." value={depositSearchQuery} onChange={(e) => setDepositSearchQuery(e.target.value)} className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-gray-50/50" /></div>
