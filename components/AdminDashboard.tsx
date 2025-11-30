@@ -637,32 +637,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                        {sortedUsers.map(u => (
-                        <tr key={u.id} className="hover:bg-gray-50/50 transition-colors group">
-                            <td className="p-4 font-bold text-gray-800">{u.name}</td>
-                            <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
-                            <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} P</td>
-                            <td className="p-4">
-                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
-                                    u.role === 'ADMIN' ? 'bg-slate-800 text-white' : 
-                                    u.role === 'MANAGER' ? 'bg-purple-100 text-purple-700' : 
-                                    'bg-blue-50 text-blue-600'
-                                }`}>
-                                    {u.role}
-                                </span>
-                            </td>
-                            <td className="p-4 text-right">
-                                {user?.role === UserRole.MANAGER && u.role === UserRole.USER && (
-                                    <button 
-                                        onClick={(e) => handleDeleteUser(u.id, e)}
-                                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Удалить пользователя"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                )}
-                            </td>
-                        </tr>
+                        {sortedUsers
+                            .filter(u => user?.role === UserRole.MANAGER ? u.role !== UserRole.ADMIN : true)
+                            .map(u => (
+                            <tr key={u.id} className="hover:bg-gray-50/50 transition-colors group">
+                                <td className="p-4 font-bold text-gray-800">{u.name}</td>
+                                <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
+                                <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} P</td>
+                                <td className="p-4">
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
+                                        u.role === 'ADMIN' ? 'bg-slate-800 text-white' : 
+                                        u.role === 'MANAGER' ? 'bg-purple-100 text-purple-700' : 
+                                        'bg-blue-50 text-blue-600'
+                                    }`}>
+                                        {u.role}
+                                    </span>
+                                </td>
+                                <td className="p-4 text-right">
+                                    {user?.role === UserRole.MANAGER && u.role === UserRole.USER && (
+                                        <button 
+                                            onClick={(e) => handleDeleteUser(u.id, e)}
+                                            className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                            title="Удалить пользователя"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
                         ))}
                     </tbody>
                     </table>
@@ -836,9 +838,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         const isExpanded = expandedUserId === userId;
                         const hasUnread = userTxs.some(t => !t.viewed);
                         const latestTx = userTxs[0]; // Already sorted by date desc in api
+                        const hasBalance = u.balance > 0;
 
                         return (
-                        <div key={userId} className={`bg-white rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'}`}>
+                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-50/60 border-emerald-100' : 'bg-white'}`}>
                             <div 
                                 className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors"
                                 onClick={() => toggleUserExpansion(userId)}
@@ -862,7 +865,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     {/* Action: Refund Button specific for this user */}
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setRefundModalUser(u); }}
-                                        className="p-2 text-gray-300 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
+                                        className="p-2 text-orange-600 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors shadow-sm"
                                         title="Сделать возврат"
                                     >
                                         <RotateCcw className="w-4 h-4" />
@@ -961,8 +964,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                         {isRefund ? 'Выполнено' : 'Списано'}
                                                     </span>
                                                 )}
-                                                {/* CHANGED REQUISITES COLOR TO DARK GRAY */}
-                                                <div className="text-sm font-medium text-gray-700 break-all max-w-[150px]">
+                                                {/* REMOVED MAX-WIDTH AND BREAK-ALL */}
+                                                <div className="text-sm font-medium text-gray-700 whitespace-normal">
                                                     {tx.description.replace('Заявка на вывод: ', '').replace('ЗАПРОС НА ВОЗВРАТ: ', '')}
                                                 </div>
                                             </div>
@@ -1010,13 +1013,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             {u?.name}
                                             <div className="text-[10px] font-normal text-gray-400">{new Date(tx.date).toLocaleDateString()}</div>
                                         </td>
-                                        {/* CHANGED TO MATCH MAKE REFUND HEADER (RED-800) */}
                                         <td className="py-4 font-extrabold text-xs text-red-800">
                                             {tx.amount} P
                                         </td>
                                         <td className="py-4">
-                                            {/* CHANGED TO MATCH MAKE REFUND HEADER */}
-                                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-[10px] font-bold uppercase whitespace-nowrap">
                                                 Выполнено
                                             </span>
                                         </td>
