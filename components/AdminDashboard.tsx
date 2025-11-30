@@ -262,7 +262,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleRefund = async (userId: string) => {
       if(!refundAmount || !refundReason) {
-          alert("Заполните сумму и причину возврата");
+          alert("Заполните сумму и выберите причину возврата");
           return;
       }
       if(!window.confirm(`Вернуть ${refundAmount} P клиенту?`)) return;
@@ -782,13 +782,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                             onChange={e => setRefundAmount(e.target.value)}
                                                             className="flex-1 p-2.5 rounded-lg border border-red-200 text-sm focus:border-red-500 outline-none"
                                                         />
-                                                        <input 
-                                                            type="text" 
-                                                            placeholder="Причина (например, отмена услуги)" 
+                                                        {/* Replaced input with select */}
+                                                        <select 
                                                             value={refundReason}
                                                             onChange={e => setRefundReason(e.target.value)}
-                                                            className="flex-[2] p-2.5 rounded-lg border border-red-200 text-sm focus:border-red-500 outline-none"
-                                                        />
+                                                            className="flex-[2] p-2.5 rounded-lg border border-red-200 text-sm focus:border-red-500 outline-none bg-white font-medium text-gray-700"
+                                                        >
+                                                            <option value="">Выберите причину...</option>
+                                                            <option value="Выплата клиенту на карту с обнулением кошелька">Выплата клиенту на карту с обнулением кошелька</option>
+                                                            <option value="Подарочный бонус">Подарочный бонус</option>
+                                                            <option value="Сбой, (претензия от клиента)">Сбой, (претензия от клиента)</option>
+                                                        </select>
+                                                        
                                                         <button 
                                                             onClick={() => handleRefund(group.user!.id)}
                                                             className="bg-red-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-red-700 active:scale-95 transition-all"
@@ -833,7 +838,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                         <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl flex items-center gap-2">
                             <ArrowUpRight className="w-6 h-6 text-indigo-500" />
-                            История выводов (Отправлено клиентам)
+                            История вывода и возврата (Отправлен запрос от клиента)
                         </h3>
                     </div>
                     
@@ -911,7 +916,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                          <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl flex items-center gap-2">
                             <CornerUpLeft className="w-6 h-6 text-purple-900" />
-                            История возвратов клиентам
+                            История возвратов клиентам от администратора
                         </h3>
                     </div>
 
