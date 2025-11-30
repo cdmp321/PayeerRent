@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { User } from '../types';
-import { Phone, User as UserIcon, ShieldCheck, Loader2, Lock, ArrowLeft, Briefcase } from 'lucide-react';
+import { Phone, User as UserIcon, ShieldCheck, Loader2, Lock, Briefcase } from 'lucide-react';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -16,6 +16,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isDefaultAdmin, setIsDefaultAdmin] = useState(true);
+  
+  // Secret Trigger State
+  const [secretClicks, setSecretClicks] = useState(0);
 
   useEffect(() => {
       // Add catch to prevent crash if local storage is corrupt
@@ -23,6 +26,17 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         .then(setIsDefaultAdmin)
         .catch(() => setIsDefaultAdmin(false));
   }, []);
+
+  const handleSecretClick = () => {
+    setSecretClicks(prev => {
+        const newCount = prev + 1;
+        if (newCount >= 7) {
+            toggleMode();
+            return 0;
+        }
+        return newCount;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,20 +70,24 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   };
 
   const toggleMode = () => {
-    setIsAdminMode(!isAdminMode);
+    setIsAdminMode(prev => !prev);
     setError('');
     setPhone('');
     setName('');
     setPassword('');
+    setSecretClicks(0);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-fade-in">
       <div className="glass-panel p-8 sm:p-10 rounded-3xl w-full max-w-sm transition-all duration-300">
         
-        {/* Header Icon */}
+        {/* Header Icon - Secret Trigger */}
         <div className="flex justify-center mb-6">
-          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl rotate-3 transition-colors duration-300 ${isAdminMode ? 'bg-slate-800 shadow-slate-300/50' : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-300/50'}`}>
+          <div 
+            onClick={handleSecretClick}
+            className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl rotate-3 transition-all duration-300 cursor-pointer active:scale-95 ${isAdminMode ? 'bg-slate-800 shadow-slate-300/50' : 'bg-gradient-to-br from-blue-600 to-indigo-600 shadow-indigo-300/50'}`}
+          >
             {isAdminMode ? <Briefcase className="w-9 h-9 text-white" /> : <ShieldCheck className="w-10 h-10 text-white" />}
           </div>
         </div>
@@ -141,21 +159,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           </button>
         </form>
         
-        <div className="mt-8 text-center">
-            <button 
-                type="button"
-                onClick={toggleMode}
-                className="text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors flex items-center justify-center gap-1 mx-auto"
-            >
-                {isAdminMode ? (
-                    <>
-                        <ArrowLeft className="w-4 h-4" /> Я клиент
-                    </>
-                ) : (
-                    "Вход для сотрудников"
-                )}
-            </button>
-        </div>
+        {/* Removed Visible Switch Button */}
       </div>
     </div>
   );

@@ -75,10 +75,10 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
 
     if (user.balance < amountToPay) {
       if (onNavigateToWallet) {
-        alert(`Недостаточно средств. Ваш баланс: ${user.balance} P. Необходимо: ${amountToPay} P.\n\nПереходим к пополнению баланса.`);
+        alert(`Недостаточно средств. Ваш баланс: ${user.balance} Ⓡ. Необходимо: ${amountToPay} Ⓡ.\n\nПереходим к пополнению баланса.`);
         onNavigateToWallet();
       } else {
-        alert(`Недостаточно средств. Необходимо: ${amountToPay} P`);
+        alert(`Недостаточно средств. Необходимо: ${amountToPay} Ⓡ`);
       }
       return;
     }
@@ -117,7 +117,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
 
       if (user.balance < amountToPay) {
         if (onNavigateToWallet) {
-            alert(`Недостаточно средств. Ваш баланс: ${user.balance} P.`);
+            alert(`Недостаточно средств. Ваш баланс: ${user.balance} Ⓡ.`);
             onNavigateToWallet();
         } else {
             alert('Недостаточно средств на балансе');
@@ -245,7 +245,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                                         disabled={isProcessing}
                                                         className="w-full pl-3 pr-8 py-2.5 border border-emerald-200 rounded-lg text-sm focus:ring-1 focus:ring-emerald-500 outline-none disabled:bg-gray-100 disabled:text-gray-400"
                                                     />
-                                                    <span className="absolute right-3 top-2.5 text-gray-400 font-bold text-sm">P</span>
+                                                    <span className="absolute right-3 top-2.5 text-gray-400 font-bold text-sm">Ⓡ</span>
                                                 </div>
                                                 <button 
                                                     onClick={() => handlePayRent(item)}
@@ -270,7 +270,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                                 }`}
                                             >
                                                 {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-                                                {isProcessing ? 'Обработка...' : `Внести платеж (${item.price} P)`}
+                                                {isProcessing ? 'Обработка...' : `Внести платеж (${item.price} Ⓡ)`}
                                             </button>
                                         )}
                                     </div>
@@ -369,7 +369,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                         <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                         {item.price > 0 ? (
                             <div className="absolute top-4 right-4 bg-white/95 backdrop-blur text-gray-900 px-4 py-2 rounded-xl text-base font-extrabold shadow-md">
-                                {item.price} P
+                                {item.price} Ⓡ
                             </div>
                         ) : (
                             <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">
@@ -385,7 +385,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                         {/* Show price badge here if no image */}
                         {!item.imageUrl && (
                             <div className={`px-3 py-1.5 rounded-xl text-sm font-bold whitespace-nowrap ml-2 ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                {item.price > 0 ? `${item.price} P` : 'Свободная цена'}
+                                {item.price > 0 ? `${item.price} Ⓡ` : 'Свободная цена'}
                             </div>
                         )}
                     </div>
@@ -403,7 +403,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                     onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
                                     className="w-full pl-4 pr-10 py-4 border-2 border-gray-100 rounded-xl text-lg outline-none focus:border-indigo-500 focus:ring-0 transition-all bg-gray-50 focus:bg-white font-bold text-gray-800 placeholder-gray-400"
                                 />
-                                <span className="absolute right-4 top-4 text-gray-400 text-lg font-bold">P</span>
+                                <span className="absolute right-4 top-4 text-gray-400 text-lg font-bold">Ⓡ</span>
                             </div>
                         )}
                         
@@ -414,8 +414,8 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                             <CreditCard className="w-7 h-7 shrink-0" />
                             <span className="truncate">
                             {isFreePrice 
-                                ? (currentInputAmount > 0 ? `Оплатить ${currentInputAmount} P` : 'Оплатить') 
-                                : `Оплатить ${item.price} P`
+                                ? (currentInputAmount > 0 ? `Оплатить ${currentInputAmount} Ⓡ` : 'Оплатить') 
+                                : `Оплатить ${item.price} Ⓡ`
                             }
                             </span>
                         </button>

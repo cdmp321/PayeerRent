@@ -71,7 +71,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       return;
     }
     if (selectedMethod.minAmount && val < selectedMethod.minAmount) {
-        setNotification({ type: 'error', msg: `Минимальная сумма: ${selectedMethod.minAmount} P` });
+        setNotification({ type: 'error', msg: `Минимальная сумма: ${selectedMethod.minAmount} Ⓡ` });
         return;
     }
     if (!receipt) {
@@ -191,7 +191,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             </div>
             
             <div className="text-5xl font-extrabold mb-8 relative z-10 tracking-tight">
-            {user.balance.toFixed(2)} <span className="text-2xl font-normal text-slate-400">P</span>
+            {user.balance.toFixed(2)} <span className="text-2xl font-normal text-slate-400">Ⓡ</span>
             </div>
 
             <div className="flex flex-col gap-3 relative z-10">
@@ -241,7 +241,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             </div>
                         </div>
                         <div className={`font-black text-2xl ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-600' : 'text-blue-600'}`}>
-                            {tx.type === 'DEPOSIT' || isRefundRequest ? '+' : '-'}{tx.amount} P
+                            {tx.type === 'DEPOSIT' || isRefundRequest ? '+' : '-'}{tx.amount} Ⓡ
                         </div>
                     </div>
                  </div>
@@ -287,7 +287,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         </div>
                         <div className="text-right">
                              <div className={`font-bold text-lg ${isRefund ? 'text-black' : 'text-gray-800'}`}>
-                                 {isRefund ? '+' : '-'}{tx.amount} P
+                                 {isRefund ? '+' : '-'}{tx.amount} Ⓡ
                              </div>
                              <div className={`text-xs font-bold uppercase ${
                                  isRefund && isApproved ? 'text-purple-900' :
@@ -384,7 +384,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         <div className="flex-1 min-w-0">
                              <span className="font-bold text-gray-800 block text-base truncate">{method.name}</span>
                              {method.minAmount && method.minAmount > 0 && (
-                                <span className="text-xs text-orange-500 font-bold uppercase">От {method.minAmount} P</span>
+                                <span className="text-xs text-orange-500 font-bold uppercase">От {method.minAmount} Ⓡ</span>
                              )}
                         </div>
                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ml-2 ${selectedMethod?.id === method.id ? 'border-emerald-500' : 'border-gray-300'}`}>
@@ -474,7 +474,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                <div className="bg-blue-50 p-4 rounded-xl flex items-start gap-3 text-sm text-blue-800 mb-2 border border-blue-100">
                    <AlertCircle className="w-6 h-6 shrink-0 mt-0.5 text-blue-600" />
                    <div>
-                       <p className="font-bold text-base">Баланс: {user.balance.toFixed(2)} P</p>
+                       <p className="font-bold text-base">Баланс: {user.balance.toFixed(2)} Ⓡ</p>
                        <p className="text-xs opacity-80 mt-1 font-medium">Средства списываются сразу. При отказе возвращаются на баланс.</p>
                    </div>
                </div>
