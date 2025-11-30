@@ -276,7 +276,7 @@ const App: React.FC = () => {
       {/* Header / Navbar */}
       <header className="glass-header sticky top-0 z-30 transition-all duration-300">
         {/* Dynamic max-width based on role */}
-        <div className={`${isAdminView ? 'max-w-7xl px-6' : 'max-w-md px-4'} mx-auto py-3.5 flex justify-between items-center`}>
+        <div className={`${isAdminView ? 'max-w-7xl px-4 sm:px-6' : 'max-w-md px-4'} mx-auto py-3.5 flex justify-between items-center`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-300">
                 <Store className="w-6 h-6" />
@@ -315,7 +315,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content Area - Responsive Container */}
-      <main className={`${isAdminView ? 'max-w-7xl px-6' : 'max-w-md px-4'} mx-auto py-6 transition-all duration-300`}>
+      <main className={`${isAdminView ? 'max-w-7xl px-4 sm:px-6' : 'max-w-md px-4'} mx-auto py-6 transition-all duration-300`}>
         {isAdminView ? (
           <AdminDashboard user={user} />
         ) : (

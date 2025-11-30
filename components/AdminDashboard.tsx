@@ -442,23 +442,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-start">
-      <aside className="w-full lg:w-72 flex-shrink-0 space-y-4 sticky top-6 self-start">
-         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 overflow-hidden">
-             <nav className="space-y-1.5">
+      <aside className="w-full lg:w-72 flex-shrink-0 space-y-4 lg:sticky lg:top-24 self-start">
+         <div className="bg-white rounded-2xl lg:rounded-3xl shadow-sm border border-gray-100 p-2 lg:p-4 overflow-hidden">
+             <nav className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-2 lg:space-y-1">
                 {displayNavItems.map(item => (
                     <button
                         key={item.id}
                         onClick={() => setActiveTab(item.id as any)}
-                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all relative ${
+                        className={`flex items-center gap-2 lg:gap-3 px-3 py-3 lg:px-4 lg:py-3.5 rounded-xl text-xs lg:text-sm font-bold transition-all relative justify-center lg:justify-start ${
                         activeTab === item.id 
                             ? 'bg-slate-900 text-white shadow-md shadow-slate-200' 
-                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 bg-gray-50/50 lg:bg-transparent'
                         }`}
                     >
                         {item.icon}
-                        <span className="flex-1 text-left">{item.label}</span>
+                        <span className="text-center lg:text-left">{item.label}</span>
                         {item.count ? (
-                            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] text-white ${item.id === 'deposits' ? 'bg-orange-500' : 'bg-emerald-500'}`}>
+                            <span className={`flex h-5 w-5 lg:h-6 lg:w-6 items-center justify-center rounded-full text-[10px] text-white absolute top-2 right-2 lg:static lg:ml-auto ${item.id === 'deposits' ? 'bg-orange-500' : 'bg-emerald-500'}`}>
                                 {item.count}
                             </span>
                         ) : null}
@@ -467,16 +467,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
              </nav>
          </div>
 
-         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg shadow-indigo-200">
-             <h3 className="font-bold text-lg mb-1">Панель</h3>
-             <p className="text-indigo-100 text-xs mb-4 opacity-80">Управление магазином</p>
+         <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl lg:rounded-3xl p-4 lg:p-6 text-white shadow-lg shadow-indigo-200 flex flex-row lg:flex-col items-center justify-between lg:justify-start gap-4">
+             <div className="text-left">
+                <h3 className="font-bold text-sm lg:text-lg mb-0 lg:mb-1">Панель</h3>
+                <p className="text-indigo-100 text-[10px] lg:text-xs opacity-80">Управление</p>
+             </div>
              <button 
                 onClick={refreshAll} 
                 disabled={isRefreshing}
-                className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 lg:w-full lg:py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shrink-0"
              >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Обновление...' : 'Обновить данные'}
+                <span className="hidden sm:inline lg:inline">{isRefreshing ? 'Обновление...' : 'Обновить'}</span>
+                <span className="sm:hidden lg:hidden">{isRefreshing ? '...' : 'Обновить'}</span>
              </button>
          </div>
       </aside>
@@ -671,7 +674,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         const txsToShow = isFullHistory ? userTxs : userTxs.slice(0, 5);
                         
                         return (
-                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-purple-100 border-purple-200' : 'bg-white'}`}>
+                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-100 border-emerald-200' : 'bg-white'}`}>
                             <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors" onClick={() => toggleUserExpansion(userId)}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>{u.name.charAt(0).toUpperCase()}</div>
