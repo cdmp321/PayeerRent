@@ -4,12 +4,21 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
   body {
     @apply text-slate-900 antialiased;
     /* Beautiful Soft Blue Gradient */
     background: linear-gradient(to top, #accbee 0%, #e7f0fd 100%);
     background-attachment: fixed;
     min-height: 100vh;
+  }
+
+  button {
+    touch-action: manipulation;
   }
 }
 
