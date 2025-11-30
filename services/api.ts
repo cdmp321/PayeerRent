@@ -32,7 +32,8 @@ const mapMethod = (data: any): PaymentMethod => ({
   name: data.name,
   instruction: data.instruction,
   isActive: data.is_active,
-  minAmount: Number(data.min_amount)
+  minAmount: Number(data.min_amount),
+  imageUrl: data.image_url
 });
 
 const mapTransaction = (data: any): Transaction => ({
@@ -570,7 +571,8 @@ export const api = {
         name: method.name,
         instruction: method.instruction,
         is_active: method.isActive,
-        min_amount: method.minAmount
+        min_amount: method.minAmount,
+        image_url: method.imageUrl
     }]);
     if (error) throw new Error(error.message);
   },

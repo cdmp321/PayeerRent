@@ -60,7 +60,8 @@ create table public.payment_methods (
   name text not null,
   instruction text not null,
   is_active boolean default true,
-  min_amount numeric default 0
+  min_amount numeric default 0,
+  image_url text
 );
 
 -- 6. Сотрудники (ЗАШИФРОВАННЫЕ ДАННЫЕ)
@@ -286,20 +287,21 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Settings Button - Top Right, Before Logout */}
             {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && !isAdminView && (
                <button 
                  onClick={() => setIsAdminView(true)}
-                 className="p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 hover:bg-slate-100 text-slate-500"
+                 className="p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 hover:bg-slate-100 text-slate-500 hover:text-indigo-600"
                  title="Панель управления"
                >
-                  <Settings className="w-5 h-5" />
+                  <Settings className="w-6 h-6" />
                </button>
             )}
             
-            {/* Logout Button (Visible for everyone now) */}
+            {/* Logout Button - Bright and Prominent */}
             <button 
               onClick={handleLogout}
-              className="p-2.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
+              className="p-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-full text-white transition-all shadow-lg hover:shadow-red-200"
               title="Выйти"
             >
               <LogOut className="w-5 h-5" />

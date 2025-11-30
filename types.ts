@@ -40,6 +40,7 @@ export interface PaymentMethod {
   instruction: string; // Instructions shown to user
   isActive: boolean;
   minAmount?: number; // Minimum deposit amount (0 or undefined = no limit)
+  imageUrl?: string; // Logo/Image base64
 }
 
 export enum TransactionStatus {

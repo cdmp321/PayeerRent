@@ -37,7 +37,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
 
-  // Form states
+  // Form states - Items
   const [newItemTitle, setNewItemTitle] = useState('');
   const [newItemDesc, setNewItemDesc] = useState(''); 
   const [newItemPrice, setNewItemPrice] = useState('');
@@ -45,9 +45,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [newItemImage, setNewItemImage] = useState(''); // Base64 string
   const [newItemImageName, setNewItemImageName] = useState(''); // For display
   
+  // Form states - Payment Methods
   const [newMethodName, setNewMethodName] = useState('');
   const [newMethodInstr, setNewMethodInstr] = useState('');
   const [newMethodMin, setNewMethodMin] = useState('');
+  const [newMethodImage, setNewMethodImage] = useState('');
+  const [newMethodImageName, setNewMethodImageName] = useState('');
 
   // Settings State - Manager
   const [managerLogin, setManagerLogin] = useState('');
@@ -121,6 +124,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     }
   };
 
+  const handleMethodImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewMethodImageName(file.name);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewMethodImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemTitle) {
@@ -164,11 +180,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       name: newMethodName,
       instruction: newMethodInstr,
       isActive: true,
-      minAmount: isNaN(minVal) ? 0 : minVal
+      minAmount: isNaN(minVal) ? 0 : minVal,
+      imageUrl: newMethodImage.trim()
     });
     setNewMethodName('');
     setNewMethodInstr('');
     setNewMethodMin('');
+    setNewMethodImage('');
+    setNewMethodImageName('');
+    
     refreshAll();
   };
 
@@ -1089,6 +1109,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         onChange={e => setNewMethodName(e.target.value)}
                         className="border-2 border-gray-100 p-4 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium" 
                     />
+
+                    {/* Image Upload for Payment Method */}
+                    <div className="relative">
+                        <label className="flex items-center gap-3 w-full border-2 border-gray-100 border-dashed p-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <Upload className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-bold text-gray-700 truncate">
+                                    {newMethodImageName || "Логотип / Иконка (необязательно)"}
+                                </div>
+                                <div className="text-xs text-gray-400">JPG, PNG, WEBP</div>
+                            </div>
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleMethodImageFileChange}
+                                className="hidden" 
+                            />
+                        </label>
+                     </div>
+
                     <textarea 
                         placeholder="Инструкция для пользователя (реквизиты)" 
                         value={newMethodInstr}
@@ -1116,7 +1158,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <div key={m.id} className="bg-white p-5 rounded-2xl shadow-sm border flex flex-col justify-between h-full relative group">
                         <div>
                             <div className="flex justify-between items-start">
-                                <div className="font-bold text-xl text-gray-800">{m.name}</div>
+                                <div className="flex items-center gap-3">
+                                     {/* Payment Method Logo Display */}
+                                    {m.imageUrl ? (
+                                        <img src={m.imageUrl} alt={m.name} className="w-10 h-10 object-contain rounded-lg border border-gray-100" />
+                                    ) : (
+                                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                                            <CreditCard className="w-6 h-6" />
+                                        </div>
+                                    )}
+                                    <div className="font-bold text-xl text-gray-800">{m.name}</div>
+                                </div>
                                 <button onClick={(e) => deleteMethod(m.id, e)} className="text-gray-300 hover:text-red-500 p-2 rounded-xl transition-colors">
                                     <Trash2 className="w-5 h-5" />
                                 </button>
