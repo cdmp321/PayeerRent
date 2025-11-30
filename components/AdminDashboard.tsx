@@ -551,7 +551,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                         {sortedUsers.filter(u => user?.role === UserRole.MANAGER ? u.role !== UserRole.ADMIN : true).map((u, index) => (
-                            <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors ${index % 2 !== 0 ? 'bg-purple-50/40' : 'bg-white'}`}>
+                            <tr key={u.id} className={`hover:bg-gray-50/50 transition-colors ${index % 2 !== 0 ? 'bg-purple-50' : 'bg-white'}`}>
                                 <td className="p-4 font-bold text-gray-800">{u.name}</td>
                                 <td className="p-4 text-sm text-gray-500 font-mono">{u.phone}</td>
                                 <td className="p-4 font-mono font-bold text-emerald-600">{u.balance} ®</td>
@@ -674,7 +674,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         const txsToShow = isFullHistory ? userTxs : userTxs.slice(0, 5);
                         
                         return (
-                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-emerald-100 border-emerald-200' : 'bg-white'}`}>
+                        <div key={userId} className={`rounded-2xl shadow-sm border transition-all overflow-hidden ${hasUnread ? 'border-indigo-200 ring-1 ring-indigo-100' : 'border-gray-100'} ${hasBalance ? 'bg-purple-100 border-purple-200' : 'bg-white'}`}>
                             <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50/50 transition-colors" onClick={() => toggleUserExpansion(userId)}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${hasUnread ? 'bg-indigo-600' : 'bg-gray-300'}`}>{u.name.charAt(0).toUpperCase()}</div>
