@@ -76,7 +76,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <div className="absolute top-1/2 right-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"></div>
        </div>
 
-      <div className="max-w-md w-full bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/50 relative z-10 animate-fade-in">
+      <div className="max-w-md w-full bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/50 relative z-10 animate-fade-in scale-90 shadow-[0_-20px_60px_-15px_rgba(79,70,229,0.5)]">
         
         <div className="flex flex-col items-center mb-10">
           <button 

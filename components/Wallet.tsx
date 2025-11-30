@@ -227,20 +227,44 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
              {pendingTransactions.map(tx => {
                  const isRefundRequest = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
                  return (
-                 <div key={tx.id} className={`rounded-2xl p-5 relative overflow-hidden border-2 ${tx.type === 'DEPOSIT' || isRefundRequest ? 'bg-orange-50 border-orange-100' : 'bg-blue-50 border-blue-100'}`}>
+                 <div key={tx.id} className={`rounded-2xl p-5 relative overflow-hidden border-2 ${
+                    tx.type === 'DEPOSIT' 
+                        ? 'bg-orange-50 border-orange-100' 
+                        : (isRefundRequest ? 'bg-purple-50 border-purple-100' : 'bg-blue-50 border-blue-100')
+                 }`}>
                     <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-full animate-pulse ${tx.type === 'DEPOSIT' || isRefundRequest ? 'bg-orange-200' : 'bg-blue-200'}`}>
-                            <Clock className={`w-7 h-7 ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-700' : 'text-blue-700'}`} />
+                        <div className={`p-3 rounded-full animate-pulse ${
+                            tx.type === 'DEPOSIT' 
+                                ? 'bg-orange-200' 
+                                : (isRefundRequest ? 'bg-purple-200' : 'bg-blue-200')
+                        }`}>
+                            <Clock className={`w-7 h-7 ${
+                                tx.type === 'DEPOSIT' 
+                                    ? 'text-orange-700' 
+                                    : (isRefundRequest ? 'text-purple-700' : 'text-blue-700')
+                            }`} />
                         </div>
                         <div className="flex-1">
-                            <h3 className={`font-bold text-lg ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-900' : 'text-blue-900'}`}>
+                            <h3 className={`font-bold text-lg ${
+                                tx.type === 'DEPOSIT' 
+                                    ? 'text-orange-900' 
+                                    : (isRefundRequest ? 'text-purple-900' : 'text-blue-900')
+                            }`}>
                                 {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : (isRefundRequest ? 'Обработка возврата' : 'Обработка вывода')}
                             </h3>
-                            <div className={`text-sm mt-0.5 font-bold ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-600/70' : 'text-blue-600/70'}`}>
+                            <div className={`text-sm mt-0.5 font-bold ${
+                                tx.type === 'DEPOSIT' 
+                                    ? 'text-orange-600/70' 
+                                    : (isRefundRequest ? 'text-purple-600/70' : 'text-blue-600/70')
+                            }`}>
                                 {new Date(tx.date).toLocaleDateString()}
                             </div>
                         </div>
-                        <div className={`font-black text-2xl ${tx.type === 'DEPOSIT' || isRefundRequest ? 'text-orange-600' : 'text-blue-600'}`}>
+                        <div className={`font-black text-2xl ${
+                            tx.type === 'DEPOSIT' 
+                                ? 'text-orange-600' 
+                                : (isRefundRequest ? 'text-purple-600' : 'text-blue-600')
+                        }`}>
                             {tx.type === 'DEPOSIT' || isRefundRequest ? '+' : '-'}{tx.amount} ®
                         </div>
                     </div>

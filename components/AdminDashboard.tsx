@@ -493,13 +493,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             ) : (
                 <div className="grid gap-4">
                 {pendingRequests.map(tx => {
-                     const u = users.find(u => u.id === tx.userId); const isWithdrawal = tx.type === 'WITHDRAWAL';
+                     const u = users.find(u => u.id === tx.userId); 
+                     const isWithdrawal = tx.type === 'WITHDRAWAL';
+                     const isRefundRequest = tx.description.startsWith('ЗАПРОС');
+
                      return (
                         <div key={tx.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-6 relative overflow-hidden">
-                            <div className={`absolute top-0 left-0 w-1.5 h-full ${isWithdrawal ? 'bg-orange-500' : 'bg-emerald-500'}`} />
+                            <div className={`absolute top-0 left-0 w-1.5 h-full ${
+                                isRefundRequest 
+                                    ? 'bg-purple-500' 
+                                    : (isWithdrawal ? 'bg-orange-500' : 'bg-emerald-500')
+                            }`} />
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${isWithdrawal ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>{tx.description.startsWith('ЗАПРОС') ? 'Запрос возврата' : (isWithdrawal ? 'Вывод средств' : 'Пополнение')}</span>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase ${
+                                        isRefundRequest 
+                                            ? 'bg-purple-100 text-purple-700' 
+                                            : (isWithdrawal ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700')
+                                    }`}>
+                                        {isRefundRequest ? 'Запрос возврата' : (isWithdrawal ? 'Вывод средств' : 'Пополнение')}
+                                    </span>
                                     <span className="text-xs text-gray-400">{new Date(tx.date).toLocaleString()}</span>
                                 </div>
                                 <div className="flex items-baseline gap-2 mb-1"><span className="text-2xl font-black text-gray-800">{tx.amount} ®</span><span className="text-sm text-gray-500">от {u?.name}</span></div>
@@ -888,13 +901,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div key={m.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-md transition-all">
                     <div className="mb-4">
                     <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3 w-full">
-                            <div className="shrink-0 scale-125 origin-left ml-1">
+                        <div className="flex items-center w-full justify-between">
+                            <h4 className="font-bold text-gray-800 text-lg self-center">{m.name}</h4>
+                            <div className="shrink-0 scale-125 origin-right ml-3">
                                 <PaymentIcon imageUrl={m.imageUrl} />
                             </div>
-                            <h4 className="font-bold text-gray-800 text-lg self-center">{m.name}</h4>
                         </div>
-                        {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase shrink-0">Min {m.minAmount}</span>}
+                        {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase shrink-0 ml-2">Min {m.minAmount}</span>}
                     </div>
                     <p className="text-sm text-gray-500 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100 mt-2">{m.instruction}</p>
                     </div>
