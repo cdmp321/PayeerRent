@@ -901,20 +901,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {methods.map(m => (
-                <div key={m.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-md transition-all">
-                    <div className="mb-4">
-                    <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center w-full justify-between">
-                            <h4 className="font-bold text-gray-800 text-lg self-center">{m.name}</h4>
-                            <div className="shrink-0 scale-125 origin-right ml-3">
-                                <PaymentIcon imageUrl={m.imageUrl} />
-                            </div>
-                        </div>
-                        {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase shrink-0 ml-2">Min {m.minAmount}</span>}
+                <div key={m.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-md transition-all relative overflow-hidden h-32">
+                    <div className="relative z-10">
+                        <h4 className="font-bold text-gray-800 text-lg">{m.name}</h4>
+                        {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase mt-1 inline-block">Min {m.minAmount}</span>}
+                        <p className="text-sm text-gray-500 whitespace-pre-wrap mt-2 line-clamp-1 opacity-70">{m.instruction}</p>
                     </div>
-                    <p className="text-sm text-gray-500 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100 mt-2">{m.instruction}</p>
+                    
+                    <div className="absolute -right-3 -bottom-3 opacity-10 scale-[3.5] origin-bottom-right pointer-events-none">
+                        <PaymentIcon imageUrl={m.imageUrl} />
                     </div>
-                    <button onClick={(e) => deleteMethod(m.id, e)} className="w-full text-red-500 bg-red-50 hover:bg-red-100 py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"><Trash2 className="w-4 h-4" /> Удалить метод</button>
+
+                    <button onClick={(e) => deleteMethod(m.id, e)} className="relative z-10 w-full text-red-500 bg-white/50 hover:bg-red-50 border border-red-100 hover:border-red-200 py-2 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 mt-auto"><Trash2 className="w-3 h-3" /> Удалить</button>
                 </div>
                 ))}
             </div>

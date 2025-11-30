@@ -384,19 +384,18 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           setSelectedMethod(method);
                           setIsCopied(false);
                       }}
-                      className={`p-4 rounded-xl border-2 flex items-center justify-between transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
+                      className={`relative overflow-hidden p-4 h-24 rounded-2xl border-2 transition-all group ${selectedMethod?.id === method.id ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500 shadow-md' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="text-left flex-1 min-w-0">
-                             <span className="font-bold text-gray-800 block text-base truncate">{method.name}</span>
-                             {method.minAmount && method.minAmount > 0 && (
-                                <span className="text-xs text-orange-500 font-bold uppercase mt-0.5 block">От {method.minAmount} ®</span>
-                             )}
-                        </div>
-                        
-                        <div className="shrink-0 ml-4 scale-125 origin-right">
-                             <PaymentIcon imageUrl={method.imageUrl} />
-                        </div>
+                      <div className="relative z-10 flex flex-col items-start h-full justify-center">
+                            <span className="font-bold text-gray-800 text-lg truncate max-w-[80%]">{method.name}</span>
+                            {method.minAmount && method.minAmount > 0 && (
+                                <span className="text-xs text-orange-500 font-bold uppercase mt-0.5 block bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">От {method.minAmount} ®</span>
+                            )}
+                      </div>
+                      
+                      {/* Background Watermark Icon */}
+                      <div className="absolute -right-4 -bottom-6 opacity-30 scale-[4] origin-bottom-right transition-all group-hover:scale-[4.2] group-hover:opacity-40 grayscale-[0.2] group-hover:grayscale-0 pointer-events-none">
+                           <PaymentIcon imageUrl={method.imageUrl} />
                       </div>
                     </button>
                   ))}
@@ -404,8 +403,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               </div>
 
               {selectedMethod && (
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 text-sm animate-fade-in">
-                  <div className="mb-5">
+                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 text-sm animate-fade-in relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-20 h-20 opacity-5 pointer-events-none">
+                     <PaymentIcon imageUrl={selectedMethod.imageUrl} />
+                  </div>
+
+                  <div className="mb-5 relative z-10">
                       <div className="flex justify-between items-center mb-2">
                         <p className="text-xs font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
                         <button 
@@ -419,7 +422,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-4 rounded-xl border border-gray-200 select-all text-sm leading-relaxed shadow-sm font-medium">{selectedMethod.instruction}</p>
                   </div>
                   
-                  <div className="pt-2 border-t border-gray-200">
+                  <div className="pt-2 border-t border-gray-200 relative z-10">
                     <div className="bg-blue-50 text-blue-800 text-xs p-3 rounded-lg mb-3 leading-relaxed border border-blue-100">
                         <div className="flex items-center gap-2 mb-1">
                             <Info className="w-4 h-4 shrink-0" />
