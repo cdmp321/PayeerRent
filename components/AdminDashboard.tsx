@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw, Filter, XCircle } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw, Filter, XCircle, Archive, ArchiveRestore } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -22,6 +22,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   // Finances Group Expansion State
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  
+  // Archive State for Finances
+  const [archivedUsers, setArchivedUsers] = useState<Set<string>>(() => {
+      const saved = localStorage.getItem('payeer_archived_users');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  const [showArchived, setShowArchived] = useState(false);
   
   // Withdrawal/Refund History Filters
   const [filterType, setFilterType] = useState<'all' | 'client' | 'date'>('all');
@@ -109,6 +116,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     } finally {
         setIsRefreshing(false);
     }
+  };
+
+  const toggleArchiveUser = (userId: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setArchivedUsers(prev => {
+          const next = new Set(prev);
+          if (next.has(userId)) {
+              next.delete(userId);
+          } else {
+              next.add(userId);
+          }
+          localStorage.setItem('payeer_archived_users', JSON.stringify(Array.from(next)));
+          return next;
+      });
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -399,8 +420,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
     });
 
-    return Object.values(groups).sort((a, b) => b.lastDate - a.lastDate);
-  }, [visibleTransactions, users]);
+    let result = Object.values(groups).sort((a, b) => b.lastDate - a.lastDate);
+
+    // Filter based on Archive state
+    if (showArchived) {
+        result = result.filter(g => g.user && archivedUsers.has(g.user.id));
+    } else {
+        result = result.filter(g => g.user && !archivedUsers.has(g.user.id));
+    }
+
+    return result;
+  }, [visibleTransactions, users, archivedUsers, showArchived]);
 
 
   const sortedItems = [...items].sort((a, b) => {
@@ -643,9 +673,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             <div className="space-y-8">
                 {/* 1. INCOME Section */}
                 <div>
-                    <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl mb-4">Поступления от клиентов</h3>
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <h3 className="font-bold text-gray-700 text-lg md:text-2xl">
+                            {showArchived ? 'Архив клиентов' : 'Поступления от клиентов'}
+                        </h3>
+                        <button 
+                            onClick={() => setShowArchived(!showArchived)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${showArchived ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                            {showArchived ? 'Показать активных' : 'Архив'}
+                        </button>
+                    </div>
+
                     {groupedFinances.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400 bg-white rounded-xl border-2 border-dashed">Пока нет оплат</div>
+                        <div className="text-center py-12 text-gray-400 bg-white rounded-xl border-2 border-dashed">
+                            {showArchived ? 'Архив пуст' : 'Пока нет оплат'}
+                        </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
                             {groupedFinances.map(group => {
@@ -654,7 +698,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 const sortedTxs = [...group.txs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                                 return (
-                                    <div key={group.user.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+                                    <div key={group.user.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md relative">
                                         {/* User Header Summary */}
                                         <div 
                                             onClick={() => toggleUserExpansion(group.user!.id)}
@@ -675,11 +719,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                 </div>
                                             </div>
 
-                                            <div className="text-right">
-                                                <div className="font-extrabold text-lg text-emerald-600">+{group.total} P</div>
-                                                <div className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
-                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                            <div className="text-right flex items-center gap-4">
+                                                <div>
+                                                    <div className="font-extrabold text-lg text-emerald-600">+{group.total} P</div>
+                                                    <div className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
+                                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                    </div>
                                                 </div>
+                                                
+                                                {/* Archive Action */}
+                                                <button 
+                                                    onClick={(e) => toggleArchiveUser(group.user!.id, e)}
+                                                    className="p-2 text-gray-300 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                                    title={showArchived ? "Восстановить" : "В архив"}
+                                                >
+                                                    {showArchived ? <ArchiveRestore className="w-5 h-5" /> : <Archive className="w-5 h-5" />}
+                                                </button>
                                             </div>
                                         </div>
 
@@ -731,7 +786,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                                 <div className="text-xs text-gray-400 mt-1">{new Date(tx.date).toLocaleString()}</div>
                                                             </div>
                                                             <div className="flex justify-between items-end mt-auto">
-                                                                <div className={`font-bold text-lg ${tx.viewed ? 'text-gray-400 opacity-50' : 'text-emerald-600'}`}>+{tx.amount} P</div>
+                                                                <div className={`font-bold text-lg ${tx.viewed ? 'text-gray-400' : 'text-emerald-600'}`}>+{tx.amount} P</div>
                                                                 <CheckCircle2 className={`w-6 h-6 ${tx.viewed ? 'text-green-500' : 'text-gray-200'}`} />
                                                             </div>
                                                         </div>
@@ -782,7 +837,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                     <div className="font-bold text-gray-800">{u ? u.name : 'Unknown'}</div>
                                                     <div className="text-xs text-gray-400 md:hidden">{new Date(tx.date).toLocaleDateString()}</div>
                                                 </td>
-                                                {/* STYLE UPDATE: Blue for Refund, Green for Withdrawal, Larger Text */}
+                                                {/* STYLE UPDATE: Consistent Font Size text-lg font-extrabold */}
                                                 <td className={`p-4 font-extrabold text-lg ${isRefundReq ? 'text-blue-600' : 'text-green-600'}`}>
                                                     {isRefundReq ? '+' : '-'}{tx.amount} P
                                                 </td>
@@ -814,7 +869,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div className="pt-8 border-t border-gray-200">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                          <h3 className="font-bold text-gray-700 px-2 text-lg md:text-2xl flex items-center gap-2">
-                            <CornerUpLeft className="w-6 h-6 text-red-500" />
+                            <CornerUpLeft className="w-6 h-6 text-purple-900" />
                             История возвратов клиентам
                         </h3>
                     </div>
@@ -831,6 +886,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         <th className="p-4">Клиент</th>
                                         <th className="p-4">Сумма</th>
                                         <th className="p-4">Причина</th>
+                                        <th className="p-4">Статус</th>
                                         <th className="p-4 hidden md:table-cell">Дата</th>
                                     </tr>
                                 </thead>
@@ -840,8 +896,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         return (
                                             <tr key={tx.id} className="hover:bg-gray-50/50">
                                                 <td className="p-4 font-bold text-gray-800">{u ? u.name : 'Unknown'}</td>
-                                                <td className="p-4 font-bold text-red-500">-{tx.amount} P</td>
+                                                {/* STYLE UPDATE: Dark Purple and consistent size */}
+                                                <td className="p-4 font-extrabold text-lg text-purple-900">-{tx.amount} P</td>
                                                 <td className="p-4 text-gray-600">{tx.description.replace('Возврат средств: ', '')}</td>
+                                                <td className="p-4">
+                                                     <span className="px-2 py-1 rounded-md text-xs font-bold uppercase bg-purple-100 text-purple-900">
+                                                         Выполнено
+                                                     </span>
+                                                </td>
                                                 <td className="p-4 text-gray-400 text-xs hidden md:table-cell">{new Date(tx.date).toLocaleString()}</td>
                                             </tr>
                                         );

@@ -211,9 +211,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         Вывести
                     </button>
                 </div>
+                {/* Updated Button Color: Dark Purple (bg-purple-900) */}
                 <button 
                     onClick={() => setShowRefundModal(true)}
-                    className="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-slate-700"
+                    className="w-full bg-purple-900 hover:bg-purple-800 active:bg-purple-700 text-purple-100 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-purple-800"
                 >
                     <RotateCcw className="w-4 h-4" />
                     Возврат средств
@@ -269,7 +270,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                     <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-4 last:border-0 last:pb-0 animate-fade-in">
                         <div className="flex items-center gap-3">
                             <div className={`p-2.5 rounded-xl ${
-                                isRefund && isApproved ? 'bg-blue-100 text-blue-600' :
+                                isRefund && isApproved ? 'bg-purple-100 text-purple-900' :
                                 tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-600' :
                                 tx.status === TransactionStatus.REJECTED ? 'bg-red-100 text-red-600' :
                                 'bg-gray-100 text-gray-500'
@@ -287,11 +288,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             </div>
                         </div>
                         <div className="text-right">
-                             <div className={`font-bold text-lg ${isRefund ? 'text-blue-600' : 'text-gray-800'}`}>
+                             {/* UPDATED STYLE: Dark Purple if refund */}
+                             <div className={`font-bold text-lg ${isRefund ? 'text-purple-900' : 'text-gray-800'}`}>
                                  {isRefund ? '+' : '-'}{tx.amount} P
                              </div>
                              <div className={`text-xs font-bold uppercase ${
-                                 isRefund && isApproved ? 'text-blue-600' :
+                                 isRefund && isApproved ? 'text-purple-900' :
                                  tx.status === TransactionStatus.APPROVED ? 'text-green-600' :
                                  tx.status === TransactionStatus.REJECTED ? 'text-red-500' :
                                  'text-orange-500'
