@@ -7,7 +7,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { api } from './services/api';
 import { supabaseUrl, supabase } from './services/supabase';
 import { User, UserRole } from './types';
-import { LogOut, Settings, Home, Wallet as WalletIcon, ShoppingBag, Store, AlertTriangle, Database, RefreshCw, Copy, Check } from 'lucide-react';
+import { LogOut, Settings, Store, AlertTriangle, Database, RefreshCw, Copy, Check, ShoppingBag, Wallet as WalletIcon } from 'lucide-react';
 
 const SCHEMA_SQL = `-- 1. Очистка старых таблиц (ПЕРЕУСТАНОВКА)
 DROP TABLE IF EXISTS public.transactions;
@@ -36,7 +36,7 @@ create table public.items (
   quantity numeric default 1, -- 0 = Unlimited
   status text default 'AVAILABLE',
   owner_id uuid references public.users(id) on delete set null,
-  purchased_at timestamp with time zone default timezone('utc'::text, now())
+  purchased_at timestamp with time zone default timezone('utc'::text, now()),
   last_purchase_price numeric,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );

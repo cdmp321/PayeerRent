@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
-import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw, Filter, XCircle, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CreditCard as CardIcon } from 'lucide-react';
+import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -103,6 +102,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Transaction processing state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [processingTxId, setProcessingTxId] = useState<string | null>(null);
   
   // Refund Form State
@@ -269,7 +269,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const handleUpdateManager = async (e: React.FormEvent) => { e.preventDefault(); if(!managerLogin || !managerPass) return; try { await api.updateStaffCredentials('MANAGER', managerLogin, managerPass); setMsgManager('Обновлено!'); setManagerLogin(''); setManagerPass(''); } catch (err: any) { setMsgManager('Ошибка: ' + err.message); } };
   const handleUpdateAdmin = async (e: React.FormEvent) => { e.preventDefault(); if(!adminLogin || !adminPass) return; try { await api.updateStaffCredentials('ADMIN', adminLogin, adminPass); setMsgAdmin('Обновлено!'); setAdminLogin(''); setAdminPass(''); } catch (err: any) { setMsgAdmin('Ошибка: ' + err.message); } };
   const handleRefundSubmit = async () => { if(!refundAmount || !refundReason || !refundModalUser) return; if(!window.confirm(`Вернуть ${refundAmount} ® клиенту ${refundModalUser.name}?`)) return; try { await api.processRefund(refundModalUser.id, parseFloat(refundAmount), refundReason); setRefundAmount(''); setRefundModalUser(null); alert("Возврат успешно выполнен!"); refreshAll(); } catch (e: any) { alert("Ошибка: " + e.message); } };
-  const forceRestock = async (itemId: string) => { await api.restockItem(itemId); await refreshAll(); };
   const deleteItem = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить?')) return; await api.deleteItem(id); await refreshAll(); };
   const handleDeleteUser = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить пользователя?')) return; await api.deleteUser(id); refreshAll(); };
   const deleteMethod = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить метод?')) return; await api.deletePaymentMethod(id); await refreshAll(); };
@@ -278,6 +277,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const handleMarkViewed = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); setTransactions(prev => prev.map(t => t.id === id ? { ...t, viewed: true } : t)); await api.markTransactionAsViewed(id); refreshAll(); };
   const toggleUserExpansion = (userId: string) => { setExpandedUserId(prev => prev === userId ? null : userId); };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toggleItemSort = (key: keyof Item) => { setItemSort(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' })); };
   const toggleUserSort = (key: keyof User) => { setUserSort(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' })); };
 
@@ -757,7 +757,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         {/* SETTINGS (unchanged) */}
         {activeTab === 'settings' && (
             <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
-                <div className="text-center mb-8"><div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-slate-200"><UserCog className="w-8 h-8" /></div><h2 className="text-2xl font-extrabold text-slate-800">Управление доступом</h2><p className="text-slate-500 font-medium">Смена паролей сотрудников</p></div>
+                <div className="text-center mb-8"><div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-slate-200"><Settings className="w-8 h-8" /></div><h2 className="text-2xl font-extrabold text-slate-800">Управление доступом</h2><p className="text-slate-500 font-medium">Смена паролей сотрудников</p></div>
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100"><h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Shield className="w-5 h-5 text-indigo-600" /> Доступ Админа</h3><form onSubmit={handleUpdateAdmin} className="space-y-4"><div><label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый логин</label><input value={adminLogin} onChange={e => setAdminLogin(e.target.value)} placeholder="Новый логин" className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" /></div><div><label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый пароль</label><input value={adminPass} onChange={e => setAdminPass(e.target.value)} placeholder="Новый пароль" type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" /></div>{msgAdmin && <p className={`text-sm font-bold ${msgAdmin.includes('Ошибка') ? 'text-red-500' : 'text-emerald-500'}`}>{msgAdmin}</p>}<button type="submit" className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">Обновить данные Админа</button></form></div>
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100"><h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><UserIcon className="w-5 h-5 text-purple-600" /> Доступ Менеджера</h3><form onSubmit={handleUpdateManager} className="space-y-4"><div><label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый логин</label><input value={managerLogin} onChange={e => setManagerLogin(e.target.value)} placeholder="Новый логин" className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-medium transition-all" /></div><div><label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый пароль</label><input value={managerPass} onChange={e => setManagerPass(e.target.value)} placeholder="Новый пароль" type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-medium transition-all" /></div>{msgManager && <p className={`text-sm font-bold ${msgManager.includes('Ошибка') ? 'text-red-500' : 'text-emerald-500'}`}>{msgManager}</p>}<button type="submit" className="w-full bg-purple-600 text-white py-3.5 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200">Обновить данные Менеджера</button></form></div>
             </div>
