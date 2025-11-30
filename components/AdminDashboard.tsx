@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -31,7 +31,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [newItemDesc, setNewItemDesc] = useState(''); 
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemQuantity, setNewItemQuantity] = useState('1'); // Default to 1
-  const [newItemImage, setNewItemImage] = useState('');
+  const [newItemImage, setNewItemImage] = useState(''); // Base64 string
+  const [newItemImageName, setNewItemImageName] = useState(''); // For display
   
   const [newMethodName, setNewMethodName] = useState('');
   const [newMethodInstr, setNewMethodInstr] = useState('');
@@ -65,6 +66,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     setTransactions(t);
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewItemImageName(file.name);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewItemImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemTitle) {
@@ -89,6 +103,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         setNewItemPrice('');
         setNewItemQuantity('1');
         setNewItemImage('');
+        setNewItemImageName('');
         
         alert('Товар успешно добавлен!');
         refreshAll();
@@ -259,8 +274,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   };
 
   // Filter transactions to only those belonging to visible users
-  // This effectively hides transactions from "hidden" users (like the manager) 
-  // because api.getUsers() already filters them out.
   const visibleTransactions = useMemo(() => {
     const userIds = new Set(users.map(u => u.id));
     return transactions.filter(t => userIds.has(t.userId));
@@ -329,11 +342,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
     });
 
   // Navigation Items Config
+  // SWAPPED USERS AND ITEMS as requested
   const navItems = [
       { id: 'deposits', label: 'Заявки', icon: FileText, count: pendingRequests.length },
       { id: 'finances', label: 'Финансы', icon: TrendingUp, count: unviewedIncomeCount },
-      { id: 'items', label: 'Товары', icon: Package },
       { id: 'users', label: 'Юзеры', icon: Users },
+      { id: 'items', label: 'Товары', icon: Package },
   ];
 
   // ONLY MANAGER can see Payments and Settings
@@ -691,12 +705,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             onChange={e => setNewItemTitle(e.target.value)}
                             className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium w-full" 
                         />
-                         <input 
-                            placeholder="URL картинки" 
-                            value={newItemImage}
-                            onChange={e => setNewItemImage(e.target.value)}
-                            className="border-2 border-gray-100 p-3 rounded-xl focus:border-blue-500 outline-none transition-colors font-medium w-full" 
-                        />
+                         {/* Replaced Text Input with File Upload + Text Fallback */}
+                         <div className="relative">
+                            <label className="flex items-center gap-3 w-full border-2 border-gray-100 border-dashed p-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                    <Upload className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-bold text-gray-700 truncate">
+                                        {newItemImageName || "Выберите изображение"}
+                                    </div>
+                                    <div className="text-xs text-gray-400">JPG, PNG, WEBP</div>
+                                </div>
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={handleImageFileChange}
+                                    className="hidden" 
+                                />
+                            </label>
+                         </div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -780,9 +808,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     return (
                         <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden group">
                             <div className="flex flex-row md:flex-col gap-4 mb-4 flex-1">
-                                {item.imageUrl && (
+                                {item.imageUrl ? (
                                     <div className="w-24 h-24 md:w-full md:h-48 bg-gray-100 rounded-xl overflow-hidden shrink-0">
                                         <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    </div>
+                                ) : (
+                                    <div className="w-24 h-24 md:w-full md:h-48 bg-gray-100 rounded-xl flex items-center justify-center text-gray-300 shrink-0">
+                                        <ImageIcon className="w-8 h-8" />
                                     </div>
                                 )}
                                 <div className="flex-1">

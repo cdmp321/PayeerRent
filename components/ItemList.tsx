@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Item, ItemStatus, User } from '../types';
-import { ShoppingBag, ShoppingCart, CreditCard, Package, RefreshCcw, CheckCircle2, Wallet, Search, ArrowUpDown, X } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, CreditCard, Package, RefreshCcw, CheckCircle2, Wallet, Search, ArrowUpDown, X, Loader2 } from 'lucide-react';
 
 interface ItemListProps {
   user: User;
@@ -24,6 +24,9 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   
   // Track custom price inputs for items with price 0
   const [customAmounts, setCustomAmounts] = useState<{[key: string]: string}>({});
+  
+  // Track processing payments
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadItems();
@@ -122,6 +125,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
         return;
       }
 
+      setProcessingIds(prev => new Set(prev).add(item.id));
       try {
           await api.payRent(user.id, item.id, amountToPay);
           if (isFreePrice) {
@@ -131,6 +135,12 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
           onRentAction();
       } catch (err: any) {
           alert(err.message);
+      } finally {
+          setProcessingIds(prev => {
+              const next = new Set(prev);
+              next.delete(item.id);
+              return next;
+          });
       }
   };
 
@@ -201,6 +211,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                     {myReservations.map(item => {
                         const isFreePrice = item.price === 0;
                         const currentInputAmount = customAmounts[item.id] || '';
+                        const isProcessing = processingIds.has(item.id);
 
                         return (
                         <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 relative overflow-hidden">
@@ -231,24 +242,35 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                                         placeholder="Сумма"
                                                         value={currentInputAmount}
                                                         onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
-                                                        className="w-full pl-3 pr-8 py-2.5 border border-emerald-200 rounded-lg text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                        disabled={isProcessing}
+                                                        className="w-full pl-3 pr-8 py-2.5 border border-emerald-200 rounded-lg text-sm focus:ring-1 focus:ring-emerald-500 outline-none disabled:bg-gray-100 disabled:text-gray-400"
                                                     />
                                                     <span className="absolute right-3 top-2.5 text-gray-400 font-bold text-sm">P</span>
                                                 </div>
                                                 <button 
                                                     onClick={() => handlePayRent(item)}
-                                                    className="bg-emerald-600 text-white px-4 rounded-lg font-bold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
+                                                    disabled={isProcessing}
+                                                    className={`px-4 rounded-lg font-bold shadow-sm transition-all flex items-center justify-center ${
+                                                        isProcessing 
+                                                        ? 'bg-gray-400 cursor-not-allowed' 
+                                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
+                                                    }`}
                                                 >
-                                                    <CheckCircle2 className="w-6 h-6" />
+                                                    {isProcessing ? <Loader2 className="w-6 h-6 animate-spin text-white" /> : <CheckCircle2 className="w-6 h-6" />}
                                                 </button>
                                             </div>
                                         ) : (
                                             <button 
                                                 onClick={() => handlePayRent(item)}
-                                                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-base hover:bg-emerald-700 shadow-emerald-200 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                disabled={isProcessing}
+                                                className={`w-full py-3 rounded-xl font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
+                                                    isProcessing 
+                                                    ? 'bg-gray-400 text-white cursor-not-allowed shadow-none' 
+                                                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200 active:scale-95'
+                                                }`}
                                             >
-                                                <CreditCard className="w-5 h-5" />
-                                                Внести платеж ({item.price} P)
+                                                {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
+                                                {isProcessing ? 'Обработка...' : `Внести платеж (${item.price} P)`}
                                             </button>
                                         )}
                                     </div>
