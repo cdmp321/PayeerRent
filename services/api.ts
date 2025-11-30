@@ -330,6 +330,44 @@ export const api = {
     }
   },
 
+  requestUserRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
+    const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
+    if (!user) throw new Error("Пользователь не найден");
+    
+    if (user.balance < amount) {
+        throw new Error("Недостаточно средств");
+    }
+
+    // Deduct balance immediately just like withdrawal
+    const { error: balanceError } = await supabase
+        .from('users')
+        .update({ balance: Number(user.balance) - Number(amount) })
+        .eq('id', userId);
+
+    if (balanceError) throw new Error("Ошибка списания средств");
+
+    // Create transaction with WITHDRAWAL type but specific description for admins
+    const { error } = await supabase
+      .from('transactions')
+      .insert([{
+        user_id: userId,
+        amount: amount,
+        type: 'WITHDRAWAL', 
+        status: 'PENDING',
+        description: `ЗАПРОС НА ВОЗВРАТ: ${reason}`,
+        viewed: false
+      }]);
+
+    if (error) {
+        // Rollback balance if tx creation fails
+        await supabase
+            .from('users')
+            .update({ balance: Number(user.balance) })
+            .eq('id', userId);
+        throw new Error(error.message);
+    }
+  },
+
   processRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
     const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
     if (!user) throw new Error("Пользователь не найден");
@@ -378,7 +416,11 @@ export const api = {
                 .eq('id', tx.user_id);
         }
     } else if (tx.type === 'WITHDRAWAL') {
-        newDesc = `Вывод средств подтвержден (Списано): ${tx.amount} P`;
+        if (tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:')) {
+            newDesc = `Возврат средств подтвержден (Списано): ${tx.amount} P`;
+        } else {
+            newDesc = `Вывод средств подтвержден (Списано): ${tx.amount} P`;
+        }
     }
 
     await supabase
@@ -403,7 +445,7 @@ export const api = {
 
     await supabase
       .from('transactions')
-      .update({ status: 'REJECTED', description: tx.type === 'WITHDRAWAL' ? 'Вывод отклонен (Средства возвращены)' : 'Пополнение отклонено' })
+      .update({ status: 'REJECTED', description: tx.type === 'WITHDRAWAL' ? 'Операция отклонена (Средства возвращены)' : 'Пополнение отклонено' })
       .eq('id', transactionId);
   },
 

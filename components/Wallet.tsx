@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -19,6 +19,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawDetails, setWithdrawDetails] = useState('');
+
+  // Refund State
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
 
   const [notification, setNotification] = useState<{type: 'success' | 'error', msg: string} | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -125,6 +129,39 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       }
   };
 
+  const handleRefundRequest = async () => {
+      const val = parseFloat(amount);
+      if (!val || val <= 0) {
+          setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
+          return;
+      }
+      if (val > user.balance) {
+          setNotification({ type: 'error', msg: 'Недостаточно средств' });
+          return;
+      }
+      if (!refundReason.trim()) {
+          setNotification({ type: 'error', msg: 'Укажите причину и реквизиты' });
+          return;
+      }
+
+      setIsProcessing(true);
+      try {
+          await api.requestUserRefund(user.id, val, refundReason);
+          setNotification({ type: 'success', msg: 'Запрос на возврат отправлен!' });
+          setShowRefundModal(false);
+          setAmount('');
+          setRefundReason('');
+          // Update local user state immediately
+          const newUser = { ...user, balance: user.balance - val };
+          onUpdateUser(newUser);
+      } catch (err: any) {
+          setNotification({ type: 'error', msg: err.message || 'Ошибка запроса' });
+      } finally {
+          setIsProcessing(false);
+          setTimeout(() => setNotification(null), 3000);
+      }
+  };
+
   const pendingTransactions = transactions.filter(t => 
     t.status === TransactionStatus.PENDING && 
     (t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
@@ -153,20 +190,29 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             {user.balance.toFixed(2)} <span className="text-2xl font-normal text-slate-400">P</span>
             </div>
 
-            <div className="flex gap-4 relative z-10">
+            <div className="flex flex-col gap-3 relative z-10">
+                <div className="flex gap-3">
+                    <button 
+                        onClick={() => setShowTopUpModal(true)}
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20"
+                    >
+                        <Plus className="w-6 h-6" />
+                        Пополнить
+                    </button>
+                    <button 
+                        onClick={() => setShowWithdrawModal(true)}
+                        className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors border border-slate-600"
+                    >
+                        <ArrowUpRight className="w-6 h-6 text-slate-300" />
+                        Вывести
+                    </button>
+                </div>
                 <button 
-                    onClick={() => setShowTopUpModal(true)}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20"
+                    onClick={() => setShowRefundModal(true)}
+                    className="w-full bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors border border-slate-700"
                 >
-                    <Plus className="w-6 h-6" />
-                    Пополнить
-                </button>
-                <button 
-                    onClick={() => setShowWithdrawModal(true)}
-                    className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-colors border border-slate-600"
-                >
-                    <ArrowUpRight className="w-6 h-6 text-slate-300" />
-                    Вывести
+                    <RotateCcw className="w-4 h-4" />
+                    Возврат средств
                 </button>
             </div>
         </div>
@@ -183,7 +229,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         </div>
                         <div className="flex-1">
                             <h3 className={`font-bold text-lg ${tx.type === 'DEPOSIT' ? 'text-orange-900' : 'text-blue-900'}`}>
-                                {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : 'Обработка вывода'}
+                                {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : (tx.description?.includes('ВОЗВРАТ') ? 'Обработка возврата' : 'Обработка вывода')}
                             </h3>
                             <div className={`text-sm mt-0.5 font-bold ${tx.type === 'DEPOSIT' ? 'text-orange-600/70' : 'text-blue-600/70'}`}>
                                 {new Date(tx.date).toLocaleDateString()}
@@ -203,7 +249,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
                 <History className="w-6 h-6 text-indigo-500" />
-                История выводов
+                История операций
             </h3>
             <div className="space-y-4">
                 {withdrawalHistory.map(tx => (
@@ -214,13 +260,15 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                                 tx.status === TransactionStatus.REJECTED ? 'bg-red-100 text-red-600' :
                                 'bg-gray-100 text-gray-500'
                             }`}>
-                                <ArrowUpRight className="w-5 h-5" />
+                                {tx.description?.includes('ВОЗВРАТ') ? <RotateCcw className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                             </div>
                             <div>
-                                <div className="font-bold text-gray-800">Вывод средств</div>
+                                <div className="font-bold text-gray-800">
+                                    {tx.description?.includes('ВОЗВРАТ') ? 'Возврат средств' : 'Вывод средств'}
+                                </div>
                                 <div className="text-xs text-gray-400 font-medium">{new Date(tx.date).toLocaleString()}</div>
                                 {tx.status === TransactionStatus.REJECTED && (
-                                    <div className="text-xs text-red-500 mt-0.5 font-bold">Отклонено (Средства возвращены)</div>
+                                    <div className="text-xs text-red-500 mt-0.5 font-bold">Отклонено (Возврат)</div>
                                 )}
                             </div>
                         </div>
@@ -424,6 +472,68 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               >
                 {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Banknote className="w-6 h-6" />}
                 {isProcessing ? 'Создание заявки...' : 'Создать заявку'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Refund Modal */}
+      {showRefundModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl flex flex-col animate-slide-up sm:animate-zoom-in shadow-2xl overflow-hidden border border-red-100">
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 shrink-0 bg-white z-10">
+              <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
+                  <RotateCcw className="w-6 h-6 text-red-500" />
+                  Возврат средств
+              </h3>
+              <button onClick={() => setShowRefundModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+               <div className="bg-red-50 p-4 rounded-xl flex items-start gap-3 text-sm text-red-800 mb-2 border border-red-100">
+                   <AlertCircle className="w-6 h-6 shrink-0 mt-0.5 text-red-600" />
+                   <div>
+                       <p className="font-bold text-base">Запрос на возврат</p>
+                       <p className="text-xs opacity-80 mt-1 font-medium">Укажите сумму и причину возврата средств с вашего аккаунта.</p>
+                   </div>
+               </div>
+
+               <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Сумма возврата</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  max={user.balance}
+                  className="w-full text-2xl p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-mono text-gray-800 placeholder-gray-400 transition-all font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Причина и Реквизиты</label>
+                <textarea 
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  placeholder="Опишите причину и укажите реквизиты для получения средств..."
+                  className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-gray-800 h-28 resize-none text-base font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="p-5 pb-8 sm:pb-5 border-t border-gray-100 bg-white shrink-0 z-10">
+              <button 
+                onClick={handleRefundRequest}
+                disabled={isProcessing}
+                className="w-full bg-red-600 text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-red-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2.5"
+              >
+                {isProcessing ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <RotateCcw className="w-6 h-6" />}
+                {isProcessing ? 'Отправка...' : 'Отправить запрос'}
               </button>
             </div>
           </div>

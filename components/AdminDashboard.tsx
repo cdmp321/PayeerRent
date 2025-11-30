@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, ItemStatus, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, ExternalLink, TrendingUp, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle2, ChevronDown, ChevronUp, User as UserIcon, Phone, Settings, Shield, LayoutGrid, ArrowUpRight, ArrowDownLeft, Lock, UserCog, CornerUpLeft, Info, HelpCircle, Upload, Image as ImageIcon, RotateCcw } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -53,6 +54,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   useEffect(() => {
     refreshAll();
+
+    // Enable Realtime updates
+    const channel = supabase
+      .channel('admin_dashboard_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        refreshAll();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+        refreshAll();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const refreshAll = async () => {
@@ -426,8 +442,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         {pendingRequests.map(tx => {
                             const user = users.find(u => u.id === tx.userId);
                             const isWithdrawal = tx.type === 'WITHDRAWAL';
+                            const isRefundRequest = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
+                            
                             return (
-                                <div key={tx.id} className={`bg-white p-5 rounded-2xl shadow-sm border border-l-4 flex flex-col h-full ${isWithdrawal ? 'border-l-indigo-500' : 'border-l-emerald-500'}`}>
+                                <div key={tx.id} className={`bg-white p-5 rounded-2xl shadow-sm border border-l-4 flex flex-col h-full ${isWithdrawal ? (isRefundRequest ? 'border-l-red-500' : 'border-l-indigo-500') : 'border-l-emerald-500'}`}>
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <div className="font-bold text-xl text-gray-800">{user?.name || 'Unknown'}</div>
@@ -435,12 +453,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             <div className="text-xs text-gray-400 mt-1">{new Date(tx.date).toLocaleString()}</div>
                                         </div>
                                         <div className="text-right">
-                                            <div className={`font-extrabold text-2xl flex items-center justify-end gap-1 ${isWithdrawal ? 'text-indigo-600' : 'text-emerald-600'}`}>
+                                            <div className={`font-extrabold text-2xl flex items-center justify-end gap-1 ${isWithdrawal ? (isRefundRequest ? 'text-red-600' : 'text-indigo-600') : 'text-emerald-600'}`}>
                                                 {isWithdrawal ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
                                                 {tx.amount} P
                                             </div>
-                                            <div className={`text-xs px-2 py-1 rounded font-bold inline-block mt-2 ${isWithdrawal ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                                {isWithdrawal ? 'Заявка на вывод' : 'Пополнение счета'}
+                                            <div className={`text-xs px-2 py-1 rounded font-bold inline-block mt-2 ${isWithdrawal ? (isRefundRequest ? 'bg-red-100 text-red-700' : 'bg-indigo-100 text-indigo-700') : 'bg-emerald-100 text-emerald-700'}`}>
+                                                {isWithdrawal ? (isRefundRequest ? 'Возврат средств' : 'Заявка на вывод') : 'Пополнение счета'}
                                             </div>
                                         </div>
                                     </div>
@@ -449,8 +467,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     <div className="bg-gray-50 p-4 rounded-xl mb-5 border border-gray-100 mt-auto">
                                         {isWithdrawal ? (
                                             <div>
-                                                <div className="text-xs font-bold text-gray-400 uppercase mb-1">Реквизиты клиента</div>
-                                                <div className="text-sm font-medium text-gray-800 whitespace-pre-wrap">{tx.description.replace('Заявка на вывод: ', '')}</div>
+                                                <div className="text-xs font-bold text-gray-400 uppercase mb-1">
+                                                    {isRefundRequest ? 'Причина и Реквизиты' : 'Реквизиты клиента'}
+                                                </div>
+                                                <div className="text-sm font-medium text-gray-800 whitespace-pre-wrap">{tx.description.replace(/Заявка на вывод: |ЗАПРОС НА ВОЗВРАТ: /g, '')}</div>
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between">
@@ -475,7 +495,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                             onClick={() => handleApproveTx(tx.id)}
                                             className={`flex-1 text-white py-3 rounded-xl font-extrabold text-sm flex justify-center items-center gap-2 active:scale-[0.98] transition-all shadow-md ${isWithdrawal ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100'}`}
                                         >
-                                            <Check className="w-4 h-4" /> {isWithdrawal ? 'Подтвердить списание' : 'Принять'}
+                                            <Check className="w-4 h-4" /> {isWithdrawal ? 'Подтвердить' : 'Принять'}
                                         </button>
                                         <button 
                                             onClick={() => handleRejectTx(tx.id)}
@@ -623,14 +643,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 <tbody className="divide-y divide-gray-100 text-sm">
                                     {withdrawalsHistory.map(tx => {
                                         const u = users.find(user => user.id === tx.userId);
+                                        const isRefundReq = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
                                         return (
                                             <tr key={tx.id} className="hover:bg-gray-50/50">
                                                 <td className="p-4">
                                                     <div className="font-bold text-gray-800">{u ? u.name : 'Unknown'}</div>
                                                     <div className="text-xs text-gray-400 md:hidden">{new Date(tx.date).toLocaleDateString()}</div>
                                                 </td>
-                                                <td className="p-4 font-bold text-indigo-600">-{tx.amount} P</td>
-                                                <td className="p-4 text-gray-600 font-mono text-xs hidden md:table-cell">{tx.description.replace('Заявка на вывод: ', '')}</td>
+                                                <td className={`p-4 font-bold ${isRefundReq ? 'text-red-500' : 'text-indigo-600'}`}>-{tx.amount} P</td>
+                                                <td className="p-4 text-gray-600 font-mono text-xs hidden md:table-cell">{tx.description.replace(/Заявка на вывод: |ЗАПРОС НА ВОЗВРАТ: /g, '')}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase ${
                                                         tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-700' :
@@ -638,7 +659,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                                         'bg-orange-100 text-orange-700'
                                                     }`}>
                                                         {tx.status === TransactionStatus.APPROVED ? 'Успешно' :
-                                                         tx.status === TransactionStatus.REJECTED ? 'Отклонено' : 'Ожидание'}
+                                                         tx.status === TransactionStatus.REJECTED ? 'Отклонено' : 
+                                                         (isRefundReq ? 'Запрос возврата' : 'Ожидание')}
                                                     </span>
                                                 </td>
                                                 <td className="p-4 text-gray-400 text-xs hidden md:table-cell">{new Date(tx.date).toLocaleString()}</td>
