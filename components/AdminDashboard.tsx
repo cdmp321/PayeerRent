@@ -46,7 +46,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   
   // Refund Form State
   const [refundAmount, setRefundAmount] = useState('');
-  const [refundReason, setRefundReason] = useState('Выплата клиенту на карту с обнулением кошелька');
+  // Updated text per request
+  const [refundReason, setRefundReason] = useState('Выплата клиенту на карту со списанием с внутренего кошелька');
   const [refundModalUser, setRefundModalUser] = useState<User | null>(null);
 
   // Form states - Items
@@ -483,9 +484,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   ];
   
   const displayNavItems = navItems.filter(item => {
-      if (user?.role === UserRole.MANAGER) {
-          // Manager sees everything
-          return true; 
+      // Hide Payments and Settings for ADMIN
+      if (user?.role === UserRole.ADMIN) {
+          if (item.id === 'payments' || item.id === 'settings') {
+              return false;
+          }
       }
       return true;
   });
@@ -731,7 +734,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </form>
             </div>
 
-            {/* Items List */}
+            {/* Items List (GRID LAYOUT) */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
                     <h3 className="font-bold text-gray-400 text-sm uppercase tracking-wider">Список товаров ({items.length})</h3>
@@ -740,47 +743,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </button>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
+                {/* CHANGED TO GRID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {sortedItems.map(item => (
-                        <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex gap-5 group">
+                        <div key={item.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 group h-full">
                             {item.imageUrl ? (
-                                <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden shrink-0">
-                                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                                <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden shrink-0">
+                                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 </div>
                             ) : (
-                                <div className="w-24 h-24 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 text-gray-300">
-                                    <Package className="w-8 h-8" />
+                                <div className="w-full h-40 bg-gray-50 rounded-xl flex items-center justify-center shrink-0 text-gray-300">
+                                    <Package className="w-12 h-12" />
                                 </div>
                             )}
                             
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start mb-1">
-                                    <h4 className="font-bold text-lg text-gray-800 truncate pr-4">{item.title}</h4>
-                                    <div className="flex items-center gap-2">
-                                        {item.quantity === 0 ? (
-                                            <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
-                                        ) : (
-                                            <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
-                                        )}
-                                        <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
-                                            {item.price > 0 ? `${item.price} P` : 'Free'}
-                                        </span>
-                                    </div>
+                            <div className="flex-1 min-w-0 flex flex-col">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h4 className="font-bold text-lg text-gray-800 truncate pr-2 w-full">{item.title}</h4>
                                 </div>
-                                <p className="text-sm text-gray-500 line-clamp-2 mb-3">{item.description}</p>
+                                <div className="flex items-center gap-2 mb-3">
+                                    {item.quantity === 0 ? (
+                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded uppercase">Unlimited</span>
+                                    ) : (
+                                        <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase">x{item.quantity}</span>
+                                    )}
+                                    <span className={`text-sm font-bold px-2 py-1 rounded-lg ${item.price > 0 ? 'bg-gray-100 text-gray-900' : 'bg-blue-100 text-blue-700'}`}>
+                                        {item.price > 0 ? `${item.price} P` : 'Free'}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">{item.description}</p>
                                 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 mt-auto">
                                     {item.status !== 'AVAILABLE' && (
                                         <button 
                                             onClick={() => forceRestock(item.id)}
-                                            className="text-xs font-bold text-orange-500 hover:text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                            className="text-xs font-bold text-orange-500 hover:text-orange-600 bg-orange-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 flex-1 justify-center"
                                         >
-                                            <RefreshCw className="w-3 h-3" /> Вернуть в продажу
+                                            <RefreshCw className="w-3 h-3" /> Вернуть
                                         </button>
                                     )}
                                     <button 
                                         onClick={(e) => deleteItem(item.id, e)}
-                                        className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ml-auto"
+                                        className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 px-3 py-2 rounded-lg transition-colors flex items-center gap-1 ml-auto flex-1 justify-center"
                                     >
                                         <Trash2 className="w-3 h-3" /> Удалить
                                     </button>
@@ -1061,7 +1065,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                     onChange={(e) => setRefundReason(e.target.value)}
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-medium transition-all text-sm appearance-none"
                                 >
-                                    <option value="Выплата клиенту на карту с обнулением кошелька">Выплата клиенту на карту с обнулением кошелька</option>
+                                    {/* UPDATED OPTION TEXT */}
+                                    <option value="Выплата клиенту на карту со списанием с внутренего кошелька">Выплата клиенту на карту со списанием с внутренего кошелька</option>
                                     <option value="Подарочный бонус">Подарочный бонус</option>
                                     <option value="Сбой (претензия от клиента)">Сбой (претензия от клиента)</option>
                                 </select>
@@ -1195,39 +1200,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <p className="text-slate-500 font-medium">Смена паролей сотрудников</p>
                 </div>
                 
-                {user?.role === UserRole.ADMIN && (
-                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                        <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                            <Shield className="w-5 h-5 text-indigo-600" />
-                            Доступ Админа
-                        </h3>
-                        <form onSubmit={handleUpdateAdmin} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый логин</label>
-                                <input 
-                                    value={adminLogin}
-                                    onChange={e => setAdminLogin(e.target.value)}
-                                    placeholder="Новый логин"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый пароль</label>
-                                <input 
-                                    value={adminPass}
-                                    onChange={e => setAdminPass(e.target.value)}
-                                    placeholder="Новый пароль"
-                                    type="text"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
-                                />
-                            </div>
-                            {msgAdmin && <p className={`text-sm font-bold ${msgAdmin.includes('Ошибка') ? 'text-red-500' : 'text-emerald-500'}`}>{msgAdmin}</p>}
-                            <button type="submit" className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
-                                Обновить данные Админа
-                            </button>
-                        </form>
-                    </div>
-                )}
+                {/* ALLOW MANAGER TO SEE ADMIN FORM NOW */}
+                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-indigo-600" />
+                        Доступ Админа
+                    </h3>
+                    <form onSubmit={handleUpdateAdmin} className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый логин</label>
+                            <input 
+                                value={adminLogin}
+                                onChange={e => setAdminLogin(e.target.value)}
+                                placeholder="Новый логин"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Новый пароль</label>
+                            <input 
+                                value={adminPass}
+                                onChange={e => setAdminPass(e.target.value)}
+                                placeholder="Новый пароль"
+                                type="text"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
+                            />
+                        </div>
+                        {msgAdmin && <p className={`text-sm font-bold ${msgAdmin.includes('Ошибка') ? 'text-red-500' : 'text-emerald-500'}`}>{msgAdmin}</p>}
+                        <button type="submit" className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">
+                            Обновить данные Админа
+                        </button>
+                    </form>
+                </div>
 
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
