@@ -72,8 +72,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       })
       .subscribe();
 
+    // Auto-refresh every 60 seconds
+    const intervalId = setInterval(() => {
+        refreshAll();
+    }, 60000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(intervalId);
     };
   }, []);
 
