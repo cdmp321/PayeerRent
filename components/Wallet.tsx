@@ -386,7 +386,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Выберите способ оплаты</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
                   {methods.map(method => (
                     <button
                       key={method.id}
@@ -394,17 +394,18 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           setSelectedMethod(method);
                           setIsCopied(false);
                       }}
-                      className={`relative overflow-hidden p-3 h-24 rounded-xl border transition-all group flex flex-col items-center justify-center text-center gap-1 ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-500/20 shadow-sm' : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}
+                      className={`relative w-full p-4 rounded-xl border transition-all group flex items-center justify-between overflow-hidden ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-500 shadow-md' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
                     >
-                      <div className="relative z-10 scale-[1.3] mb-1">
-                            <PaymentIcon imageUrl={method.imageUrl} />
+                      <div className="flex flex-col items-start gap-1 relative z-10">
+                          <span className="font-bold text-slate-800 text-sm">{method.name}</span>
+                          {method.minAmount && method.minAmount > 0 && (
+                                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-md">Min {method.minAmount}</span>
+                          )}
                       </div>
                       
-                      <span className="font-bold text-gray-800 text-xs truncate max-w-full relative z-10 leading-tight px-1">{method.name}</span>
-                      
-                      {method.minAmount && method.minAmount > 0 && (
-                            <span className="text-[9px] text-orange-500 font-bold uppercase relative z-10 bg-white/50 px-1 rounded-sm">Min {method.minAmount}</span>
-                      )}
+                      <div className="relative z-10">
+                            <PaymentIcon imageUrl={method.imageUrl} />
+                      </div>
                     </button>
                   ))}
                 </div>
