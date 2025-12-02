@@ -145,22 +145,25 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         return;
     }
     
-    if (!receipt) {
-        setNotification({ type: 'error', msg: 'Загрузите чек оплаты' });
-        if (receiptUploadRef.current) {
-            receiptUploadRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const el = receiptUploadRef.current;
-            el.classList.add('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
-            setTimeout(() => {
-                el.classList.remove('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
-            }, 2000);
+    // Only require receipt if it's NOT a link method
+    if (!selectedMethod.paymentUrl) {
+        if (!receipt) {
+            setNotification({ type: 'error', msg: 'Загрузите чек оплаты' });
+            if (receiptUploadRef.current) {
+                receiptUploadRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const el = receiptUploadRef.current;
+                el.classList.add('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
+                setTimeout(() => {
+                    el.classList.remove('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
+                }, 2000);
+            }
+            return;
         }
-        return;
     }
 
     setIsProcessing(true);
     try {
-      await api.requestTopUp(user.id, val, receipt);
+      await api.requestTopUp(user.id, val, receipt || undefined);
       
       setNotification({ type: 'success', msg: 'Заявка отправлена на проверку!' });
       setShowTopUpModal(false);
@@ -470,103 +473,116 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               {selectedMethod && (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm animate-fade-in relative overflow-hidden">
                   
-                  {/* Payment Button (Transparent Blue) */}
-                  <div className="mb-4 relative z-10">
-                       <button 
-                            onClick={() => selectedMethod.paymentUrl && window.open(selectedMethod.paymentUrl, '_blank')}
-                            className="w-full bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
-                       >
-                            <ExternalLink className="w-5 h-5 stroke-[2.5]" />
-                            Нажмите для оплаты
-                       </button>
-                       
-                       {/* Optional instruction note */}
-                       <p className="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Или по реквизитам ниже</p>
-                       
-                       {selectedMethod.instruction ? (
-                            <div>
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
-                                    
-                                    <div className="flex gap-2">
-                                        <button 
-                                            onClick={copyInstruction}
-                                            className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
-                                        >
-                                            {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                            {isCopied ? 'Скопировано' : 'Копировать'}
-                                        </button>
+                  {/* Payment Logic Switch */}
+                  {selectedMethod.paymentUrl ? (
+                      /* EXTERNAL LINK MODE */
+                      <div className="mb-4 relative z-10">
+                           <button 
+                                onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
+                                className="w-full bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
+                           >
+                                <ExternalLink className="w-5 h-5 stroke-[2.5]" />
+                                Нажмите для оплаты
+                           </button>
+                           <p className="text-center text-[10px] font-bold text-gray-400 uppercase">
+                               Переход на страницу оплаты
+                           </p>
+                      </div>
+                  ) : (
+                      /* MANUAL MODE */
+                      <>
+                           <div className="mb-4 relative z-10">
+                               <p className="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Реквизиты для оплаты</p>
+                               
+                               {selectedMethod.instruction ? (
+                                    <div>
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
+                                            
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={copyInstruction}
+                                                    className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
+                                                >
+                                                    {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                    {isCopied ? 'Скопировано' : 'Копировать'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">
+                                            {selectedMethod.instruction}
+                                        </p>
                                     </div>
-                                </div>
-                                <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">
-                                    {selectedMethod.instruction}
-                                </p>
+                               ) : null}
+                          </div>
+                          
+                          {/* INSTRUCTION BLOCK */}
+                          <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">
+                            <div className="flex items-start gap-3">
+                               <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0 mt-0.5">
+                                  <Banknote className="w-4 h-4" />
+                               </div>
+                               <div>
+                                  <h4 className="font-bold text-indigo-900 text-xs mb-1.5 uppercase tracking-wide">Как пополнить баланс?</h4>
+                                  <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
+                                     <li className="flex gap-1.5">
+                                        <span className="font-bold text-indigo-500">1.</span>
+                                        <span>Выполните перевод по реквизитам выше.</span>
+                                     </li>
+                                     <li className="flex gap-1.5">
+                                        <span className="font-bold text-indigo-500">2.</span>
+                                        <span>Сохраните чек или сделайте скриншот оплаты.</span>
+                                     </li>
+                                     <li className="flex gap-1.5">
+                                        <span className="font-bold text-indigo-500">3.</span>
+                                        <span>Загрузите чек в поле ниже и нажмите "Отправить заявку".</span>
+                                     </li>
+                                  </ol>
+                               </div>
                             </div>
-                       ) : null}
-                  </div>
-                  
-                  {/* INSTRUCTION BLOCK */}
-                  <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">
-                    <div className="flex items-start gap-3">
-                       <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0 mt-0.5">
-                          <Banknote className="w-4 h-4" />
-                       </div>
-                       <div>
-                          <h4 className="font-bold text-indigo-900 text-xs mb-1.5 uppercase tracking-wide">Как пополнить баланс?</h4>
-                          <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
-                             <li className="flex gap-1.5">
-                                <span className="font-bold text-indigo-500">1.</span>
-                                <span>{selectedMethod.paymentUrl ? 'Нажмите кнопку "Нажмите для оплаты" или используйте реквизиты.' : 'Выполните перевод по реквизитам выше.'}</span>
-                             </li>
-                             <li className="flex gap-1.5">
-                                <span className="font-bold text-indigo-500">2.</span>
-                                <span>Сохраните чек или сделайте скриншот оплаты.</span>
-                             </li>
-                             <li className="flex gap-1.5">
-                                <span className="font-bold text-indigo-500">3.</span>
-                                <span>Загрузите чек в поле ниже и нажмите "Отправить заявку".</span>
-                             </li>
-                          </ol>
-                       </div>
-                    </div>
-                  </div>
+                          </div>
 
-                  <div className="pt-2 border-t border-gray-200 relative z-10">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 mt-2">Загрузка чека</label>
-                    <label 
-                        ref={receiptUploadRef}
-                        className="flex flex-col items-center justify-center w-full h-16 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-all duration-300 relative overflow-hidden group"
-                    >
-                        <div className="flex items-center gap-2 px-2 relative z-10">
-                            {receipt ? (
-                                <>
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                                    <span className="text-sm font-bold text-emerald-700 truncate max-w-[180px]">{receipt.name}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                                    <span className="text-xs font-bold text-gray-500 group-hover:text-gray-700 transition-colors">Нажмите для загрузки</span>
-                                </>
-                            )}
-                        </div>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                    </label>
-                  </div>
+                          <div className="pt-2 border-t border-gray-200 relative z-10">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 mt-2">Загрузка чека</label>
+                            <label 
+                                ref={receiptUploadRef}
+                                className="flex flex-col items-center justify-center w-full h-16 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-gray-50 transition-all duration-300 relative overflow-hidden group"
+                            >
+                                <div className="flex items-center gap-2 px-2 relative z-10">
+                                    {receipt ? (
+                                        <>
+                                            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                            <span className="text-sm font-bold text-emerald-700 truncate max-w-[180px]">{receipt.name}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                                            <span className="text-xs font-bold text-gray-500 group-hover:text-gray-700 transition-colors">Нажмите для загрузки</span>
+                                        </>
+                                    )}
+                                </div>
+                                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                            </label>
+                          </div>
+                      </>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
-              <button 
-                onClick={handleTopUpRequest}
-                disabled={isProcessing}
-                className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-              >
-                {isProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-                {isProcessing ? 'Обработка...' : 'Отправить заявку'}
-              </button>
-            </div>
+            {/* Footer with Send Button - Only if Manual Mode */}
+            {(!selectedMethod || !selectedMethod.paymentUrl) && (
+                <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
+                <button 
+                    onClick={handleTopUpRequest}
+                    disabled={isProcessing}
+                    className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                >
+                    {isProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+                    {isProcessing ? 'Обработка...' : 'Отправить заявку'}
+                </button>
+                </div>
+            )}
 
           </div>
         </div>
