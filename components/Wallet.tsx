@@ -476,17 +476,19 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   {/* Payment Logic Switch */}
                   {selectedMethod.paymentUrl ? (
                       /* EXTERNAL LINK MODE */
-                      <div className="mb-4 relative z-10">
+                      <div className="mb-4 relative z-10 space-y-4">
+                           {/* New Instruction Text */}
+                           <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm">
+                               введите сумму которую хотите пополнить кошелек и передите по кнопке ниже, вас перенесет в аккаунт для оплаты где нужно ввести в окно "другая сумма" туже сууму что и в кошельке на пополнение.
+                           </div>
+
                            <button 
                                 onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                                className="w-full bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95"
                            >
                                 <ExternalLink className="w-5 h-5 stroke-[2.5]" />
-                                Нажмите для оплаты
+                                перейти для оплаты
                            </button>
-                           <p className="text-center text-[10px] font-bold text-gray-400 uppercase">
-                               Переход на страницу оплаты
-                           </p>
                       </div>
                   ) : (
                       /* MANUAL MODE */
