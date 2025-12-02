@@ -475,11 +475,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   
                   {/* Payment Logic Switch */}
                   {selectedMethod.paymentUrl ? (
-                      /* EXTERNAL LINK MODE */
+                      /* LINK MODE */
                       <div className="mb-4 relative z-10 space-y-4">
                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm">
                                Введите сумму на которую вы хотите пополнить кошелек, нажмите кнопку ниже для перехода в аккаунт для оплаты, где нужно ввести в окне «другая сумма» то же сумму которую вы вводили при пополнении кошелька.
                            </div>
+                           {/* Receipt upload removed for Link Mode as requested */}
                       </div>
                   ) : (
                       /* MANUAL MODE */
@@ -567,10 +568,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             {/* Footer with Actions */}
             <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
                 {selectedMethod && selectedMethod.paymentUrl ? (
-                     /* LINK MODE BUTTON */
+                     /* LINK MODE BUTTON - "Перейти к оплате" */
                     <button 
                         onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                        className="w-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-600 hover:text-blue-700 py-3.5 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 border border-blue-200"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95"
                     >
                         <ExternalLink className="w-5 h-5 stroke-[2.5]" />
                         Перейти к оплате
