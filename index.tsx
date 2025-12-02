@@ -1,3 +1,4 @@
+
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
@@ -21,7 +22,7 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // Explicitly declare state property for TypeScript compatibility
+  // Explicitly declare state
   public state: State = {
     hasError: false,
     error: null

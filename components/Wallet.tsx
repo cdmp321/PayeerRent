@@ -123,6 +123,49 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       }
   };
 
+  // Handler for Link-based payments
+  const handleLinkPayment = async () => {
+      const val = parseFloat(amount);
+      
+      if (!val || val <= 0) {
+        setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
+        if (amountInputRef.current) {
+            amountInputRef.current.focus();
+            amountInputRef.current.parentElement?.classList.add('animate-pulse');
+            setTimeout(() => amountInputRef.current?.parentElement?.classList.remove('animate-pulse'), 1000);
+        }
+        return;
+      }
+      
+      if (!selectedMethod || !selectedMethod.paymentUrl) return;
+
+      if (selectedMethod.minAmount && val < selectedMethod.minAmount) {
+          setNotification({ type: 'error', msg: `Минимальная сумма: ${selectedMethod.minAmount} ®` });
+          return;
+      }
+
+      // 1. Open link in new tab immediately
+      window.open(selectedMethod.paymentUrl, '_blank');
+
+      setIsProcessing(true);
+      try {
+        // 2. Create Request in background (no receipt needed)
+        await api.requestTopUp(user.id, val); 
+        
+        setNotification({ type: 'success', msg: 'Заявка создана! Ожидайте зачисления.' });
+        setShowTopUpModal(false);
+        setAmount('');
+        setSelectedMethod(null);
+        setReceipt(null);
+        loadData(); 
+      } catch (error) {
+        setNotification({ type: 'error', msg: 'Ошибка создания заявки' });
+      } finally {
+        setIsProcessing(false);
+        setTimeout(() => setNotification(null), 3000);
+      }
+  };
+
   const handleTopUpRequest = async () => {
     const val = parseFloat(amount);
     
@@ -568,12 +611,17 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             {/* Footer with Actions */}
             <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
                 {selectedMethod && selectedMethod.paymentUrl ? (
-                     /* LINK MODE BUTTON - "Перейти к оплате" */
+                     /* LINK MODE BUTTON - "Перейти к оплате" (Trigger both link and request) */
                     <button 
-                        onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95"
+                        onClick={handleLinkPayment}
+                        disabled={isProcessing}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <ExternalLink className="w-5 h-5 stroke-[2.5]" />
+                         {isProcessing ? (
+                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                         ) : (
+                             <ExternalLink className="w-5 h-5 stroke-[2.5]" />
+                         )}
                         Перейти к оплате
                     </button>
                 ) : (
