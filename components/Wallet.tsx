@@ -120,14 +120,19 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
   const handleTopUpRequest = async () => {
     const val = parseFloat(amount);
+    
+    // 1. Check Amount
     if (!val || val <= 0) {
       setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
-      // Auto-focus the input field
       if (amountInputRef.current) {
           amountInputRef.current.focus();
+          amountInputRef.current.parentElement?.classList.add('animate-pulse');
+          setTimeout(() => amountInputRef.current?.parentElement?.classList.remove('animate-pulse'), 1000);
       }
       return;
     }
+    
+    // 2. Check Method
     if (!selectedMethod) {
       setNotification({ type: 'error', msg: 'Выберите метод оплаты' });
       return;
@@ -136,15 +141,20 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         setNotification({ type: 'error', msg: `Минимальная сумма: ${selectedMethod.minAmount} ®` });
         return;
     }
+    
+    // 3. Check Receipt (Auto-scroll functionality)
     if (!receipt) {
-        setNotification({ type: 'error', msg: 'Прикрепите чек оплаты' });
-        // Auto-scroll to receipt upload section
+        setNotification({ type: 'error', msg: 'Загрузите чек оплаты' });
         if (receiptUploadRef.current) {
+            // Scroll to the upload section
             receiptUploadRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Add a temporary visual cue
-            receiptUploadRef.current.classList.add('ring-2', 'ring-red-400');
+            
+            // Apply Red Flash Animation
+            const el = receiptUploadRef.current;
+            el.classList.add('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
+            
             setTimeout(() => {
-                receiptUploadRef.current?.classList.remove('ring-2', 'ring-red-400');
+                el.classList.remove('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
             }, 2000);
         }
         return;

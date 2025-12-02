@@ -19,7 +19,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 };
 
 interface ErrorBoundaryProps {
-  children?: ReactNode;
+  children: ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -28,7 +28,10 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false, error: null };
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null
+  };
 
   static getDerivedStateFromError(error: any): ErrorBoundaryState {
     return { hasError: true, error };
@@ -59,7 +62,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       );
     }
 
-    return (this as any).props.children;
+    return this.props.children;
   }
 }
 
