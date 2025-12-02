@@ -605,9 +605,19 @@ export const api = {
       }]);
 
       if (error) {
-          // Check for schema error (missing column)
+          // Check for schema error (missing column or cache issue)
           if (error.code === '42703' || error.message?.includes('image_url') || error.message?.includes('payment_url') || error.message?.includes('Could not find')) {
-             throw new Error("Ошибка базы данных: отсутствуют необходимые поля (image_url или payment_url). Пожалуйста, обновите структуру базы данных в App.tsx.");
+             console.warn("Schema mismatch (missing columns). Retrying addPaymentMethod without image/url.");
+             // Fallback: Insert without new columns to prevent crash
+             const { error: retryError } = await supabase.from('payment_methods').insert([{
+                name: methodData.name,
+                instruction: methodData.instruction,
+                is_active: methodData.isActive,
+                min_amount: methodData.minAmount
+             }]);
+             
+             if (retryError) throw new Error(retryError.message);
+             return;
           }
 
           throw new Error(error.message);
