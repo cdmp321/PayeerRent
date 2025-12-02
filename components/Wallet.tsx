@@ -459,10 +459,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       onClick={() => {
                           setSelectedMethod(method);
                           setIsCopied(false);
-                          // AUTO REDIRECT if payment URL exists
-                          if (method.paymentUrl) {
-                              window.open(method.paymentUrl, '_blank');
-                          }
                       }}
                       className={`relative w-full p-4 rounded-xl border transition-all group flex items-center justify-between overflow-hidden ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-500 shadow-md' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
                     >
@@ -486,9 +482,32 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
               {selectedMethod && (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm animate-fade-in relative overflow-hidden">
-                  <div className="mb-4 relative z-10">
-                      {/* Show Requisites Header and Buttons ONLY if NO direct link (User asked to remove excess) */}
-                      {!selectedMethod.paymentUrl && (
+                  
+                  {/* If Payment URL exists, show dedicated button and instruction */}
+                  {selectedMethod.paymentUrl ? (
+                      <div className="mb-4 relative z-10">
+                           <button 
+                                onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
+                           >
+                                <ExternalLink className="w-5 h-5" />
+                                Перейдите для оплаты
+                           </button>
+                           
+                           {/* Optional instruction note */}
+                           <p className="text-center text-xs font-medium text-gray-500">
+                               После успешной оплаты вернитесь в приложение и загрузите чек ниже.
+                           </p>
+                           
+                           {selectedMethod.instruction && (
+                                <p className="mt-3 font-medium text-indigo-800 bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs shadow-sm">
+                                    {selectedMethod.instruction}
+                                </p>
+                           )}
+                      </div>
+                  ) : (
+                      // Standard Requisites View
+                      <div className="mb-4 relative z-10">
                           <div className="flex justify-between items-center mb-1.5">
                             <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
                             
@@ -502,22 +521,14 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                                 </button>
                             </div>
                           </div>
-                      )}
 
-                      {/* Instruction Text */}
-                      {/* If it's a link method, we display instruction as a small note if exists, otherwise hide standard block if empty */}
-                      {selectedMethod.instruction && (
-                         selectedMethod.paymentUrl ? (
-                            <p className="font-medium text-indigo-800 bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs shadow-sm mb-2">
-                                {selectedMethod.instruction}
-                            </p>
-                         ) : (
+                          {selectedMethod.instruction && (
                             <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">
                                 {selectedMethod.instruction}
                             </p>
-                         )
-                      )}
-                  </div>
+                          )}
+                      </div>
+                  )}
                   
                   {/* NEW INSTRUCTION BLOCK */}
                   <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">
@@ -530,7 +541,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
                              <li className="flex gap-1.5">
                                 <span className="font-bold text-indigo-500">1.</span>
-                                <span>{selectedMethod.paymentUrl ? 'Выполните оплату по открывшейся ссылке.' : 'Выполните перевод по реквизитам выше.'}</span>
+                                <span>{selectedMethod.paymentUrl ? 'Нажмите синюю кнопку выше для перехода к оплате.' : 'Выполните перевод по реквизитам выше.'}</span>
                              </li>
                              <li className="flex gap-1.5">
                                 <span className="font-bold text-indigo-500">2.</span>
@@ -665,8 +676,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                        <p className="opacity-80 mt-0.5 font-medium">Запрос на начисление (Кэшбэк)</p>
                    </div>
                </div>
-
-               {/* Removed Amount Input as requested */}
                
                <div>
                   <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800 leading-relaxed font-medium">
