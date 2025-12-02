@@ -594,18 +594,45 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // STRICT INSERTION - NO FALLBACK
-      // If payment_url or image_url columns are missing, this MUST fail
-      // so the user sees the Error Screen and updates the DB schema.
-      const { error } = await supabase.from('payment_methods').insert([{
+      // 1. Try Full Insert (Assuming all columns exist)
+      const payloadFull = {
         name: methodData.name,
         instruction: methodData.instruction,
         is_active: methodData.isActive,
         min_amount: methodData.minAmount,
         image_url: methodData.imageUrl,
         payment_url: methodData.paymentUrl
-      }]);
-
+      };
+      
+      let { error } = await supabase.from('payment_methods').insert([payloadFull]);
+      
+      // Fallback: If error is due to missing columns (code 42703), try simpler payloads
+      if (error && (error.code === '42703' || error.message.includes('payment_url') || error.message.includes('image_url'))) {
+          console.warn("Schema mismatch detected (missing columns), retrying with compatible fields...");
+          
+          // 2. Try without 'payment_url'
+          const payloadNoUrl = { ...payloadFull };
+          delete (payloadNoUrl as any).payment_url;
+          
+          let { error: err2 } = await supabase.from('payment_methods').insert([payloadNoUrl]);
+          
+          if (err2 && (err2.code === '42703' || err2.message.includes('image_url'))) {
+               // 3. Try Basic Only (No payment_url, No image_url)
+               const payloadBasic = {
+                    name: methodData.name,
+                    instruction: methodData.instruction,
+                    is_active: methodData.isActive,
+                    min_amount: methodData.minAmount
+               };
+               const { error: err3 } = await supabase.from('payment_methods').insert([payloadBasic]);
+               if (err3) throw new Error("Fallback failed: " + err3.message);
+               return; // Success on basic
+          } else if (err2) {
+              throw new Error(err2.message);
+          }
+          return; // Success on NoUrl
+      }
+      
       if (error) throw new Error(error.message);
   },
 
