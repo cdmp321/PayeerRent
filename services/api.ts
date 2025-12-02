@@ -593,6 +593,8 @@ export const api = {
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
       // 1. Attempt to insert with image_url
+      // REMOVED FALLBACK: If this fails because of missing column, it WILL throw error
+      // This ensures the user knows they need to update schema.
       const { error } = await supabase.from('payment_methods').insert([{
         name: methodData.name,
         instruction: methodData.instruction,
@@ -602,24 +604,6 @@ export const api = {
       }]);
 
       if (error) {
-          // Check for "column not found" error (Postgres code 42703 or specific message)
-          // Also check for client-side schema cache issues
-          const isSchemaError = error.code === '42703' || 
-                                error.message?.includes('image_url') || 
-                                error.message?.includes('schema');
-
-          if (isSchemaError) {
-              console.warn("Schema mismatch: 'image_url' column missing. Retrying without image.");
-              const { error: retryError } = await supabase.from('payment_methods').insert([{
-                name: methodData.name,
-                instruction: methodData.instruction,
-                is_active: methodData.isActive,
-                min_amount: methodData.minAmount
-              }]);
-              if (retryError) throw new Error(retryError.message);
-              return; // Success on fallback
-          }
-          
           throw new Error(error.message);
       }
   },
