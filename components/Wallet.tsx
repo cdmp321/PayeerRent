@@ -453,7 +453,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       </div>
                       
                       <div className="relative z-10">
-                            <PaymentIcon imageUrl={method.imageUrl} />
+                            {/* Window Container for Payment Icon */}
+                            <div className="w-14 h-14 bg-white rounded-xl border border-gray-200 flex items-center justify-center shrink-0 p-1 shadow-sm">
+                                <div className="scale-125">
+                                    <PaymentIcon imageUrl={method.imageUrl} />
+                                </div>
+                            </div>
                       </div>
                     </button>
                   ))}
