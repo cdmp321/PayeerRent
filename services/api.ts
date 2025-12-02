@@ -298,11 +298,14 @@ export const api = {
   },
 
   // Wallet & Transactions
-  requestTopUp: async (userId: string, amount: number, receiptFile?: File): Promise<void> => {
+  requestTopUp: async (userId: string, amount: number, receiptFile?: File, isLinkPayment?: boolean): Promise<void> => {
     let receiptUrl = '';
     
     // Store image directly as base64 string in database
-    if (receiptFile) {
+    if (isLinkPayment) {
+        // Special marker for Link Payment so admin sees specific text
+        receiptUrl = 'LINK_PAYMENT_SPB';
+    } else if (receiptFile) {
         try {
             receiptUrl = await toBase64(receiptFile);
         } catch (e) {

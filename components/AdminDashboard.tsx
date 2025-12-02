@@ -638,6 +638,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                      const u = users.find(u => u.id === tx.userId); 
                      const isWithdrawal = tx.type === 'WITHDRAWAL';
                      const isRefundRequest = tx.description.startsWith('ЗАПРОС');
+                     const isLinkPayment = tx.receiptUrl === 'LINK_PAYMENT_SPB';
 
                      return (
                         <div key={tx.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-6 relative overflow-hidden">
@@ -659,7 +660,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 </div>
                                 <div className="flex items-baseline gap-2 mb-1"><span className="text-2xl font-black text-gray-800">{tx.amount} ®</span><span className="text-sm text-gray-500">от {u?.name}</span></div>
                                 {isWithdrawal && <div className="mt-2 bg-gray-50 p-3 rounded-lg text-sm text-gray-700 font-medium">{tx.description.replace('Заявка на вывод: ', '').replace('ЗАПРОС НА ВОЗВРАТ: ', '')}</div>}
-                                {!isWithdrawal && tx.receiptUrl && <button onClick={() => setViewingReceipt(tx.receiptUrl || null)} className="mt-3 flex items-center gap-2 text-sm text-indigo-600 font-bold hover:underline"><FileText className="w-4 h-4" /> Смотреть чек</button>}
+                                {!isWithdrawal && (
+                                    isLinkPayment ? (
+                                        <div className="mt-3 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg border border-indigo-100 inline-block">
+                                            оплата пополнения кошелька была сделана через "СПБ"
+                                        </div>
+                                    ) : (
+                                        tx.receiptUrl && <button onClick={() => setViewingReceipt(tx.receiptUrl || null)} className="mt-3 flex items-center gap-2 text-sm text-indigo-600 font-bold hover:underline"><FileText className="w-4 h-4" /> Смотреть чек</button>
+                                    )
+                                )}
                             </div>
                             <div className="flex flex-row sm:flex-col gap-2 justify-center border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6">
                                 <button onClick={() => handleApproveTx(tx.id, isRefundRequest)} className="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg shadow-emerald-200"><Check className="w-5 h-5" /></button>

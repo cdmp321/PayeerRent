@@ -149,8 +149,8 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
       setIsProcessing(true);
       try {
-        // 2. Create Request in background (no receipt needed)
-        await api.requestTopUp(user.id, val); 
+        // 2. Create Request in background (true indicates Link Payment)
+        await api.requestTopUp(user.id, val, undefined, true); 
         
         setNotification({ type: 'success', msg: 'Заявка создана! Ожидайте зачисления.' });
         setShowTopUpModal(false);
