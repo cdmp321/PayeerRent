@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, ArrowDownLeft, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink } from 'lucide-react';
+import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, ArrowDownLeft, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink, Link } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -484,10 +484,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
                            <button 
                                 onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95"
+                                className="w-full bg-blue-600/90 hover:bg-blue-600 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95 backdrop-blur-sm"
                            >
                                 <ExternalLink className="w-5 h-5 stroke-[2.5]" />
-                                перейти к оплате
+                                Перейти к оплате
                            </button>
                       </div>
                   ) : (
