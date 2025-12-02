@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, ArrowDownLeft, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink, Link } from 'lucide-react';
+import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink, Link } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -499,9 +499,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                     >
                       <div className="flex flex-col items-start gap-1 relative z-10 pr-12">
                           <span className="font-extrabold text-slate-800 text-base">{method.name}</span>
-                          {method.minAmount && method.minAmount > 0 && (
+                          {/* Only show Min amount if strictly greater than 0 */}
+                          {method.minAmount && method.minAmount > 0 ? (
                                 <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md">Min {method.minAmount}</span>
-                          )}
+                          ) : null}
                       </div>
                       
                       {/* Image in the Top-Right Corner */}
@@ -520,8 +521,13 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   {selectedMethod.paymentUrl ? (
                       /* LINK MODE - Replaces Requisites & Receipt Upload */
                       <div className="mb-4 relative z-10 space-y-4">
-                           <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm text-justify">
-                               Введите сумму на которую вы хотите пополнить кошелек, нажмите кнопку ниже для перехода в аккаунт для оплаты, где нужно ввести в окне «другая сумма» ту же сумму которую вы вводили изначально при пополнении кошелька.
+                           <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 relative z-10">
+                                <h4 className="font-bold text-indigo-900 text-xs mb-2 uppercase tracking-wide">Как пополнить баланс?</h4>
+                                <ol className="text-xs text-indigo-900 font-bold space-y-2 list-decimal list-inside leading-relaxed text-left">
+                                    <li>Введите сумму на которую вы хотите пополнить кошелек.</li>
+                                    <li>Нажмите кнопку ниже для перехода в аккаунт для оплаты.</li>
+                                    <li>Где выберете вкладку «другая сумма» и введите ту же сумму которую вы вводили изначально при пополнении кошелька.</li>
+                                </ol>
                            </div>
                            {/* Receipt upload and manual instructions are hidden in this mode */}
                       </div>
