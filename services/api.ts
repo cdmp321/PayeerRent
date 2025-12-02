@@ -73,6 +73,11 @@ export const api = {
       .single();
 
     if (existingUser) {
+      // SECURITY CHECK: Prevent Admin/Manager from logging in via Client Form
+      if (existingUser.role === 'ADMIN' || existingUser.role === 'MANAGER') {
+          throw new Error('Сотрудники должны использовать Служебный вход');
+      }
+
       localStorage.setItem('payeer_current_user_id', existingUser.id);
       return mapUser(existingUser);
     }
@@ -294,6 +299,40 @@ export const api = {
       .from('items')
       .update({ status: 'AVAILABLE', owner_id: null, purchased_at: null })
       .eq('id', id);
+    if (error) throw new Error(error.message);
+  },
+
+  // Payment Methods
+  getPaymentMethods: async (): Promise<PaymentMethod[]> => {
+    const { data, error } = await supabase.from('payment_methods').select('*').order('name');
+    if (error) return [];
+    return data.map(mapMethod);
+  },
+
+  addPaymentMethod: async (method: Omit<PaymentMethod, 'id'>): Promise<PaymentMethod> => {
+    // Attempt to insert with image_url and payment_url
+    // If columns are missing, this will fail, prompting an update in the UI via ErrorBoundary/App.tsx
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .insert([{
+        name: method.name,
+        instruction: method.instruction,
+        is_active: method.isActive,
+        min_amount: method.minAmount,
+        image_url: method.imageUrl,
+        payment_url: method.paymentUrl
+      }])
+      .select()
+      .single();
+
+    if (error) {
+        throw new Error(error.message); // Throw to trigger error handling in UI
+    }
+    return mapMethod(data);
+  },
+
+  deletePaymentMethod: async (id: string): Promise<void> => {
+    const { error } = await supabase.from('payment_methods').delete().eq('id', id);
     if (error) throw new Error(error.message);
   },
 
@@ -612,52 +651,10 @@ export const api = {
   },
 
   cancelReservation: async (itemId: string): Promise<void> => {
-    await supabase.from('items').update({ status: 'AVAILABLE', owner_id: null, purchased_at: null }).eq('id', itemId);
-  },
-
-  // Payment Methods
-  getPaymentMethods: async (): Promise<PaymentMethod[]> => {
-    const { data, error } = await supabase.from('payment_methods').select('*');
-    if (error) return [];
-    return data.map(mapMethod);
-  },
-
-  addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // Ensure we explicitly map properties to snake_case database columns
-      // REMOVED SILENT FALLBACK: If columns are missing, this MUST fail so the user sees the schema update error.
-      const payload = {
-        name: methodData.name,
-        instruction: methodData.instruction || '',
-        is_active: methodData.isActive,
-        min_amount: methodData.minAmount || 0,
-        image_url: methodData.imageUrl || null,
-        payment_url: methodData.paymentUrl || null // New Link Field
-      };
-      
-      const { error } = await supabase.from('payment_methods').insert([payload]);
-      
-      if (error) {
-         // Fallback logic in case of schema mismatch to avoid hard errors in prod if DB is old
-         // NOTE: Removed by request to ensure images/links work, but re-adding robustness check 
-         // so it tries to save AT LEAST the basic data if new columns fail.
-         if (error.message.includes('image_url') || error.message.includes('payment_url')) {
-             console.warn("Schema mismatch, retrying without new columns...");
-             const fallbackPayload = {
-                name: methodData.name,
-                instruction: methodData.instruction || '',
-                is_active: methodData.isActive,
-                min_amount: methodData.minAmount || 0
-             };
-             const { error: retryError } = await supabase.from('payment_methods').insert([fallbackPayload]);
-             if (retryError) throw new Error(retryError.message);
-             return;
-         }
-         throw new Error(error.message);
-      }
-  },
-
-  deletePaymentMethod: async (id: string): Promise<void> => {
-    const { error } = await supabase.from('payment_methods').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await supabase.from('items').update({
+        status: 'AVAILABLE',
+        owner_id: null,
+        purchased_at: null
+    }).eq('id', itemId);
   }
 };
