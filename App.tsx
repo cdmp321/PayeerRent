@@ -61,7 +61,8 @@ create table public.payment_methods (
   instruction text not null,
   is_active boolean default true,
   min_amount numeric default 0,
-  image_url text
+  image_url text,
+  payment_url text
 );
 
 -- 6. Сотрудники (ЗАШИФРОВАННЫЕ ДАННЫЕ)
@@ -72,7 +73,7 @@ insert into public.users (phone, name, password, role, balance)
 values ('wADM', '==gcldhcnRzaW5pbWRWQ', '=4mWdaY', 'ADMIN', 0);
 
 -- Менеджер (Логин: 001, Пароль: manager)
--- Encoded: 001 -> xADM, manager -> ==gcldYNaWb
+-- Encoded: 001 -> xADM, manager -> ==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
 insert into public.users (phone, name, password, role, balance)
 values ('xADM', '==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
 
@@ -87,8 +88,9 @@ create policy "Public access items" on public.items for all using (true);
 create policy "Public access transactions" on public.transactions for all using (true);
 create policy "Public access payment_methods" on public.payment_methods for all using (true);
 
--- ОБНОВЛЕНИЕ: Добавление колонки image_url, если её нет (для исправления ошибки)
+-- ОБНОВЛЕНИЕ: Добавление колонок, если их нет
 ALTER TABLE public.payment_methods ADD COLUMN IF NOT EXISTS image_url text;
+ALTER TABLE public.payment_methods ADD COLUMN IF NOT EXISTS payment_url text;
 `;
 
 const App: React.FC = () => {

@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock, ChevronLeft, ChevronRight, AlertCircle, Link } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -69,8 +70,6 @@ export const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
                 // Fallback on error
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.parentElement?.classList.add('bg-gray-100', 'flex', 'items-center', 'justify-center');
-                // We can't easily inject a component here, so we let the container show empty or we could try something else.
-                // But typically if we hide it, the container bg shows.
             }}
          />
     );
@@ -148,6 +147,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [newMethodName, setNewMethodName] = useState('');
   const [newMethodInstr, setNewMethodInstr] = useState('');
   const [newMethodMin, setNewMethodMin] = useState('');
+  const [newMethodUrl, setNewMethodUrl] = useState(''); // New Payment URL
   // Icon selector state
   const [selectedIconType, setSelectedIconType] = useState<string>('preset:card'); 
   const [customMethodIcon, setCustomMethodIcon] = useState('');
@@ -299,16 +299,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         }
 
         await api.addPaymentMethod({
-        name: newMethodName,
-        instruction: newMethodInstr,
-        isActive: true,
-        minAmount: isNaN(minVal) ? 0 : minVal,
-        imageUrl: finalImageUrl
+            name: newMethodName,
+            instruction: newMethodInstr,
+            isActive: true,
+            minAmount: isNaN(minVal) ? 0 : minVal,
+            imageUrl: finalImageUrl,
+            paymentUrl: newMethodUrl.trim() // Pass the new URL
         });
         
         setNewMethodName('');
         setNewMethodInstr('');
         setNewMethodMin('');
+        setNewMethodUrl('');
         setSelectedIconType('preset:card');
         setCustomMethodIcon('');
         
@@ -1039,7 +1041,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <form onSubmit={handleAddMethod} className="space-y-5">
                 <input placeholder="Название (напр. Сбербанк)" value={newMethodName} onChange={e => setNewMethodName(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
                 <textarea placeholder="Инструкция и реквизиты" value={newMethodInstr} onChange={e => setNewMethodInstr(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all h-24 resize-none" />
-                <input type="number" placeholder="Мин. сумма (необязательно)" value={newMethodMin} onChange={e => setNewMethodMin(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="number" placeholder="Мин. сумма (необязательно)" value={newMethodMin} onChange={e => setNewMethodMin(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
+                    <div className="relative">
+                         <input type="text" placeholder="Ссылка на оплату (необязательно)" value={newMethodUrl} onChange={e => setNewMethodUrl(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
+                         <Link className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    </div>
+                </div>
                 
                 {/* ICON SELECTION */}
                 <div>
@@ -1092,7 +1100,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <div className="flex justify-between items-start gap-3">
                         <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-gray-800 text-base truncate">{m.name}</h4>
-                            {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded uppercase mt-1 inline-block">Min {m.minAmount}</span>}
+                            <div className="flex gap-2 mt-1">
+                                {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded uppercase inline-block">Min {m.minAmount}</span>}
+                                {m.paymentUrl && <span className="text-[10px] font-bold bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase inline-block flex items-center gap-1"><Link className="w-3 h-3"/> Link</span>}
+                            </div>
                             <p className="text-xs text-gray-500 mt-1 line-clamp-2">{m.instruction}</p>
                         </div>
                         

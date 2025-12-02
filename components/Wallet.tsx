@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Bitcoin } from 'lucide-react';
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Bitcoin, ExternalLink } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -484,13 +485,28 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   <div className="mb-4 relative z-10">
                       <div className="flex justify-between items-center mb-1.5">
                         <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
-                        <button 
-                            onClick={copyInstruction}
-                            className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
-                        >
-                            {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                            {isCopied ? 'Скопировано' : 'Копировать'}
-                        </button>
+                        
+                        <div className="flex gap-2">
+                             {/* External Payment Link Button */}
+                             {selectedMethod.paymentUrl && (
+                                <a 
+                                    href={selectedMethod.paymentUrl} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="flex items-center gap-1 text-[10px] font-bold bg-indigo-600 border border-indigo-600 px-2 py-1 rounded-lg text-white hover:bg-indigo-700 transition-colors active:scale-95 shadow-sm"
+                                >
+                                    <ExternalLink className="w-3 h-3" />
+                                    Перейти к оплате
+                                </a>
+                             )}
+                            <button 
+                                onClick={copyInstruction}
+                                className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
+                            >
+                                {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                {isCopied ? 'Скопировано' : 'Копировать'}
+                            </button>
+                        </div>
                       </div>
                       <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">{selectedMethod.instruction}</p>
                   </div>

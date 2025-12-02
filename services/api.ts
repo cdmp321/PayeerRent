@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { User, Item, ItemStatus, UserRole, PaymentMethod, Transaction, TransactionStatus } from '../types';
 import { encrypt, decrypt } from './encryption';
@@ -32,7 +33,8 @@ const mapMethod = (data: any): PaymentMethod => ({
   instruction: data.instruction,
   isActive: data.is_active,
   minAmount: Number(data.min_amount),
-  imageUrl: data.image_url
+  imageUrl: data.image_url,
+  paymentUrl: data.payment_url // Map new field
 });
 
 const mapTransaction = (data: any): Transaction => ({
@@ -592,29 +594,20 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // 1. Attempt to insert with image_url
+      // 1. Attempt to insert with image_url AND payment_url
       const { error } = await supabase.from('payment_methods').insert([{
         name: methodData.name,
         instruction: methodData.instruction,
         is_active: methodData.isActive,
         min_amount: methodData.minAmount,
-        image_url: methodData.imageUrl 
+        image_url: methodData.imageUrl,
+        payment_url: methodData.paymentUrl
       }]);
 
       if (error) {
           // Check for schema error (missing column)
-          if (error.code === '42703' || error.message?.includes('image_url') || error.message?.includes('Could not find')) {
-              console.warn("Fallback: Inserting payment method without image_url due to schema mismatch.");
-              // Retry without image_url
-              const { error: retryError } = await supabase.from('payment_methods').insert([{
-                name: methodData.name,
-                instruction: methodData.instruction,
-                is_active: methodData.isActive,
-                min_amount: methodData.minAmount
-              }]);
-              
-              if (retryError) throw new Error(retryError.message);
-              return;
+          if (error.code === '42703' || error.message?.includes('image_url') || error.message?.includes('payment_url') || error.message?.includes('Could not find')) {
+             throw new Error("Ошибка базы данных: отсутствуют необходимые поля (image_url или payment_url). Пожалуйста, обновите структуру базы данных в App.tsx.");
           }
 
           throw new Error(error.message);

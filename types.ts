@@ -41,6 +41,7 @@ export interface PaymentMethod {
   isActive: boolean;
   minAmount?: number; // Minimum deposit amount (0 or undefined = no limit)
   imageUrl?: string; // Logo/Image base64
+  paymentUrl?: string; // Optional direct payment link
 }
 
 export enum TransactionStatus {
