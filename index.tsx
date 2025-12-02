@@ -6,40 +6,32 @@ import './index.css';
 // Global error handler for white screen debugging
 window.onerror = function(message, source, lineno, colno, error) {
   const root = document.getElementById('root');
-  if (root) {
-    root.innerHTML = `
-      <div style="padding: 20px; font-family: sans-serif; color: #333;">
-        <h1 style="color: #e11d48;">Critical Error</h1>
-        <p>The application crashed before it could start.</p>
-        <pre style="background: #f1f5f9; padding: 15px; border-radius: 8px; overflow: auto; color: #ef4444;">${message}\n\n${source}:${lineno}:${colno}</pre>
-        <button onclick="window.location.reload()" style="margin-top: 10px; padding: 10px 20px; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer;">Reload</button>
-      </div>
-    `;
+  if (root && !root.innerHTML.includes('Critical Error')) {
+    console.error('Global Error:', message);
   }
 };
 
-interface ErrorBoundaryProps {
+interface Props {
   children?: ReactNode;
 }
 
-interface ErrorBoundaryState {
+interface State {
   hasError: boolean;
-  error: any;
+  error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  // Explicitly declare state property to satisfy TypeScript in certain envs
-  state: ErrorBoundaryState = {
-    hasError: false,
-    error: null
-  };
+class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-  static getDerivedStateFromError(error: any): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error("Uncaught error:", error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
   }
 
   render() {

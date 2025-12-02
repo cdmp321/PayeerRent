@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
@@ -481,14 +480,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm">
                                Введите сумму на которую вы хотите пополнить кошелек, нажмите кнопку ниже для перехода в аккаунт для оплаты, где нужно ввести в окне «другая сумма» то же сумму которую вы вводили при пополнении кошелька.
                            </div>
-
-                           <button 
-                                onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                                className="w-full bg-blue-600/90 hover:bg-blue-600 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95 backdrop-blur-sm"
-                           >
-                                <ExternalLink className="w-5 h-5 stroke-[2.5]" />
-                                Перейти к оплате
-                           </button>
                       </div>
                   ) : (
                       /* MANUAL MODE */
@@ -523,7 +514,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             <div className="flex items-start gap-3">
                                <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0 mt-0.5">
                                   <Banknote className="w-4 h-4" />
-                               </div>
+                                </div>
                                <div>
                                   <h4 className="font-bold text-indigo-900 text-xs mb-1.5 uppercase tracking-wide">Как пополнить баланс?</h4>
                                   <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
@@ -573,19 +564,29 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               )}
             </div>
 
-            {/* Footer with Send Button - Only if Manual Mode */}
-            {(!selectedMethod || !selectedMethod.paymentUrl) && (
-                <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
-                <button 
-                    onClick={handleTopUpRequest}
-                    disabled={isProcessing}
-                    className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                >
-                    {isProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-                    {isProcessing ? 'Обработка...' : 'Отправить заявку'}
-                </button>
-                </div>
-            )}
+            {/* Footer with Actions */}
+            <div className="p-4 pb-8 sm:pb-4 border-t border-gray-100 bg-white shrink-0 z-10">
+                {selectedMethod && selectedMethod.paymentUrl ? (
+                     /* LINK MODE BUTTON */
+                    <button 
+                        onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
+                        className="w-full bg-blue-600/90 hover:bg-blue-600 text-white py-3.5 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95 backdrop-blur-sm"
+                    >
+                        <ExternalLink className="w-5 h-5 stroke-[2.5]" />
+                        Перейти к оплате
+                    </button>
+                ) : (
+                     /* MANUAL MODE BUTTON */
+                    <button 
+                        onClick={handleTopUpRequest}
+                        disabled={isProcessing || !selectedMethod}
+                        className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold text-lg shadow-lg hover:shadow-xl hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                    >
+                        {isProcessing ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+                        {isProcessing ? 'Обработка...' : 'Отправить заявку'}
+                    </button>
+                )}
+            </div>
 
           </div>
         </div>
