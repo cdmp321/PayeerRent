@@ -593,8 +593,6 @@ export const api = {
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
       // 1. Attempt to insert with image_url
-      // REMOVED FALLBACK: If this fails because of missing column, it WILL throw error
-      // This ensures the user knows they need to update schema.
       const { error } = await supabase.from('payment_methods').insert([{
         name: methodData.name,
         instruction: methodData.instruction,
@@ -604,6 +602,21 @@ export const api = {
       }]);
 
       if (error) {
+          // Check for schema error (missing column)
+          if (error.code === '42703' || error.message?.includes('image_url') || error.message?.includes('Could not find')) {
+              console.warn("Fallback: Inserting payment method without image_url due to schema mismatch.");
+              // Retry without image_url
+              const { error: retryError } = await supabase.from('payment_methods').insert([{
+                name: methodData.name,
+                instruction: methodData.instruction,
+                is_active: methodData.isActive,
+                min_amount: methodData.minAmount
+              }]);
+              
+              if (retryError) throw new Error(retryError.message);
+              return;
+          }
+
           throw new Error(error.message);
       }
   },
