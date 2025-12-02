@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
@@ -1070,18 +1071,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {methods.map(m => (
-                <div key={m.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between group hover:shadow-md transition-all relative overflow-hidden h-32">
-                    <div className="relative z-10">
-                        <h4 className="font-bold text-gray-800 text-lg">{m.name}</h4>
-                        {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded uppercase mt-1 inline-block">Min {m.minAmount}</span>}
-                        <p className="text-sm text-gray-500 whitespace-pre-wrap mt-2 line-clamp-1 opacity-70">{m.instruction}</p>
-                    </div>
-                    
-                    <div className="absolute -right-3 -bottom-3 opacity-10 scale-[3.5] origin-bottom-right pointer-events-none">
-                        <PaymentIcon imageUrl={m.imageUrl} />
+                <div key={m.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 group hover:shadow-md transition-all relative overflow-hidden">
+                    <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-gray-800 text-base truncate">{m.name}</h4>
+                            {m.minAmount && m.minAmount > 0 && <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded uppercase mt-1 inline-block">Min {m.minAmount}</span>}
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{m.instruction}</p>
+                        </div>
+                        
+                        {/* The requested window for the image */}
+                        <div className="w-14 h-14 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center shrink-0 p-1 shadow-sm">
+                             <div className="scale-125">
+                                <PaymentIcon imageUrl={m.imageUrl} />
+                             </div>
+                        </div>
                     </div>
 
-                    <button onClick={(e) => deleteMethod(m.id, e)} className="relative z-10 w-full text-red-500 bg-white/50 hover:bg-red-50 border border-red-100 hover:border-red-200 py-2 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 mt-auto"><Trash2 className="w-3 h-3" /> Удалить</button>
+                    <button onClick={(e) => deleteMethod(m.id, e)} className="w-full text-red-500 bg-red-50 hover:bg-red-100 border border-red-100 py-2 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 mt-auto"><Trash2 className="w-3 h-3" /> Удалить</button>
                 </div>
                 ))}
             </div>
