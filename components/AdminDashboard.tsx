@@ -1033,26 +1033,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             </div>
         )}
 
-        {/* PAYMENT METHODS TAB - UPDATED WITH ICON SELECTION */}
+        {/* PAYMENT METHODS TAB - REDESIGNED */}
         {activeTab === 'payments' && (
             <div className="space-y-8 animate-fade-in">
             <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2"><Plus className="w-5 h-5 text-indigo-500" /> Добавить метод оплаты</h3>
-                <form onSubmit={handleAddMethod} className="space-y-5">
-                <input placeholder="Название (напр. Сбербанк)" value={newMethodName} onChange={e => setNewMethodName(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
-                <textarea placeholder="Инструкция и реквизиты" value={newMethodInstr} onChange={e => setNewMethodInstr(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all h-24 resize-none" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="number" placeholder="Мин. сумма (необязательно)" value={newMethodMin} onChange={e => setNewMethodMin(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
-                    <div className="relative">
-                         <input type="text" placeholder="Ссылка на оплату (необязательно)" value={newMethodUrl} onChange={e => setNewMethodUrl(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
-                         <Link className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-                    </div>
-                </div>
+                <form onSubmit={handleAddMethod} className="space-y-6">
                 
-                {/* ICON SELECTION */}
+                {/* 1. NAME */}
                 <div>
-                    <label className="block text-xs font-bold text-gray-400 uppercase mb-3">Выберите иконку метода</label>
-                    <div className="flex gap-4 flex-wrap">
+                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">1. Название (Банк / Система)</label>
+                     <input placeholder="Например: Сбербанк" value={newMethodName} onChange={e => setNewMethodName(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
+                </div>
+
+                {/* 2. IMAGE/ICON */}
+                <div>
+                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">2. Иконка (в углу)</label>
+                    <div className="flex flex-wrap gap-3">
+                        {/* Preset Icons */}
                         {[
                             { id: 'preset:card', label: 'Карты', icon: <PaymentIcon imageUrl="preset:card" /> },
                             { id: 'preset:crypto', label: 'Крипто', icon: <PaymentIcon imageUrl="preset:crypto" /> },
@@ -1064,7 +1062,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 key={type.id}
                                 onClick={() => {
                                     setSelectedIconType(type.id);
-                                    setCustomMethodIcon(''); // Clear custom file if preset selected
+                                    setCustomMethodIcon('');
                                 }}
                                 className={`cursor-pointer rounded-xl p-3 border-2 transition-all flex flex-col items-center gap-2 min-w-[80px] ${selectedIconType === type.id ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-100 hover:bg-gray-50'}`}
                             >
@@ -1090,6 +1088,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     </div>
                 </div>
 
+                {/* 3. URL (LINK) */}
+                <div>
+                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">3. Ссылка на оплату (Кнопка перехода)</label>
+                     <div className="relative">
+                         <input type="text" placeholder="https://..." value={newMethodUrl} onChange={e => setNewMethodUrl(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
+                         <Link className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                    <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">Инструкция / Реквизиты (текст)</label>
+                    <textarea placeholder="Номер карты или описание..." value={newMethodInstr} onChange={e => setNewMethodInstr(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all h-24 resize-none" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="number" placeholder="Мин. сумма (необязательно)" value={newMethodMin} onChange={e => setNewMethodMin(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all" />
+                </div>
+                
                 <button type="submit" className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-[0.98] shadow-lg">Добавить метод</button>
                 </form>
             </div>

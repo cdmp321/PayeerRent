@@ -2,18 +2,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Bitcoin, ExternalLink } from 'lucide-react';
+import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, ArrowDownLeft, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink } from 'lucide-react';
 
 interface WalletProps {
   user: User;
   onUpdateUser: (user: User) => void; 
 }
 
-// Helper Component for Payment Icons (Copied from AdminDashboard to avoid dependency cycle and ensure consistency)
+// Helper Component for Payment Icons
 const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
     if (!imageUrl) return <CreditCard className="w-8 h-8 text-gray-400" />;
 
-    // Preset Icons
     if (imageUrl.startsWith('preset:')) {
         const type = imageUrl.split(':')[1];
         switch(type) {
@@ -56,13 +55,12 @@ const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
         }
     }
 
-    // Normal Image (Base64 or URL)
     return (
          <img 
             key={imageUrl}
             src={imageUrl} 
             alt="Method" 
-            className="w-full h-full object-contain rounded-lg" 
+            className="w-full h-full object-contain rounded-md" 
             onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.parentElement?.classList.add('bg-gray-100');
@@ -128,7 +126,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   const handleTopUpRequest = async () => {
     const val = parseFloat(amount);
     
-    // 1. Check Amount
     if (!val || val <= 0) {
       setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
       if (amountInputRef.current) {
@@ -139,7 +136,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       return;
     }
     
-    // 2. Check Method
     if (!selectedMethod) {
       setNotification({ type: 'error', msg: 'Выберите метод оплаты' });
       return;
@@ -149,17 +145,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
         return;
     }
     
-    // 3. Check Receipt (Auto-scroll functionality)
     if (!receipt) {
         setNotification({ type: 'error', msg: 'Загрузите чек оплаты' });
         if (receiptUploadRef.current) {
-            // Scroll to the upload section
             receiptUploadRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Apply Red Flash Animation
             const el = receiptUploadRef.current;
             el.classList.add('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
-            
             setTimeout(() => {
                 el.classList.remove('ring-4', 'ring-red-400', 'bg-red-50', 'border-red-400');
             }, 2000);
@@ -176,7 +167,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       setAmount('');
       setSelectedMethod(null);
       setReceipt(null);
-      
       loadData(); 
     } catch (error) {
       setNotification({ type: 'error', msg: 'Ошибка отправки заявки' });
@@ -219,7 +209,6 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   };
 
   const handleRefundRequest = async () => {
-      // Amount is not entered by user anymore, sending 0 as a placeholder/signal
       setIsProcessing(true);
       try {
           await api.requestUserRefund(user.id, 0, "Запрос пользователя на снятие/возврат");
@@ -452,7 +441,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Выберите способ оплаты</label>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {methods.map(method => (
                     <button
                       key={method.id}
@@ -460,20 +449,18 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           setSelectedMethod(method);
                           setIsCopied(false);
                       }}
-                      className={`relative w-full p-4 rounded-xl border transition-all group flex items-center justify-between overflow-hidden ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-500 shadow-md' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
+                      className={`relative w-full p-4 rounded-xl border transition-all group flex items-center justify-between overflow-hidden ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50/50 shadow-md ring-1 ring-indigo-500' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'}`}
                     >
-                      <div className="flex flex-col items-start gap-1 relative z-10">
-                          <span className="font-bold text-slate-800 text-sm">{method.name}</span>
+                      <div className="flex flex-col items-start gap-1 relative z-10 pr-12">
+                          <span className="font-extrabold text-slate-800 text-base">{method.name}</span>
                           {method.minAmount && method.minAmount > 0 && (
-                                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-md">Min {method.minAmount}</span>
+                                <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md">Min {method.minAmount}</span>
                           )}
                       </div>
                       
-                      <div className="relative z-10">
-                            {/* Window Container for Payment Icon */}
-                            <div className="w-14 h-14 bg-white rounded-xl border border-gray-200 flex items-center justify-center shrink-0 p-1 shadow-sm">
-                                <PaymentIcon imageUrl={method.imageUrl} />
-                            </div>
+                      {/* Image in the Top-Right Corner */}
+                      <div className="absolute top-2 right-2 w-10 h-10 bg-white rounded-lg border border-gray-100 flex items-center justify-center p-1 shadow-sm z-20">
+                          <PaymentIcon imageUrl={method.imageUrl} />
                       </div>
                     </button>
                   ))}
@@ -483,24 +470,22 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               {selectedMethod && (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm animate-fade-in relative overflow-hidden">
                   
-                  {/* If Payment URL exists, show dedicated button and instruction */}
+                  {/* Payment Button (Transparent Blue) */}
                   {selectedMethod.paymentUrl ? (
                       <div className="mb-4 relative z-10">
                            <button 
                                 onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
+                                className="w-full bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
                            >
-                                <ExternalLink className="w-5 h-5" />
-                                Перейдите для оплаты
+                                <ExternalLink className="w-5 h-5 stroke-[2.5]" />
+                                Нажмите для оплаты
                            </button>
                            
                            {/* Optional instruction note */}
-                           <p className="text-center text-xs font-medium text-gray-500">
-                               После успешной оплаты вернитесь в приложение и загрузите чек ниже.
-                           </p>
+                           <p className="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Или по реквизитам ниже</p>
                            
                            {selectedMethod.instruction && (
-                                <p className="mt-3 font-medium text-indigo-800 bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs shadow-sm">
+                                <p className="font-medium text-indigo-900 bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs shadow-sm whitespace-pre-wrap">
                                     {selectedMethod.instruction}
                                 </p>
                            )}
@@ -530,7 +515,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       </div>
                   )}
                   
-                  {/* NEW INSTRUCTION BLOCK */}
+                  {/* INSTRUCTION BLOCK */}
                   <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">
                     <div className="flex items-start gap-3">
                        <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0 mt-0.5">
@@ -541,7 +526,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
                              <li className="flex gap-1.5">
                                 <span className="font-bold text-indigo-500">1.</span>
-                                <span>{selectedMethod.paymentUrl ? 'Нажмите синюю кнопку выше для перехода к оплате.' : 'Выполните перевод по реквизитам выше.'}</span>
+                                <span>{selectedMethod.paymentUrl ? 'Нажмите кнопку "Нажмите для оплаты" или используйте реквизиты.' : 'Выполните перевод по реквизитам выше.'}</span>
                              </li>
                              <li className="flex gap-1.5">
                                 <span className="font-bold text-indigo-500">2.</span>
