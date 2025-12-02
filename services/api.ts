@@ -594,23 +594,20 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // Direct Insert - No Fallback.
-      // This ensures that if the DB schema is missing 'payment_url' or 'image_url', 
-      // the Admin gets an error and knows they must update the DB schema.
-      
+      // Ensure we explicitly map properties to snake_case database columns
       const payload = {
         name: methodData.name,
-        instruction: methodData.instruction,
+        instruction: methodData.instruction || '',
         is_active: methodData.isActive,
-        min_amount: methodData.minAmount,
-        image_url: methodData.imageUrl,
-        payment_url: methodData.paymentUrl
+        min_amount: methodData.minAmount || 0,
+        image_url: methodData.imageUrl || null,
+        payment_url: methodData.paymentUrl || null // New Link Field
       };
       
       const { error } = await supabase.from('payment_methods').insert([payload]);
       
       if (error) {
-          // Pass the error up so the UI catches it
+          console.error("Add Method Error:", error);
           throw new Error(error.message); 
       }
   },
