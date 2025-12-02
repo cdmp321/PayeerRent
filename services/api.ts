@@ -595,6 +595,7 @@ export const api = {
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
       // Ensure we explicitly map properties to snake_case database columns
+      // REMOVED SILENT FALLBACK: If columns are missing, this MUST fail so the user sees the schema update error.
       const payload = {
         name: methodData.name,
         instruction: methodData.instruction || '',
@@ -604,33 +605,10 @@ export const api = {
         payment_url: methodData.paymentUrl || null // New Link Field
       };
       
-      try {
-          const { error } = await supabase.from('payment_methods').insert([payload]);
-          
-          if (error) {
-             // Check for postgres error codes regarding columns
-             // 42703 is undefined_column
-             if (error.code === '42703' || error.message?.includes('image_url') || error.message?.includes('payment_url')) {
-                 throw new Error("SCHEMA_MISMATCH");
-             }
-             throw new Error(error.message);
-          }
-      } catch (err: any) {
-          // Fallback mechanism: if the schema is old and missing columns, retry without them
-          // This allows users to add basic methods even if they haven't run the SQL update
-          if (err.message === "SCHEMA_MISMATCH" || err.message?.includes('schema cache') || err.message?.includes('image_url') || err.message?.includes('payment_url')) {
-              console.warn("Falling back to legacy payment_method insert (ignoring new fields due to schema mismatch)");
-               const fallbackPayload = {
-                  name: payload.name,
-                  instruction: payload.instruction,
-                  is_active: payload.is_active,
-                  min_amount: payload.min_amount
-              };
-              const { error: fallbackError } = await supabase.from('payment_methods').insert([fallbackPayload]);
-              if (fallbackError) throw new Error(fallbackError.message);
-          } else {
-              throw err;
-          }
+      const { error } = await supabase.from('payment_methods').insert([payload]);
+      
+      if (error) {
+         throw new Error(error.message);
       }
   },
 
