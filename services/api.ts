@@ -384,12 +384,24 @@ export const api = {
     return data.map(mapTransaction);
   },
 
-  approveTransaction: async (transactionId: string): Promise<void> => {
+  // UPDATED: Accepts manualAmount for refund requests
+  approveTransaction: async (transactionId: string, manualAmount?: number): Promise<void> => {
     const { data: tx } = await supabase.from('transactions').select('*').eq('id', transactionId).single();
     if (!tx || tx.status !== 'PENDING') return;
 
     let newStatus = 'APPROVED';
     let newDesc = tx.description;
+    let finalAmount = Number(tx.amount);
+
+    // If manual amount provided (for Refund Requests), use it
+    if (manualAmount !== undefined && manualAmount >= 0) {
+        finalAmount = manualAmount;
+        // Update the transaction amount in DB
+        await supabase
+            .from('transactions')
+            .update({ amount: finalAmount })
+            .eq('id', transactionId);
+    }
 
     if (tx.type === 'DEPOSIT') {
         newDesc = 'Пополнение кошелька (Подтверждено)';
@@ -397,7 +409,7 @@ export const api = {
         if (user) {
             await supabase
                 .from('users')
-                .update({ balance: Number(user.balance) + Number(tx.amount) })
+                .update({ balance: Number(user.balance) + finalAmount })
                 .eq('id', tx.user_id);
         }
     } else if (tx.type === 'WITHDRAWAL') {
@@ -408,7 +420,7 @@ export const api = {
             if (user) {
                 await supabase
                     .from('users')
-                    .update({ balance: Number(user.balance) + Number(tx.amount) })
+                    .update({ balance: Number(user.balance) + finalAmount })
                     .eq('id', tx.user_id);
             }
         } else {

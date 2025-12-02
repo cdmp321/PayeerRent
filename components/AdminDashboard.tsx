@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -87,6 +86,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   });
   const [showArchived, setShowArchived] = useState(false);
   
+  // Shift Navigation State
+  const [shiftAnchorDate, setShiftAnchorDate] = useState(new Date());
+
   // Withdrawal History Filters
   const [withdrawalSearchQuery, setWithdrawalSearchQuery] = useState('');
   const [withdrawalSearchDate, setWithdrawalSearchDate] = useState('');
@@ -111,7 +113,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [processingTxId, setProcessingTxId] = useState<string | null>(null);
   
-  // Refund Form State
+  // Refund Request Approval Modal State
+  const [approveRefundModalTxId, setApproveRefundModalTxId] = useState<string | null>(null);
+  const [approveRefundAmount, setApproveRefundAmount] = useState('');
+
+  // Refund Form State (Global)
   const [refundAmount, setRefundAmount] = useState('');
   // Initialize with empty string to force selection
   const [refundReason, setRefundReason] = useState('');
@@ -342,7 +348,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   };
 
   const deleteMethod = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить метод?')) return; await api.deletePaymentMethod(id); await refreshAll(); };
-  const handleApproveTx = async (id: string) => { setProcessingTxId(id); try { await api.approveTransaction(id); await refreshAll(); } catch (e: any) { alert('Ошибка: ' + e.message); } finally { setProcessingTxId(null); } };
+  
+  const handleApproveTx = async (id: string, isRefundRequest: boolean) => { 
+      if (isRefundRequest) {
+          // Open Modal for manual amount entry
+          setApproveRefundModalTxId(id);
+          setApproveRefundAmount('');
+      } else {
+          // Standard approval
+          setProcessingTxId(id); 
+          try { 
+              await api.approveTransaction(id); 
+              await refreshAll(); 
+          } catch (e: any) { 
+              alert('Ошибка: ' + e.message); 
+          } finally { 
+              setProcessingTxId(null); 
+          } 
+      }
+  };
+
+  const handleConfirmRefundApproval = async () => {
+      if (!approveRefundModalTxId || !approveRefundAmount) return;
+      const amount = parseFloat(approveRefundAmount);
+      if (isNaN(amount) || amount <= 0) {
+          alert("Введите корректную сумму");
+          return;
+      }
+      
+      setProcessingTxId(approveRefundModalTxId);
+      try {
+          // Call API with manual amount
+          await api.approveTransaction(approveRefundModalTxId, amount);
+          setApproveRefundModalTxId(null);
+          setApproveRefundAmount('');
+          await refreshAll();
+          alert("Возврат подтвержден и средства зачислены.");
+      } catch (e: any) {
+          alert("Ошибка: " + e.message);
+      } finally {
+          setProcessingTxId(null);
+      }
+  };
+
   const handleRejectTx = async (id: string) => { if(!window.confirm('Отклонить заявку?')) return; setProcessingTxId(id); try { await api.rejectTransaction(id); await refreshAll(); } catch (e: any) { alert('Ошибка: ' + e.message); } finally { setProcessingTxId(null); } };
   const handleMarkViewed = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); setTransactions(prev => prev.map(t => t.id === id ? { ...t, viewed: true } : t)); await api.markTransactionAsViewed(id); refreshAll(); };
   const toggleUserExpansion = (userId: string) => { setExpandedUserId(prev => prev === userId ? null : userId); };
@@ -352,12 +400,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const toggleUserSort = (key: keyof User) => { setUserSort(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' })); };
 
   // --- Shift Logic (09:00 - 09:00) ---
-  const getShiftInterval = () => {
-      const now = new Date();
+  const getShiftInterval = (anchor: Date) => {
+      const now = new Date(anchor);
       let start = new Date(now);
       
-      // If current time is before 09:00, the shift started yesterday at 09:00
-      if (now.getHours() < 9) {
+      // If time is before 09:00, the shift started yesterday at 09:00
+      // We use 'anchor' which effectively selects the "viewing day"
+      // If anchor is Today 08:00, start is Yesterday 09:00.
+      // If anchor is Today 10:00, start is Today 09:00.
+      
+      if (start.getHours() < 9) {
           start.setDate(start.getDate() - 1);
       }
       
@@ -371,8 +423,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       return { start, end };
   };
 
-  const shiftInterval = getShiftInterval();
+  const shiftInterval = useMemo(() => getShiftInterval(shiftAnchorDate), [shiftAnchorDate]);
   const formatShiftDate = (d: Date) => d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+  const changeShiftDate = (days: number) => {
+      const newDate = new Date(shiftAnchorDate);
+      newDate.setDate(newDate.getDate() + days);
+      setShiftAnchorDate(newDate);
+  };
 
   // --- Derived Data ---
   const visibleTransactions = useMemo(() => {
@@ -584,7 +642,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 {!isWithdrawal && tx.receiptUrl && <button onClick={() => setViewingReceipt(tx.receiptUrl || null)} className="mt-3 flex items-center gap-2 text-sm text-indigo-600 font-bold hover:underline"><FileText className="w-4 h-4" /> Смотреть чек</button>}
                             </div>
                             <div className="flex flex-row sm:flex-col gap-2 justify-center border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6">
-                                <button onClick={() => handleApproveTx(tx.id)} className="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg shadow-emerald-200"><Check className="w-5 h-5" /></button>
+                                <button onClick={() => handleApproveTx(tx.id, isRefundRequest)} className="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg shadow-emerald-200"><Check className="w-5 h-5" /></button>
                                 <button onClick={() => handleRejectTx(tx.id)} className="bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 p-3 rounded-xl"><X className="w-5 h-5" /></button>
                             </div>
                         </div>
@@ -706,14 +764,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         {activeTab === 'finances' && (
             <div className="space-y-8 animate-fade-in">
             
-            {/* Shift Indicator */}
+            {/* Shift Indicator and Navigation */}
             <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-2 text-indigo-800 text-xs font-bold">
                     <Clock className="w-4 h-4 text-indigo-500" />
-                    <span>Статистика за смену (09:00 - 09:00):</span>
+                    <span>Статистика за смену:</span>
                 </div>
-                <div className="text-xs font-bold text-indigo-600 bg-white px-2 py-1 rounded-lg border border-indigo-100 shadow-sm">
-                    {formatShiftDate(shiftInterval.start)} — {formatShiftDate(shiftInterval.end)}
+                
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => changeShiftDate(-1)} 
+                        className="p-1 hover:bg-white rounded-lg transition-colors text-indigo-600"
+                        title="Предыдущая смена"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    
+                    <div className="text-xs font-bold text-indigo-600 bg-white px-2 py-1 rounded-lg border border-indigo-100 shadow-sm">
+                        {formatShiftDate(shiftInterval.start)} — {formatShiftDate(shiftInterval.end)}
+                    </div>
+                    
+                    <button 
+                        onClick={() => changeShiftDate(1)} 
+                        className="p-1 hover:bg-white rounded-lg transition-colors text-indigo-600"
+                         title="Следующая смена"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
@@ -730,7 +807,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 
                 {Object.keys(groupedFinances).length === 0 ? (
                     <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                        <p>Нет покупок за текущую смену</p>
+                        <p>Нет покупок за выбранную смену</p>
                     </div>
                 ) : (
                     Object.entries(groupedFinances)
@@ -1026,6 +1103,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={e => e.stopPropagation()}>
                     <button onClick={() => setViewingReceipt(null)} className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"><X className="w-8 h-8" /></button>
                     <img src={viewingReceipt} alt="Receipt" className="w-full h-full object-contain rounded-lg shadow-2xl" />
+                </div>
+            </div>
+        )}
+
+        {/* APPROVE REFUND AMOUNT MODAL */}
+        {approveRefundModalTxId && (
+            <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-zoom-in">
+                    <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-purple-50">
+                        <h3 className="font-bold text-lg text-purple-900">Подтверждение возврата</h3>
+                        <button onClick={() => { setApproveRefundModalTxId(null); setApproveRefundAmount(''); }} className="p-1.5 hover:bg-purple-100 rounded-full transition-colors text-purple-500"><X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <p className="text-sm text-gray-600 font-medium">Укажите точную сумму, которая будет зачислена клиенту:</p>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Сумма возврата (®)</label>
+                            <input 
+                                type="number" 
+                                autoFocus
+                                placeholder="0.00" 
+                                value={approveRefundAmount} 
+                                onChange={(e) => setApproveRefundAmount(e.target.value)} 
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-bold text-purple-900 transition-all text-xl" 
+                            />
+                        </div>
+                    </div>
+                    <div className="p-6 pt-0">
+                        <button 
+                            onClick={handleConfirmRefundApproval}
+                            disabled={!!processingTxId}
+                            className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 flex items-center justify-center gap-2"
+                        >
+                           {processingTxId ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                           {processingTxId ? 'Обработка...' : 'Подтвердить и зачислить'}
+                        </button>
+                    </div>
                 </div>
             </div>
         )}
