@@ -604,11 +604,33 @@ export const api = {
         payment_url: methodData.paymentUrl || null // New Link Field
       };
       
-      const { error } = await supabase.from('payment_methods').insert([payload]);
-      
-      if (error) {
-          console.error("Add Method Error:", error);
-          throw new Error(error.message); 
+      try {
+          const { error } = await supabase.from('payment_methods').insert([payload]);
+          
+          if (error) {
+             // Check for postgres error codes regarding columns
+             // 42703 is undefined_column
+             if (error.code === '42703' || error.message?.includes('image_url') || error.message?.includes('payment_url')) {
+                 throw new Error("SCHEMA_MISMATCH");
+             }
+             throw new Error(error.message);
+          }
+      } catch (err: any) {
+          // Fallback mechanism: if the schema is old and missing columns, retry without them
+          // This allows users to add basic methods even if they haven't run the SQL update
+          if (err.message === "SCHEMA_MISMATCH" || err.message?.includes('schema cache') || err.message?.includes('image_url') || err.message?.includes('payment_url')) {
+              console.warn("Falling back to legacy payment_method insert (ignoring new fields due to schema mismatch)");
+               const fallbackPayload = {
+                  name: payload.name,
+                  instruction: payload.instruction,
+                  is_active: payload.is_active,
+                  min_amount: payload.min_amount
+              };
+              const { error: fallbackError } = await supabase.from('payment_methods').insert([fallbackPayload]);
+              if (fallbackError) throw new Error(fallbackError.message);
+          } else {
+              throw err;
+          }
       }
   },
 
