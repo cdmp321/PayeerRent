@@ -475,12 +475,12 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   
                   {/* Payment Logic Switch */}
                   {selectedMethod.paymentUrl ? (
-                      /* LINK MODE */
+                      /* LINK MODE - Replaces Requisites & Receipt Upload */
                       <div className="mb-4 relative z-10 space-y-4">
                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm">
                                Введите сумму на которую вы хотите пополнить кошелек, нажмите кнопку ниже для перехода в аккаунт для оплаты, где нужно ввести в окне «другая сумма» то же сумму которую вы вводили при пополнении кошелька.
                            </div>
-                           {/* Receipt upload removed for Link Mode as requested */}
+                           {/* Receipt upload and manual instructions are hidden in this mode */}
                       </div>
                   ) : (
                       /* MANUAL MODE */

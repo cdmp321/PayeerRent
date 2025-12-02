@@ -138,6 +138,15 @@ const App: React.FC = () => {
                 }
                 console.warn("DB Check warning:", dbError.message);
             }
+            
+            // 2.1 Check for required columns in payment_methods
+            // This forces the user to update schema if they are missing 'payment_url' or 'image_url'
+            const { error: colError } = await supabase.from('payment_methods').select('image_url, payment_url').limit(1);
+            if (colError && colError.code === '42703') { // Undefined column
+                 setError("SCHEMA_MISSING");
+                 setLoading(false);
+                 return;
+            }
 
             // 3. Get current user session
             const u = await api.getCurrentUser();
@@ -222,7 +231,7 @@ const App: React.FC = () => {
             
             <p className="text-slate-500 mb-8 font-medium">
                 {isSchemaError 
-                    ? "Необходимо обновить структуру базы для поддержки шифрования и новых функций." 
+                    ? "Необходимо обновить структуру базы для поддержки новых методов оплаты (картинки и ссылки)." 
                     : error}
             </p>
 
