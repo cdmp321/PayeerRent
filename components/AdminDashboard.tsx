@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
@@ -993,13 +992,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                         </div>
                                     </td>
                                     <td className="py-4 text-right pr-4">
-                                         {tx.receiptUrl && (
-                                            <button 
-                                                onClick={() => setViewingReceipt(tx.receiptUrl || null)}
-                                                className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1 justify-end"
-                                            >
-                                                <FileText className="w-3 h-3" /> Чек
-                                            </button>
+                                         {tx.receiptUrl === 'LINK_PAYMENT_SPB' ? (
+                                            <div className="flex justify-end">
+                                                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100 inline-block whitespace-normal max-w-[180px] text-right leading-tight">
+                                                    оплата пополнения кошелька была произведена через "СПБ"
+                                                </span>
+                                            </div>
+                                         ) : (
+                                             tx.receiptUrl && (
+                                                <button 
+                                                    onClick={() => setViewingReceipt(tx.receiptUrl || null)}
+                                                    className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1 justify-end ml-auto"
+                                                >
+                                                    <FileText className="w-3 h-3" /> Чек
+                                                </button>
+                                             )
                                          )}
                                     </td>
                                 </tr>
