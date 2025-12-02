@@ -475,11 +475,11 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                   
                   {/* Payment Logic Switch */}
                   {selectedMethod.paymentUrl ? (
-                      /* EXTERNAL LINK MODE */
+                      /* EXTERNAL LINK MODE - REDESIGNED */
                       <div className="mb-4 relative z-10 space-y-4">
-                           {/* New Instruction Text */}
+                           {/* Updated Instruction Text as requested */}
                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm">
-                               Введите сумму, на которую хотите пополнить кошелек, и нажмите кнопку ниже. Вас перенесет в аккаунт для оплаты, где нужно ввести в окне «другая сумма» ту же сумму, что и в кошельке при пополнении.
+                               Введите сумму на которую вы хотите пополнить кошелек, нажмите кнопку ниже для перехода в аккаунт для оплаты, где нужно ввести в окне «другая сумма» то же сумму которую вы вводили при пополнении кошелька.
                            </div>
 
                            <button 
@@ -518,7 +518,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                                ) : null}
                           </div>
                           
-                          {/* INSTRUCTION BLOCK */}
+                          {/* INSTRUCTION BLOCK - Only in Manual Mode */}
                           <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">
                             <div className="flex items-start gap-3">
                                <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 shrink-0 mt-0.5">
@@ -544,6 +544,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                             </div>
                           </div>
 
+                          {/* RECEIPT UPLOAD - Only in Manual Mode */}
                           <div className="pt-2 border-t border-gray-200 relative z-10">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1.5 mt-2">Загрузка чека</label>
                             <label 
