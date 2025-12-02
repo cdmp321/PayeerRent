@@ -2,13 +2,67 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
-import { PaymentIcon } from './AdminDashboard'; // Import the new icon renderer
+import { Wallet as WalletIcon, Plus, CreditCard, AlertCircle, CheckCircle2, X, Upload, Clock, Loader2, Lock, ArrowUpRight, Banknote, History, ArrowDownLeft, Info, Copy, Check, RotateCcw, ChevronDown, ChevronUp, ArrowRight, Bitcoin } from 'lucide-react';
 
 interface WalletProps {
   user: User;
   onUpdateUser: (user: User) => void; 
 }
+
+// Helper Component for Payment Icons (Copied from AdminDashboard to avoid dependency cycle and ensure consistency)
+const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
+    if (!imageUrl) return <CreditCard className="w-8 h-8 text-gray-400" />;
+
+    // Preset Icons
+    if (imageUrl.startsWith('preset:')) {
+        const type = imageUrl.split(':')[1];
+        switch(type) {
+            case 'card':
+                return (
+                    <div className="w-10 h-7 rounded bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 relative shadow-sm overflow-hidden flex items-center justify-center border border-white/20">
+                        <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-yellow-300 rounded-full opacity-80 shadow-sm"></div>
+                        <div className="absolute bottom-1 right-1 w-4 h-2 bg-white/20 rounded-sm backdrop-blur-sm"></div>
+                    </div>
+                );
+            case 'crypto':
+                return (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-sm text-white border-2 border-white ring-1 ring-orange-200">
+                        <Bitcoin className="w-5 h-5" />
+                    </div>
+                );
+            case 'master':
+                 return (
+                    <div className="w-10 h-7 rounded bg-slate-900 relative shadow-sm flex items-center justify-center overflow-hidden border border-slate-700">
+                        <div className="w-4 h-4 rounded-full bg-red-500/90 -mr-1.5 z-10 mix-blend-screen"></div>
+                        <div className="w-4 h-4 rounded-full bg-yellow-500/90 -ml-1.5 z-0 mix-blend-screen"></div>
+                    </div>
+                 );
+            case 'mir':
+                return (
+                     <div className="w-10 h-7 rounded bg-emerald-600 flex items-center justify-center shadow-sm border border-emerald-500 relative overflow-hidden">
+                         <div className="absolute inset-0 bg-gradient-to-tr from-emerald-800 to-transparent opacity-50"></div>
+                         <span className="text-[9px] font-black text-white tracking-tighter uppercase italic relative z-10">MIR</span>
+                     </div>
+                );
+            case 'visa':
+                return (
+                    <div className="w-10 h-7 rounded bg-white border border-gray-200 flex items-center justify-center shadow-sm relative overflow-hidden">
+                         <div className="absolute top-0 right-0 w-4 h-4 bg-blue-100 rounded-bl-full opacity-50"></div>
+                         <span className="text-[10px] font-black text-blue-800 uppercase italic tracking-tighter">VISA</span>
+                    </div>
+                );
+            default:
+                return <CreditCard className="w-8 h-8 text-gray-400" />;
+        }
+    }
+
+    // Normal Image (Base64 or URL)
+    return (
+        <div className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-0.5 overflow-hidden">
+             <img src={imageUrl} alt="Method" className="w-full h-full object-contain" />
+        </div>
+    );
+};
 
 export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
@@ -148,15 +202,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   };
 
   const handleRefundRequest = async () => {
-      const val = parseFloat(amount);
-      if (!val || val <= 0) {
-          setNotification({ type: 'error', msg: 'Укажите корректную сумму' });
-          return;
-      }
-      
+      // Amount is not entered by user anymore, sending 0 as a placeholder/signal
       setIsProcessing(true);
       try {
-          await api.requestUserRefund(user.id, val, "Запрос пользователя");
+          await api.requestUserRefund(user.id, 0, "Запрос пользователя на снятие/возврат");
           setNotification({ type: 'success', msg: 'Запрос на возврат отправлен!' });
           setShowRefundModal(false);
           setAmount('');
@@ -574,22 +623,11 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                    </div>
                </div>
 
+               {/* Removed Amount Input as requested */}
+               
                <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Сумма возврата</label>
-                <input 
-                  type="number" 
-                  min="1"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full text-xl p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-mono text-gray-800 placeholder-gray-400 transition-all font-bold"
-                />
-              </div>
-
-              <div>
                   <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800 leading-relaxed font-medium">
-                      Укажите сумму возврата и отправьте запрос. После подтверждения ваша сумма пополнится в личном кошельке. Время возврата средств в среднем 5 мин.
+                      отправьте запрос на снятие и возврат средств. После подтверждения ваша сумма пополнится в личном кошельке. Время возврата средств в среднем 5 мин.
                   </div>
               </div>
             </div>

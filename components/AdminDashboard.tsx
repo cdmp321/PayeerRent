@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
@@ -351,6 +351,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const toggleItemSort = (key: keyof Item) => { setItemSort(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' })); };
   const toggleUserSort = (key: keyof User) => { setUserSort(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' })); };
 
+  // --- Shift Logic (09:00 - 09:00) ---
+  const getShiftInterval = () => {
+      const now = new Date();
+      let start = new Date(now);
+      
+      // If current time is before 09:00, the shift started yesterday at 09:00
+      if (now.getHours() < 9) {
+          start.setDate(start.getDate() - 1);
+      }
+      
+      // Set start to 09:00:00
+      start.setHours(9, 0, 0, 0);
+      
+      // End is start + 24 hours
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      
+      return { start, end };
+  };
+
+  const shiftInterval = getShiftInterval();
+  const formatShiftDate = (d: Date) => d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
   // --- Derived Data ---
   const visibleTransactions = useMemo(() => {
       const userIds = new Set(users.map(u => u.id));
@@ -364,6 +387,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   // Filter Withdrawals
   const filteredWithdrawals = allWithdrawals.filter(tx => {
+      const txDate = new Date(tx.date);
+      // Shift filter
+      const inShift = txDate >= shiftInterval.start && txDate < shiftInterval.end;
+      if (!inShift) return false;
+
       let matchName = true;
       let matchDate = true;
       if (withdrawalSearchQuery) {
@@ -379,6 +407,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   // Filter Refunds
   const filteredRefunds = allRefunds.filter(tx => {
+      const txDate = new Date(tx.date);
+      // Shift filter
+      const inShift = txDate >= shiftInterval.start && txDate < shiftInterval.end;
+      if (!inShift) return false;
+
       let matchName = true;
       let matchDate = true;
       if (refundSearchQuery) {
@@ -394,6 +427,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   
   // Filter Deposits (New)
   const filteredDeposits = allDeposits.filter(tx => {
+      const txDate = new Date(tx.date);
+      // Shift filter
+      const inShift = txDate >= shiftInterval.start && txDate < shiftInterval.end;
+      if (!inShift) return false;
+
       let matchName = true;
       let matchDate = true;
       if (depositSearchQuery) {
@@ -433,12 +471,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       const groups: {[key: string]: Transaction[]} = {};
       visibleTransactions
         .filter(t => t.type === 'PURCHASE' || t.type === 'RENT_CHARGE')
+        .filter(t => {
+            // Apply Shift Filter to Purchase History as well
+            const txDate = new Date(t.date);
+            return txDate >= shiftInterval.start && txDate < shiftInterval.end;
+        })
         .forEach(t => {
             if (!groups[t.userId]) groups[t.userId] = [];
             groups[t.userId].push(t);
         });
       return groups;
-  }, [visibleTransactions]);
+  }, [visibleTransactions, shiftInterval.start, shiftInterval.end]);
 
 
   // Navigation Items
@@ -663,6 +706,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         {activeTab === 'finances' && (
             <div className="space-y-8 animate-fade-in">
             
+            {/* Shift Indicator */}
+            <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2 text-indigo-800 text-xs font-bold">
+                    <Clock className="w-4 h-4 text-indigo-500" />
+                    <span>Статистика за смену (09:00 - 09:00):</span>
+                </div>
+                <div className="text-xs font-bold text-indigo-600 bg-white px-2 py-1 rounded-lg border border-indigo-100 shadow-sm">
+                    {formatShiftDate(shiftInterval.start)} — {formatShiftDate(shiftInterval.end)}
+                </div>
+            </div>
+
             {/* Messages / Purchase History */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
@@ -675,7 +729,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                 </div>
                 
                 {Object.keys(groupedFinances).length === 0 ? (
-                    <div className="text-center py-10 text-gray-400">Нет покупок</div>
+                    <div className="text-center py-10 text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                        <p>Нет покупок за текущую смену</p>
+                    </div>
                 ) : (
                     Object.entries(groupedFinances)
                     .filter(([userId]) => { const isArchived = archivedUsers.has(userId); return showArchived ? isArchived : !isArchived; })
