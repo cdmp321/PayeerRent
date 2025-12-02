@@ -594,34 +594,19 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // ATTEMPT 1: Try with all fields
-      try {
-          const { error } = await supabase.from('payment_methods').insert([{
-            name: methodData.name,
-            instruction: methodData.instruction,
-            is_active: methodData.isActive,
-            min_amount: methodData.minAmount,
-            image_url: methodData.imageUrl,
-            payment_url: methodData.paymentUrl
-          }]);
+      // STRICT INSERTION - NO FALLBACK
+      // If payment_url or image_url columns are missing, this MUST fail
+      // so the user sees the Error Screen and updates the DB schema.
+      const { error } = await supabase.from('payment_methods').insert([{
+        name: methodData.name,
+        instruction: methodData.instruction,
+        is_active: methodData.isActive,
+        min_amount: methodData.minAmount,
+        image_url: methodData.imageUrl,
+        payment_url: methodData.paymentUrl
+      }]);
 
-          if (error) throw error;
-      } catch (err: any) {
-          // If error is related to missing columns (schema mismatch), try fallback
-          if (err.message?.includes('image_url') || err.message?.includes('payment_url') || err.code === '42703') {
-              console.warn("Schema missing image_url/payment_url, retrying without...");
-              const { error: fallbackError } = await supabase.from('payment_methods').insert([{
-                name: methodData.name,
-                instruction: methodData.instruction,
-                is_active: methodData.isActive,
-                min_amount: methodData.minAmount
-              }]);
-              
-              if (fallbackError) throw new Error(fallbackError.message);
-          } else {
-              throw new Error(err.message);
-          }
-      }
+      if (error) throw new Error(error.message);
   },
 
   deletePaymentMethod: async (id: string): Promise<void> => {
