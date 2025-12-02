@@ -73,9 +73,13 @@ export const api = {
       .single();
 
     if (existingUser) {
-      // SECURITY CHECK: Prevent Admin/Manager from logging in via Client Form
+      // MODIFIED: If Admin/Manager logs in via Client form, treat them as a generic USER
+      // preventing Admin Dashboard access but allowing "User" view login without error.
       if (existingUser.role === 'ADMIN' || existingUser.role === 'MANAGER') {
-          throw new Error('Сотрудники должны использовать Служебный вход');
+          localStorage.setItem('payeer_current_user_id', existingUser.id);
+          const mapped = mapUser(existingUser);
+          // Force role to USER for this session context so App.tsx renders Client View
+          return { ...mapped, role: UserRole.USER };
       }
 
       localStorage.setItem('payeer_current_user_id', existingUser.id);
