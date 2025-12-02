@@ -18,40 +18,40 @@ const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
         switch(type) {
             case 'card':
                 return (
-                    <div className="w-10 h-7 rounded bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 relative shadow-sm overflow-hidden flex items-center justify-center border border-white/20">
+                    <div className="w-full h-full rounded bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 relative shadow-sm overflow-hidden flex items-center justify-center border border-white/20">
                         <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-yellow-300 rounded-full opacity-80 shadow-sm"></div>
                         <div className="absolute bottom-1 right-1 w-4 h-2 bg-white/20 rounded-sm backdrop-blur-sm"></div>
                     </div>
                 );
             case 'crypto':
                 return (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-sm text-white border-2 border-white ring-1 ring-orange-200">
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-sm text-white border-2 border-white ring-1 ring-orange-200">
                         <Bitcoin className="w-5 h-5" />
                     </div>
                 );
             case 'master':
                  return (
-                    <div className="w-10 h-7 rounded bg-slate-900 relative shadow-sm flex items-center justify-center overflow-hidden border border-slate-700">
+                    <div className="w-full h-full rounded bg-slate-900 relative shadow-sm flex items-center justify-center overflow-hidden border border-slate-700">
                         <div className="w-4 h-4 rounded-full bg-red-500/90 -mr-1.5 z-10 mix-blend-screen"></div>
                         <div className="w-4 h-4 rounded-full bg-yellow-500/90 -ml-1.5 z-0 mix-blend-screen"></div>
                     </div>
                  );
             case 'mir':
                 return (
-                     <div className="w-10 h-7 rounded bg-emerald-600 flex items-center justify-center shadow-sm border border-emerald-500 relative overflow-hidden">
+                     <div className="w-full h-full rounded bg-emerald-600 flex items-center justify-center shadow-sm border border-emerald-500 relative overflow-hidden">
                          <div className="absolute inset-0 bg-gradient-to-tr from-emerald-800 to-transparent opacity-50"></div>
                          <span className="text-[9px] font-black text-white tracking-tighter uppercase italic relative z-10">MIR</span>
                      </div>
                 );
             case 'visa':
                 return (
-                    <div className="w-10 h-7 rounded bg-white border border-gray-200 flex items-center justify-center shadow-sm relative overflow-hidden">
+                    <div className="w-full h-full rounded bg-white border border-gray-200 flex items-center justify-center shadow-sm relative overflow-hidden">
                          <div className="absolute top-0 right-0 w-4 h-4 bg-blue-100 rounded-bl-full opacity-50"></div>
                          <span className="text-[10px] font-black text-blue-800 uppercase italic tracking-tighter">VISA</span>
                     </div>
                 );
             default:
-                return <CreditCard className="w-8 h-8 text-gray-400" />;
+                return <CreditCard className="w-full h-full text-gray-400 p-1" />;
         }
     }
 
@@ -60,7 +60,7 @@ const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
             key={imageUrl}
             src={imageUrl} 
             alt="Method" 
-            className="w-full h-full object-contain rounded-md" 
+            className="w-full h-full object-cover rounded-md" 
             onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.parentElement?.classList.add('bg-gray-100');
@@ -441,7 +441,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
 
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Выберите способ оплаты</label>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {methods.map(method => (
                     <button
                       key={method.id}
@@ -459,7 +459,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       </div>
                       
                       {/* Image in the Top-Right Corner */}
-                      <div className="absolute top-2 right-2 w-10 h-10 bg-white rounded-lg border border-gray-100 flex items-center justify-center p-1 shadow-sm z-20">
+                      <div className="absolute top-2 right-2 w-14 h-10 bg-white rounded-lg border border-gray-100 flex items-center justify-center p-0.5 shadow-sm z-20">
                           <PaymentIcon imageUrl={method.imageUrl} />
                       </div>
                     </button>
@@ -471,49 +471,39 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm animate-fade-in relative overflow-hidden">
                   
                   {/* Payment Button (Transparent Blue) */}
-                  {selectedMethod.paymentUrl ? (
-                      <div className="mb-4 relative z-10">
-                           <button 
-                                onClick={() => window.open(selectedMethod.paymentUrl, '_blank')}
-                                className="w-full bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
-                           >
-                                <ExternalLink className="w-5 h-5 stroke-[2.5]" />
-                                Нажмите для оплаты
-                           </button>
-                           
-                           {/* Optional instruction note */}
-                           <p className="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Или по реквизитам ниже</p>
-                           
-                           {selectedMethod.instruction && (
-                                <p className="font-medium text-indigo-900 bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs shadow-sm whitespace-pre-wrap">
+                  <div className="mb-4 relative z-10">
+                       <button 
+                            onClick={() => selectedMethod.paymentUrl && window.open(selectedMethod.paymentUrl, '_blank')}
+                            className="w-full bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 mb-3"
+                       >
+                            <ExternalLink className="w-5 h-5 stroke-[2.5]" />
+                            Нажмите для оплаты
+                       </button>
+                       
+                       {/* Optional instruction note */}
+                       <p className="text-center text-[10px] font-bold text-gray-400 uppercase mb-2">Или по реквизитам ниже</p>
+                       
+                       {selectedMethod.instruction ? (
+                            <div>
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
+                                    
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={copyInstruction}
+                                            className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
+                                        >
+                                            {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                            {isCopied ? 'Скопировано' : 'Копировать'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">
                                     {selectedMethod.instruction}
                                 </p>
-                           )}
-                      </div>
-                  ) : (
-                      // Standard Requisites View
-                      <div className="mb-4 relative z-10">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
-                            
-                            <div className="flex gap-2">
-                                <button 
-                                    onClick={copyInstruction}
-                                    className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
-                                >
-                                    {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                    {isCopied ? 'Скопировано' : 'Копировать'}
-                                </button>
                             </div>
-                          </div>
-
-                          {selectedMethod.instruction && (
-                            <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">
-                                {selectedMethod.instruction}
-                            </p>
-                          )}
-                      </div>
-                  )}
+                       ) : null}
+                  </div>
                   
                   {/* INSTRUCTION BLOCK */}
                   <div className="my-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3 shadow-sm relative z-10">

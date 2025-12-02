@@ -279,8 +279,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMethodName || !newMethodInstr) {
-        alert("Заполните название и инструкцию");
+    if (!newMethodName) {
+        alert("Заполните название");
         return;
     }
     
@@ -300,7 +300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
         await api.addPaymentMethod({
             name: newMethodName,
-            instruction: newMethodInstr,
+            instruction: newMethodInstr || '',
             isActive: true,
             minAmount: isNaN(minVal) ? 0 : minVal,
             imageUrl: finalImageUrl,
