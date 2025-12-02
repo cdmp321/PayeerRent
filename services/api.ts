@@ -594,8 +594,11 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // 1. Try Full Insert (Assuming all columns exist)
-      const payloadFull = {
+      // Direct Insert - No Fallback.
+      // This ensures that if the DB schema is missing 'payment_url' or 'image_url', 
+      // the Admin gets an error and knows they must update the DB schema.
+      
+      const payload = {
         name: methodData.name,
         instruction: methodData.instruction,
         is_active: methodData.isActive,
@@ -604,36 +607,12 @@ export const api = {
         payment_url: methodData.paymentUrl
       };
       
-      let { error } = await supabase.from('payment_methods').insert([payloadFull]);
+      const { error } = await supabase.from('payment_methods').insert([payload]);
       
-      // Fallback: If error is due to missing columns (code 42703), try simpler payloads
-      if (error && (error.code === '42703' || error.message.includes('payment_url') || error.message.includes('image_url'))) {
-          console.warn("Schema mismatch detected (missing columns), retrying with compatible fields...");
-          
-          // 2. Try without 'payment_url'
-          const payloadNoUrl = { ...payloadFull };
-          delete (payloadNoUrl as any).payment_url;
-          
-          let { error: err2 } = await supabase.from('payment_methods').insert([payloadNoUrl]);
-          
-          if (err2 && (err2.code === '42703' || err2.message.includes('image_url'))) {
-               // 3. Try Basic Only (No payment_url, No image_url)
-               const payloadBasic = {
-                    name: methodData.name,
-                    instruction: methodData.instruction,
-                    is_active: methodData.isActive,
-                    min_amount: methodData.minAmount
-               };
-               const { error: err3 } = await supabase.from('payment_methods').insert([payloadBasic]);
-               if (err3) throw new Error("Fallback failed: " + err3.message);
-               return; // Success on basic
-          } else if (err2) {
-              throw new Error(err2.message);
-          }
-          return; // Success on NoUrl
+      if (error) {
+          // Pass the error up so the UI catches it
+          throw new Error(error.message); 
       }
-      
-      if (error) throw new Error(error.message);
   },
 
   deletePaymentMethod: async (id: string): Promise<void> => {
