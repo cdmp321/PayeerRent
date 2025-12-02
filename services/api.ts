@@ -592,14 +592,13 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-      // REMOVED SILENT FALLBACK.
-      // We want to force image saving. If schema is wrong, we want an error so user fixes DB.
+      // Ensure image_url is correctly mapped and saved
       const { error } = await supabase.from('payment_methods').insert([{
         name: methodData.name,
         instruction: methodData.instruction,
         is_active: methodData.isActive,
         min_amount: methodData.minAmount,
-        image_url: methodData.imageUrl
+        image_url: methodData.imageUrl 
       }]);
       if (error) throw error;
   },

@@ -2,17 +2,18 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
 import { Item, User, PaymentMethod, UserRole, Transaction, TransactionStatus } from '../types';
-import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Package, CreditCard, Plus, Trash2, RefreshCw, FileText, Check, X, TrendingUp, ArrowUpRight, ArrowDownLeft, Shield, User as UserIcon, Settings, ImageIcon, RotateCcw, Archive, ArchiveRestore, Search, Calendar, Bitcoin, CheckCircle2, ChevronUp, ChevronDown, Lock, Unlock, Upload, Clock, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 
 interface AdminDashboardProps {
   user: User | null;
 }
 
-// Payment Icon Helper Component
+// Payment Icon Helper Component - Enhanced for robustness
 export const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
+    // If no URL at all, fallback
     if (!imageUrl) return <CreditCard className="w-8 h-8 text-gray-400" />;
 
-    // Preset Icons
+    // Preset Icons logic
     if (imageUrl.startsWith('preset:')) {
         const type = imageUrl.split(':')[1];
         switch(type) {
@@ -51,13 +52,27 @@ export const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
                     </div>
                 );
             default:
+                // If it starts with preset but unknown, fallback
                 return <CreditCard className="w-8 h-8 text-gray-400" />;
         }
     }
 
     // Normal Image (Base64 or URL)
+    // Key ensures re-render if URL changes
     return (
-         <img src={imageUrl} alt="Method" className="w-full h-full object-contain rounded-lg" />
+         <img 
+            key={imageUrl}
+            src={imageUrl} 
+            alt="Method" 
+            className="w-full h-full object-contain rounded-lg" 
+            onError={(e) => {
+                // Fallback on error
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement?.classList.add('bg-gray-100', 'flex', 'items-center', 'justify-center');
+                // We can't easily inject a component here, so we let the container show empty or we could try something else.
+                // But typically if we hide it, the container bg shows.
+            }}
+         />
     );
 };
 
@@ -221,6 +236,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
+        // The result is a Base64 string "data:image/png;base64,..."
         setCustomMethodIcon(result);
         setSelectedIconType('custom'); // Flag to use custom icon
       };
@@ -411,10 +427,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       let start = new Date(now);
       
       // If time is before 09:00, the shift started yesterday at 09:00
-      // We use 'anchor' which effectively selects the "viewing day"
-      // If anchor is Today 08:00, start is Yesterday 09:00.
-      // If anchor is Today 10:00, start is Today 09:00.
-      
       if (start.getHours() < 9) {
           start.setDate(start.getDate() - 1);
       }

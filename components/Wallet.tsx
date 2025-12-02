@@ -57,7 +57,16 @@ const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
 
     // Normal Image (Base64 or URL)
     return (
-         <img src={imageUrl} alt="Method" className="w-full h-full object-contain rounded-lg" />
+         <img 
+            key={imageUrl}
+            src={imageUrl} 
+            alt="Method" 
+            className="w-full h-full object-contain rounded-lg" 
+            onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement?.classList.add('bg-gray-100');
+            }}
+        />
     );
 };
 
