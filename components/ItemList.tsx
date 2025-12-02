@@ -344,17 +344,17 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
               )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {filteredAvailableItems.map(item => {
                 const currentInputAmount = parseFloat(customAmounts[item.id] || '0');
                 const isFreePrice = item.price === 0;
 
                 return (
-                <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-indigo-100 overflow-hidden flex flex-col w-full group transform transition-all duration-300 relative">
+                <div key={item.id} className="bg-white rounded-xl shadow-[0_10px_30px_-10px_rgba(168,85,247,0.2)] border border-purple-50 hover:shadow-[0_20px_40px_-10px_rgba(168,85,247,0.3)] hover:border-purple-200 overflow-hidden flex flex-col w-full group transform transition-all duration-300 relative">
                     
                     {/* Compact Image Container */}
                     {item.imageUrl ? (
-                        <div className="h-40 sm:h-56 bg-slate-100 relative shrink-0 w-full overflow-hidden">
+                        <div className="h-32 sm:h-40 bg-slate-100 relative shrink-0 w-full overflow-hidden">
                             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                             
                             {/* Price Badge */}
@@ -372,7 +372,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                         </div>
                     ) : (
                         // Fallback pattern
-                        <div className="h-28 sm:h-36 bg-gradient-to-br from-slate-50 to-indigo-50 relative w-full flex items-center justify-center">
+                        <div className="h-32 sm:h-40 bg-gradient-to-br from-slate-50 to-indigo-50 relative w-full flex items-center justify-center">
                             <Package className="w-8 h-8 text-indigo-200" />
                              <div className="absolute top-2 right-2">
                                 {item.price > 0 ? (
@@ -388,12 +388,12 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                         </div>
                     )}
 
-                    <div className="p-4 flex flex-col flex-grow min-w-0 bg-white relative z-20">
-                        <h4 className="font-bold text-slate-800 text-base leading-tight mb-1 line-clamp-1">{item.title}</h4>
-                        <p className="text-xs text-slate-500 mb-4 line-clamp-2 leading-relaxed">{item.description}</p>
+                    <div className="p-3 flex flex-col flex-grow min-w-0 bg-white relative z-20">
+                        <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1 line-clamp-1">{item.title}</h4>
+                        <p className="text-[10px] text-slate-500 mb-3 line-clamp-2 leading-relaxed">{item.description}</p>
                         
                         {/* Control Area */}
-                        <div className="mt-auto w-full space-y-2">
+                        <div className="mt-auto w-full space-y-1.5">
                             {isFreePrice && (
                                 <div className="relative w-full group/input">
                                     <input 
@@ -401,17 +401,17 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                         placeholder="Сумма"
                                         value={customAmounts[item.id] || ''}
                                         onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
-                                        className="w-full pl-2 pr-5 py-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
+                                        className="w-full pl-2 pr-5 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-900 text-sm font-black">®</span>
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-900 text-xs font-black">®</span>
                                 </div>
                             )}
                             
                             <button 
                                 onClick={() => handleReserve(item)}
-                                className="w-full py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-1.5 transition-all bg-slate-900 text-white hover:bg-slate-800 shadow-md hover:shadow-lg active:scale-95"
+                                className="w-full py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:from-slate-800 hover:to-slate-700 shadow-sm hover:shadow-md active:scale-95"
                             >
-                                <CreditCard className="w-4 h-4" />
+                                <CreditCard className="w-3.5 h-3.5" />
                                 <span>
                                 {isFreePrice 
                                     ? (currentInputAmount > 0 ? `Оплат. ${currentInputAmount}` : 'Купить') 
