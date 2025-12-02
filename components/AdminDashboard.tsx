@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
@@ -58,9 +57,7 @@ export const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
 
     // Normal Image (Base64 or URL)
     return (
-        <div className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-0.5 overflow-hidden">
-             <img src={imageUrl} alt="Method" className="w-full h-full object-contain" />
-        </div>
+         <img src={imageUrl} alt="Method" className="w-full h-full object-contain rounded-lg" />
     );
 };
 
@@ -275,7 +272,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         const minVal = parseFloat(newMethodMin);
 
         // Determine Image URL: Custom or Preset
-        const finalImageUrl = (selectedIconType === 'custom' && customMethodIcon) ? customMethodIcon : selectedIconType;
+        let finalImageUrl = selectedIconType;
+        
+        if (selectedIconType === 'custom') {
+            if (!customMethodIcon) {
+                alert("Пожалуйста, выберите файл для иконки.");
+                return;
+            }
+            finalImageUrl = customMethodIcon;
+        }
 
         await api.addPaymentMethod({
         name: newMethodName,
@@ -1081,9 +1086,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         
                         {/* The requested window for the image */}
                         <div className="w-14 h-14 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center shrink-0 p-1 shadow-sm">
-                             <div className="scale-125">
-                                <PaymentIcon imageUrl={m.imageUrl} />
-                             </div>
+                             <PaymentIcon imageUrl={m.imageUrl} />
                         </div>
                     </div>
 

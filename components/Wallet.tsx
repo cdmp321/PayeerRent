@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
@@ -58,9 +57,7 @@ const PaymentIcon = ({ imageUrl }: { imageUrl?: string }) => {
 
     // Normal Image (Base64 or URL)
     return (
-        <div className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center p-0.5 overflow-hidden">
-             <img src={imageUrl} alt="Method" className="w-full h-full object-contain" />
-        </div>
+         <img src={imageUrl} alt="Method" className="w-full h-full object-contain rounded-lg" />
     );
 };
 
@@ -465,9 +462,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       <div className="relative z-10">
                             {/* Window Container for Payment Icon */}
                             <div className="w-14 h-14 bg-white rounded-xl border border-gray-200 flex items-center justify-center shrink-0 p-1 shadow-sm">
-                                <div className="scale-125">
-                                    <PaymentIcon imageUrl={method.imageUrl} />
-                                </div>
+                                <PaymentIcon imageUrl={method.imageUrl} />
                             </div>
                       </div>
                     </button>

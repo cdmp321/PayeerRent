@@ -592,30 +592,16 @@ export const api = {
   },
 
   addPaymentMethod: async (methodData: Omit<PaymentMethod, 'id'>): Promise<void> => {
-    try {
-        const { error } = await supabase.from('payment_methods').insert([{
-          name: methodData.name,
-          instruction: methodData.instruction,
-          is_active: methodData.isActive,
-          min_amount: methodData.minAmount,
-          image_url: methodData.imageUrl
-        }]);
-        if (error) throw error;
-    } catch (err: any) {
-        // Fallback: If image_url column doesn't exist (Error 42703 or message text)
-        if (err.code === '42703' || err.message?.includes('image_url')) {
-            console.warn("Schema mismatch: 'image_url' column missing in payment_methods. Retrying without image.");
-            const { error: retryError } = await supabase.from('payment_methods').insert([{
-              name: methodData.name,
-              instruction: methodData.instruction,
-              is_active: methodData.isActive,
-              min_amount: methodData.minAmount
-            }]);
-            if (retryError) throw new Error(retryError.message);
-        } else {
-            throw new Error(err.message);
-        }
-    }
+      // REMOVED SILENT FALLBACK.
+      // We want to force image saving. If schema is wrong, we want an error so user fixes DB.
+      const { error } = await supabase.from('payment_methods').insert([{
+        name: methodData.name,
+        instruction: methodData.instruction,
+        is_active: methodData.isActive,
+        min_amount: methodData.minAmount,
+        image_url: methodData.imageUrl
+      }]);
+      if (error) throw error;
   },
 
   deletePaymentMethod: async (id: string): Promise<void> => {
