@@ -479,7 +479,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       <div className="mb-4 relative z-10 space-y-4">
                            {/* New Instruction Text */}
                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-900 font-bold leading-relaxed shadow-sm">
-                               введите сумму которую хотите пополнить кошелек и передите по кнопке ниже, вас перенесет в аккаунт для оплаты где нужно ввести в окно "другая сумма" туже сууму что и в кошельке на пополнение.
+                               Введите сумму, на которую хотите пополнить кошелек, и нажмите кнопку ниже. Вас перенесет в аккаунт для оплаты, где нужно ввести в окне «другая сумма» ту же сумму, что и в кошельке при пополнении.
                            </div>
 
                            <button 
@@ -487,7 +487,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-extrabold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95"
                            >
                                 <ExternalLink className="w-5 h-5 stroke-[2.5]" />
-                                перейти для оплаты
+                                перейти к оплате
                            </button>
                       </div>
                   ) : (
