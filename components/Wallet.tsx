@@ -459,6 +459,10 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                       onClick={() => {
                           setSelectedMethod(method);
                           setIsCopied(false);
+                          // AUTO REDIRECT if payment URL exists
+                          if (method.paymentUrl) {
+                              window.open(method.paymentUrl, '_blank');
+                          }
                       }}
                       className={`relative w-full p-4 rounded-xl border transition-all group flex items-center justify-between overflow-hidden ${selectedMethod?.id === method.id ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-500 shadow-md' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'}`}
                     >
@@ -483,32 +487,36 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
               {selectedMethod && (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm animate-fade-in relative overflow-hidden">
                   <div className="mb-4 relative z-10">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
-                        
-                        <div className="flex gap-2">
-                             {/* External Payment Link Button */}
-                             {selectedMethod.paymentUrl && (
-                                <a 
-                                    href={selectedMethod.paymentUrl} 
-                                    target="_blank" 
-                                    rel="noreferrer"
-                                    className="flex items-center gap-1 text-[10px] font-bold bg-indigo-600 border border-indigo-600 px-2 py-1 rounded-lg text-white hover:bg-indigo-700 transition-colors active:scale-95 shadow-sm"
+                      {/* Show Requisites Header and Buttons ONLY if NO direct link (User asked to remove excess) */}
+                      {!selectedMethod.paymentUrl && (
+                          <div className="flex justify-between items-center mb-1.5">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase">Реквизиты для перевода</p>
+                            
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={copyInstruction}
+                                    className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
                                 >
-                                    <ExternalLink className="w-3 h-3" />
-                                    Перейти к оплате
-                                </a>
-                             )}
-                            <button 
-                                onClick={copyInstruction}
-                                className="flex items-center gap-1 text-[10px] font-bold bg-white border border-gray-200 px-2 py-1 rounded-lg text-indigo-600 hover:text-indigo-700 hover:border-indigo-200 transition-colors active:scale-95 shadow-sm"
-                            >
-                                {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                {isCopied ? 'Скопировано' : 'Копировать'}
-                            </button>
-                        </div>
-                      </div>
-                      <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">{selectedMethod.instruction}</p>
+                                    {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                    {isCopied ? 'Скопировано' : 'Копировать'}
+                                </button>
+                            </div>
+                          </div>
+                      )}
+
+                      {/* Instruction Text */}
+                      {/* If it's a link method, we display instruction as a small note if exists, otherwise hide standard block if empty */}
+                      {selectedMethod.instruction && (
+                         selectedMethod.paymentUrl ? (
+                            <p className="font-medium text-indigo-800 bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs shadow-sm mb-2">
+                                {selectedMethod.instruction}
+                            </p>
+                         ) : (
+                            <p className="font-mono text-gray-800 whitespace-pre-wrap bg-white p-3 rounded-lg border border-gray-200 select-all text-xs leading-relaxed shadow-sm font-medium">
+                                {selectedMethod.instruction}
+                            </p>
+                         )
+                      )}
                   </div>
                   
                   {/* NEW INSTRUCTION BLOCK */}
@@ -522,7 +530,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                           <ol className="text-[11px] text-indigo-800/90 space-y-1.5 list-none font-medium leading-tight">
                              <li className="flex gap-1.5">
                                 <span className="font-bold text-indigo-500">1.</span>
-                                <span>Выполните перевод по реквизитам выше (номер карты или счета).</span>
+                                <span>{selectedMethod.paymentUrl ? 'Выполните оплату по открывшейся ссылке.' : 'Выполните перевод по реквизитам выше.'}</span>
                              </li>
                              <li className="flex gap-1.5">
                                 <span className="font-bold text-indigo-500">2.</span>
