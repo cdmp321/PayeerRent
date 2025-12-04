@@ -37,6 +37,19 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     });
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+
+    if (isAdminMode) {
+        // Admin logins can be text (e.g. 'Payeer', 'admin')
+        setPhone(val);
+    } else {
+        // Client: Only digits, max 11 chars
+        const numbersOnly = val.replace(/\D/g, '').slice(0, 11);
+        setPhone(numbersOnly);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,6 +61,11 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         const { user, isNew } = await api.loginAdmin(phone, password);
         onLogin(user, isNew);
       } else {
+        if (phone.length !== 11) {
+            setError('Номер телефона должен содержать 11 цифр');
+            setLoading(false);
+            return;
+        }
         // User Login/Register - Now accepts password, name defaults to empty string
         const { user, isNew } = await api.loginOrRegister(phone, password, ''); 
         onLogin(user, isNew);
@@ -102,10 +120,12 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <div className="relative group">
               <Phone strokeWidth={3} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
               <input
-                type="text"
+                type={isAdminMode ? "text" : "tel"}
+                inputMode={isAdminMode ? "text" : "numeric"}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={isAdminMode ? "Логин сотрудника" : "Номер телефона"}
+                onChange={handlePhoneChange}
+                placeholder={isAdminMode ? "Логин сотрудника" : "Номер телефона (11 цифр)"}
+                maxLength={isAdminMode ? 50 : 11}
                 className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
                 required
               />
