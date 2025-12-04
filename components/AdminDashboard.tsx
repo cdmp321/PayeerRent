@@ -450,6 +450,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       newDate.setDate(newDate.getDate() + days);
       setShiftAnchorDate(newDate);
   };
+  
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.value) {
+          setShiftAnchorDate(new Date(e.target.value));
+      }
+  };
 
   // --- Derived Data ---
   const visibleTransactions = useMemo(() => {
@@ -807,10 +813,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
-                    
-                    <div className="text-xs font-bold text-indigo-600 bg-white px-2 py-1 rounded-lg border border-indigo-100 shadow-sm">
-                        {formatShiftDate(shiftInterval.start)} — {formatShiftDate(shiftInterval.end)}
-                    </div>
+
+                    {/* DATE PICKER */}
+                    <input 
+                        type="date"
+                        value={shiftAnchorDate.toISOString().split('T')[0]}
+                        onChange={handleDateChange}
+                        className="text-xs font-bold text-indigo-600 bg-white px-2 py-1 rounded-lg border border-indigo-100 shadow-sm focus:ring-1 focus:ring-indigo-300 outline-none"
+                    />
                     
                     <button 
                         onClick={() => changeShiftDate(1)} 
@@ -820,6 +830,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
+            </div>
+            
+            <div className="text-center text-[10px] text-indigo-400 font-medium -mt-2 mb-4">
+                {formatShiftDate(shiftInterval.start)} — {formatShiftDate(shiftInterval.end)}
             </div>
 
             {/* Messages / Purchase History */}
