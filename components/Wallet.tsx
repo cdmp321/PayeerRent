@@ -447,7 +447,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                         }
                     } else if (isExpense) {
                         Icon = ShoppingBag;
-                        titleText = tx.type === 'PURCHASE' ? 'Оплата товара' : 'Аренда';
+                        titleText = tx.type === 'PURCHASE' ? 'Оплата товара' : 'Резерв продукта';
                         amountSign = '-';
                         bgColor = 'bg-slate-100';
                         textColor = 'text-slate-700';

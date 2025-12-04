@@ -82,7 +82,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
           <button 
             type="button" 
             onClick={handleSecretClick}
-            className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-xl transform transition-transform active:scale-95 ${isAdminMode ? 'bg-slate-900 rotate-12' : 'bg-indigo-600 -rotate-3'}`}
+            className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-xl transform transition-transform active:scale-95 ${isAdminMode ? 'bg-slate-900' : 'bg-indigo-600'}`}
           >
             {isAdminMode ? (
               <ShieldCheck className="w-10 h-10 text-white" />
@@ -102,7 +102,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-5">
             <div className="relative group">
-              <Phone strokeWidth={2.5} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
+              <Phone strokeWidth={3} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
               <input
                 type="text"
                 value={phone}
@@ -115,7 +115,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
             {/* Password Field (Now for BOTH Admin and Client) */}
             <div className="relative group">
-                <Lock strokeWidth={2.5} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
+                <Lock strokeWidth={3} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
                 <input
                   type="password"
                   value={password}
@@ -129,7 +129,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             {/* Name field - only for client registration */}
             {!isAdminMode && (
               <div className="relative group">
-                <UserIcon strokeWidth={2.5} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
+                <UserIcon strokeWidth={3} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
                 <input
                   type="text"
                   value={name}
