@@ -109,6 +109,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
         amountToPay = inputVal;
       }
 
+      // Check balance and redirect if insufficient
       if (user.balance < amountToPay) {
         if (onNavigateToWallet) {
             // Automatically redirect to wallet
@@ -403,7 +404,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                                         placeholder="Сумма"
                                         value={customAmounts[item.id] || ''}
                                         onChange={(e) => handleCustomAmountChange(item.id, e.target.value)}
-                                        className="w-full pl-2 pr-5 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
+                                        className="w-full pl-2 pr-5 py-2.5 border border-slate-200 rounded-lg text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-50 transition-all bg-slate-50 focus:bg-white font-bold text-slate-800 placeholder-slate-400"
                                     />
                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-900 text-xs font-black">®</span>
                                 </div>
@@ -411,13 +412,13 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                             
                             <button 
                                 onClick={() => handleReserve(item)}
-                                className="w-full py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:from-slate-800 hover:to-slate-700 shadow-sm hover:shadow-md active:scale-95"
+                                className="w-full py-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:from-slate-800 hover:to-slate-700 shadow-sm hover:shadow-md active:scale-95"
                             >
                                 <CreditCard className="w-3.5 h-3.5" />
                                 <span>
                                 {isFreePrice 
-                                    ? (currentInputAmount > 0 ? `Оплат. ${currentInputAmount}` : 'Купить') 
-                                    : 'Купить'
+                                    ? (currentInputAmount > 0 ? `Оплат. ${currentInputAmount}` : 'Оплатить') 
+                                    : 'Оплатить'
                                 }
                                 </span>
                             </button>
