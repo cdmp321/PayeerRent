@@ -178,10 +178,10 @@ const App: React.FC = () => {
         setNotification({ message: "Вы авторизованы! Добро пожаловать!", type: 'welcome' });
     }
 
-    // Clear after 4 seconds
+    // Clear after 10 seconds (increased from 4)
     setTimeout(() => {
         setNotification(null);
-    }, 4000);
+    }, 10000);
   };
 
   const handleLogout = async () => {
@@ -295,21 +295,21 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* NOTIFICATION BANNER */}
+      {/* NOTIFICATION BANNER - ENLARGED AND RESTYLED */}
       {notification && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border ${
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-8 py-5 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] border-slate-700 scale-110 ${
             notification.type === 'new' 
-                ? 'bg-blue-600 text-white border-blue-500' 
-                : 'bg-emerald-600 text-white border-emerald-500'
+                ? 'bg-blue-600 text-white' 
+                : 'bg-emerald-600 text-white'
         }`}>
             {notification.type === 'new' ? (
-                <PartyPopper className="w-6 h-6 animate-bounce" />
+                <PartyPopper className="w-8 h-8 animate-bounce" />
             ) : (
-                <UserCheck className="w-6 h-6" />
+                <UserCheck className="w-8 h-8" />
             )}
             <div className="flex flex-col">
-                <span className="font-extrabold text-sm">{notification.message}</span>
-                {notification.type === 'new' && <span className="text-[10px] opacity-80 font-bold">Добро пожаловать в PayeerRent</span>}
+                <span className="font-extrabold text-lg">{notification.message}</span>
+                {notification.type === 'new' && <span className="text-xs opacity-90 font-bold">Добро пожаловать в PayeerRent</span>}
             </div>
         </div>
       )}
