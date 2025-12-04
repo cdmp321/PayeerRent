@@ -16,7 +16,7 @@ const mapUser = (data: any): User => ({
 
 const mapItem = (data: any): Item => ({
   id: data.id,
-  title: data.title,
+  title: decrypt(data.title), // Decrypt title
   description: data.description,
   imageUrl: data.image_url,
   price: Number(data.price),
@@ -34,7 +34,7 @@ const mapMethod = (data: any): PaymentMethod => ({
   isActive: data.is_active,
   minAmount: Number(data.min_amount),
   imageUrl: data.image_url,
-  paymentUrl: data.payment_url
+  paymentUrl: decrypt(data.payment_url) // Decrypt paymentUrl
 });
 
 const mapTransaction = (data: any): Transaction => ({
@@ -325,7 +325,7 @@ export const api = {
     const { data, error } = await supabase
       .from('items')
       .insert([{
-        title: itemData.title,
+        title: encrypt(itemData.title), // Encrypt Title
         description: itemData.description,
         image_url: itemData.imageUrl,
         price: itemData.price,
@@ -343,7 +343,7 @@ export const api = {
     await supabase
       .from('items')
       .update({
-        title: item.title,
+        title: encrypt(item.title), // Encrypt Title
         description: item.description,
         image_url: item.imageUrl,
         price: item.price,
@@ -379,6 +379,7 @@ export const api = {
     // ENCRYPT SENSITIVE DATA
     const encName = encrypt(method.name);
     const encInstr = encrypt(method.instruction);
+    const encUrl = method.paymentUrl ? encrypt(method.paymentUrl) : null; // Encrypt URL
 
     // Try normal insert
     const { data, error } = await supabase
@@ -389,7 +390,7 @@ export const api = {
         is_active: method.isActive,
         min_amount: method.minAmount,
         image_url: method.imageUrl,
-        payment_url: method.paymentUrl
+        payment_url: encUrl
       }])
       .select()
       .single();
@@ -647,11 +648,14 @@ export const api = {
     const isUnlimited = quantity === 0;
     const isMultiStock = quantity > 1;
 
+    // DECRYPT TITLE for use in description
+    const itemTitle = decrypt(item.title);
+
     if (isUnlimited || isMultiStock) {
         const { error: cloneError } = await supabase
             .from('items')
             .insert([{
-                title: item.title,
+                title: item.title, // Copy raw encrypted title
                 description: item.description,
                 image_url: item.image_url,
                 price: item.price,
@@ -685,7 +689,7 @@ export const api = {
             .eq('id', itemId);
     }
 
-    const desc = item.price > 0 ? `Резерв товара: ${item.title}` : `Оплата (Free Price): ${item.title}`;
+    const desc = item.price > 0 ? `Резерв товара: ${itemTitle}` : `Оплата (Free Price): ${itemTitle}`;
 
     await supabase.from('transactions').insert([{
         user_id: userId,
@@ -718,7 +722,10 @@ export const api = {
         .update({ last_purchase_price: currentPaid + finalPrice })
         .eq('id', itemId);
 
-    const desc = item.price > 0 ? `Оплата аренды: ${item.title}` : `Взнос (Free Price): ${item.title}`;
+    // DECRYPT TITLE for use in description
+    const itemTitle = decrypt(item.title);
+
+    const desc = item.price > 0 ? `Оплата аренды: ${itemTitle}` : `Взнос (Free Price): ${itemTitle}`;
 
     await supabase.from('transactions').insert([{
         user_id: userId,
