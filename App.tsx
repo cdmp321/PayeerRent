@@ -9,13 +9,14 @@ import { supabaseUrl, supabase } from './services/supabase';
 import { User, UserRole } from './types';
 import { LogOut, Settings, Store, AlertTriangle, Database, RefreshCw, Copy, Check, ShoppingBag, Wallet as WalletIcon } from 'lucide-react';
 
-const SCHEMA_SQL = `-- 1. Очистка старых таблиц (ПЕРЕУСТАНОВКА)
+const SCHEMA_SQL = `-- НОВАЯ СХЕМА БАЗЫ ДАННЫХ PAYEERRENT
+-- 1. Очистка (Внимание: удалит все данные)
 DROP TABLE IF EXISTS public.transactions;
 DROP TABLE IF EXISTS public.items;
 DROP TABLE IF EXISTS public.payment_methods;
 DROP TABLE IF EXISTS public.users;
 
--- 2. Пользователи (Данные: phone, name, password хранятся в ЗАШИФРОВАННОМ виде)
+-- 2. Таблица пользователей
 create table public.users (
   id uuid default gen_random_uuid() primary key,
   phone text unique not null,
@@ -26,14 +27,14 @@ create table public.users (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 3. Товары
+-- 3. Таблица товаров
 create table public.items (
   id uuid default gen_random_uuid() primary key,
   title text not null,
   description text,
   image_url text,
   price numeric not null,
-  quantity numeric default 1, -- 0 = Unlimited
+  quantity numeric default 1,
   status text default 'AVAILABLE',
   owner_id uuid references public.users(id) on delete set null,
   purchased_at timestamp with time zone default timezone('utc'::text, now()),
@@ -41,12 +42,12 @@ create table public.items (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 4. Транзакции
+-- 4. Таблица транзакций
 create table public.transactions (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.users(id) on delete cascade not null,
   amount numeric not null,
-  type text not null,
+  type text not null, -- 'DEPOSIT', 'WITHDRAWAL', 'PURCHASE', 'RENT_CHARGE', 'REFUND'
   status text not null,
   description text,
   receipt_url text,
@@ -54,7 +55,7 @@ create table public.transactions (
   date timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 5. Методы оплаты
+-- 5. Таблица методов оплаты (со всеми полями сразу)
 create table public.payment_methods (
   id uuid default gen_random_uuid() primary key,
   name text not null,
@@ -65,19 +66,7 @@ create table public.payment_methods (
   payment_url text
 );
 
--- 6. Сотрудники (ЗАШИФРОВАННЫЕ ДАННЫЕ)
-
--- Администратор (Логин: 000, Пароль: admin)
--- Encoded: 000 -> wADM, admin -> =4mWdaY
-insert into public.users (phone, name, password, role, balance)
-values ('wADM', '==gcldhcnRzaW5pbWRWQ', '=4mWdaY', 'ADMIN', 0);
-
--- Менеджер (Логин: 001, Пароль: manager)
--- Encoded: 001 -> xADM, manager -> ==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
-insert into public.users (phone, name, password, role, balance)
-values ('xADM', '==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
-
--- 7. Доступ (RLS)
+-- 6. Настройка безопасности (RLS)
 alter table public.users enable row level security;
 alter table public.items enable row level security;
 alter table public.transactions enable row level security;
@@ -88,9 +77,14 @@ create policy "Public access items" on public.items for all using (true);
 create policy "Public access transactions" on public.transactions for all using (true);
 create policy "Public access payment_methods" on public.payment_methods for all using (true);
 
--- ОБНОВЛЕНИЕ: Добавление колонок, если их нет
-ALTER TABLE public.payment_methods ADD COLUMN IF NOT EXISTS image_url text;
-ALTER TABLE public.payment_methods ADD COLUMN IF NOT EXISTS payment_url text;
+-- 7. Дефолтные сотрудники (Данные зашифрованы для совместимости)
+-- Admin (000 / admin) -> wADM / =4mWdaY
+insert into public.users (phone, name, password, role, balance)
+values ('wADM', '==gcldhcnRzaW5pbWRWQ', '=4mWdaY', 'ADMIN', 0);
+
+-- Manager (001 / manager) -> xADM / ==gcldYNaWb
+insert into public.users (phone, name, password, role, balance)
+values ('xADM', '==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
 `;
 
 const App: React.FC = () => {
@@ -231,7 +225,7 @@ const App: React.FC = () => {
             
             <p className="text-slate-500 mb-8 font-medium">
                 {isSchemaError 
-                    ? "Необходимо обновить структуру базы для поддержки новых методов оплаты (картинки и ссылки)." 
+                    ? "Необходимо обновить структуру базы для работы приложения." 
                     : error}
             </p>
 

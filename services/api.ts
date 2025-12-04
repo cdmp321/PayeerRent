@@ -62,10 +62,14 @@ const toBase64 = (file: File): Promise<string> => {
 export const api = {
   // Auth
   loginOrRegister: async (phone: string, password: string, name: string): Promise<User> => {
-    const encryptedPhone = encrypt(phone.trim());
-    const encryptedName = encrypt(name.trim());
+    const cleanPhone = phone.trim();
+    const encryptedPhone = encrypt(cleanPhone);
     const hashedPassword = await hashPassword(password.trim()); // Hash input
     const legacyEncryptedPassword = encrypt(password.trim()); // Legacy check
+    
+    // Generate default name if empty (since input is removed from UI)
+    const finalName = name.trim() || `Пользователь ${cleanPhone.slice(-4)}`;
+    const encryptedName = encrypt(finalName);
 
     // Check if user exists (Search by Encrypted Phone)
     const { data: existingUser, error: fetchError } = await supabase

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { User } from '../types';
-import { Phone, User as UserIcon, ShieldCheck, Loader2, Lock, Briefcase } from 'lucide-react';
+import { Phone, ShieldCheck, Loader2, Lock, Briefcase } from 'lucide-react';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -11,7 +11,6 @@ interface AuthProps {
 export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -49,8 +48,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         const user = await api.loginAdmin(phone, password);
         onLogin(user);
       } else {
-        // User Login/Register - Now accepts password
-        const user = await api.loginOrRegister(phone, password, name);
+        // User Login/Register - Now accepts password, name defaults to empty string
+        const user = await api.loginOrRegister(phone, password, ''); 
         onLogin(user);
       }
     } catch (err: any) {
@@ -65,7 +64,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     setError('');
     setPhone('');
     setPassword('');
-    setName('');
   };
 
   return (
@@ -125,21 +123,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   required
                 />
             </div>
-
-            {/* Name field - only for client registration */}
-            {!isAdminMode && (
-              <div className="relative group">
-                <UserIcon strokeWidth={3} className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ваше имя"
-                  className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
-                  required
-                />
-              </div>
-            )}
           </div>
 
           {error && (
