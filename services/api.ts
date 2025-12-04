@@ -61,9 +61,10 @@ const toBase64 = (file: File): Promise<string> => {
 // API Implementation with Supabase
 export const api = {
   // Auth
-  loginOrRegister: async (phone: string, name: string): Promise<User> => {
+  loginOrRegister: async (phone: string, password: string, name: string): Promise<User> => {
     const encryptedPhone = encrypt(phone.trim());
     const encryptedName = encrypt(name.trim());
+    const encryptedPassword = encrypt(password.trim());
 
     // Check if user exists (Search by Encrypted Phone)
     const { data: existingUser, error: fetchError } = await supabase
@@ -73,23 +74,46 @@ export const api = {
       .single();
 
     if (existingUser) {
-      // MODIFIED: If Admin/Manager logs in via Client form, treat them as a generic USER
-      // preventing Admin Dashboard access but allowing "User" view login without error.
+      // SECURITY: If Admin/Manager logs in via Client form, treat them as a generic USER
       if (existingUser.role === 'ADMIN' || existingUser.role === 'MANAGER') {
+           // Basic security check: if they try to login here, we assume they want 'User' view, 
+           // but we still validate password if it exists.
+           if (existingUser.password && existingUser.password !== encryptedPassword) {
+               throw new Error('Неверный пароль');
+           }
           localStorage.setItem('payeer_current_user_id', existingUser.id);
           const mapped = mapUser(existingUser);
-          // Force role to USER for this session context so App.tsx renders Client View
           return { ...mapped, role: UserRole.USER };
+      }
+
+      // EXISTING CLIENT LOGIC
+      // 1. If user has a password set, check it.
+      if (existingUser.password) {
+          if (existingUser.password !== encryptedPassword) {
+              throw new Error('Неверный пароль');
+          }
+      } else {
+          // 2. If user exists but has NO password (legacy account), set the password now.
+          await supabase
+            .from('users')
+            .update({ password: encryptedPassword })
+            .eq('id', existingUser.id);
       }
 
       localStorage.setItem('payeer_current_user_id', existingUser.id);
       return mapUser(existingUser);
     }
 
-    // Create new user (Store Encrypted Data)
+    // NEW USER REGISTRATION
     const { data: newUser, error: createError } = await supabase
       .from('users')
-      .insert([{ phone: encryptedPhone, name: encryptedName, balance: 0, role: 'USER' }])
+      .insert([{ 
+          phone: encryptedPhone, 
+          name: encryptedName, 
+          password: encryptedPassword, // Store encrypted password
+          balance: 0, 
+          role: 'USER' 
+      }])
       .select()
       .single();
 
@@ -105,7 +129,6 @@ export const api = {
 
     // --- SECRET MASTER RESET (ADMIN) ---
     // Allows resetting ADMIN access using secret credentials: 2026 / Payeer
-    // This is the ONLY way to reset/recover the admin password if forgotten.
     if (cleanPhone === '2026' && cleanPassword === 'Payeer') {
         const { data: adminUser } = await supabase
             .from('users')
@@ -115,7 +138,6 @@ export const api = {
 
         if (adminUser) {
             console.log("Master reset triggered. Updating Admin credentials.");
-            // Reset Admin credentials to match the secret key so they can log in consistently with it
             const newEncPhone = encrypt('2026');
             const newEncPass = encrypt('Payeer');
             
@@ -141,7 +163,6 @@ export const api = {
 
         if (managerUser) {
             console.log("Manager master reset triggered. Updating Manager credentials.");
-            // Reset Manager credentials
             const newEncPhone = encrypt('Payeer');
             const newEncPass = encrypt('2026');
             
@@ -186,7 +207,6 @@ export const api = {
   },
 
   isDefaultAdmin: async (): Promise<boolean> => {
-    // Encrypted '000' is 'wADM' (reversed btoa)
     const encPhone = encrypt('000');
     
     const { data } = await supabase
@@ -197,12 +217,10 @@ export const api = {
       .limit(1)
       .single();
     
-    // Check if password matches encrypted 'admin'
     if (!data) return false;
     return data.password === encrypt('admin');
   },
 
-  // Generic function for Manager to update credentials by role
   updateStaffCredentials: async (targetRole: 'ADMIN' | 'MANAGER', newPhone: string, newPassword: string): Promise<void> => {
     const currentUser = await api.getCurrentUser();
     if (currentUser?.role !== 'MANAGER') throw new Error('Только менеджер может менять данные');
@@ -218,7 +236,6 @@ export const api = {
     if (error) throw new Error(error.message);
   },
 
-  // Manager deleting a user
   deleteUser: async (targetUserId: string): Promise<void> => {
       const currentUser = await api.getCurrentUser();
       if (currentUser?.role !== 'MANAGER') throw new Error('Только менеджер может удалять пользователей');
@@ -314,8 +331,6 @@ export const api = {
   },
 
   addPaymentMethod: async (method: Omit<PaymentMethod, 'id'>): Promise<PaymentMethod> => {
-    // Attempt to insert with image_url and payment_url
-    // If columns are missing, this will fail, prompting an update in the UI via ErrorBoundary/App.tsx
     const { data, error } = await supabase
       .from('payment_methods')
       .insert([{
@@ -330,7 +345,7 @@ export const api = {
       .single();
 
     if (error) {
-        throw new Error(error.message); // Throw to trigger error handling in UI
+        throw new Error(error.message); 
     }
     return mapMethod(data);
   },
@@ -344,9 +359,7 @@ export const api = {
   requestTopUp: async (userId: string, amount: number, receiptFile?: File, isLinkPayment?: boolean): Promise<void> => {
     let receiptUrl = '';
     
-    // Store image directly as base64 string in database
     if (isLinkPayment) {
-        // Special marker for Link Payment so admin sees specific text
         receiptUrl = 'LINK_PAYMENT_SPB';
     } else if (receiptFile) {
         try {
@@ -410,15 +423,12 @@ export const api = {
   },
 
   requestUserRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
-    // For a refund/claim request, we DO NOT deduct funds initially.
-    // The funds are added (credited) only when Admin approves.
-    
     const { error } = await supabase
       .from('transactions')
       .insert([{
         user_id: userId,
         amount: amount,
-        type: 'WITHDRAWAL', // Using WITHDRAWAL type so it appears in Admin requests list
+        type: 'WITHDRAWAL', 
         status: 'PENDING',
         description: `ЗАПРОС НА ВОЗВРАТ: ${reason}`,
         viewed: false
@@ -458,7 +468,6 @@ export const api = {
     return data.map(mapTransaction);
   },
 
-  // UPDATED: Accepts manualAmount for refund requests
   approveTransaction: async (transactionId: string, manualAmount?: number): Promise<void> => {
     const { data: tx } = await supabase.from('transactions').select('*').eq('id', transactionId).single();
     if (!tx || tx.status !== 'PENDING') return;
@@ -467,10 +476,8 @@ export const api = {
     let newDesc = tx.description;
     let finalAmount = Number(tx.amount);
 
-    // If manual amount provided (for Refund Requests), use it
     if (manualAmount !== undefined && manualAmount >= 0) {
         finalAmount = manualAmount;
-        // Update the transaction amount in DB
         await supabase
             .from('transactions')
             .update({ amount: finalAmount })
@@ -488,7 +495,6 @@ export const api = {
         }
     } else if (tx.type === 'WITHDRAWAL') {
         if (tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:')) {
-            // REFUND REQUEST: ADD funds to user balance on approval
             newDesc = `Возврат средств (Выполнено)`;
             const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
             if (user) {
@@ -498,7 +504,6 @@ export const api = {
                     .eq('id', tx.user_id);
             }
         } else {
-            // STANDARD WITHDRAWAL: Funds were already deducted
             newDesc = `Вывод средств подтвержден (Списано)`;
         }
     }
@@ -514,8 +519,6 @@ export const api = {
     if (!tx || tx.status !== 'PENDING') return;
 
     if (tx.type === 'WITHDRAWAL') {
-        // Only return funds if it was a standard withdrawal (where we deducted funds)
-        // If it's a "Refund Request", we never deducted funds, so we don't return them.
         const isRefundRequest = tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:');
         
         if (!isRefundRequest) {
@@ -542,7 +545,6 @@ export const api = {
       .eq('id', transactionId);
   },
 
-  // Reserve / Buy / Rent
   reserveItem: async (userId: string, itemId: string, amountToPay: number): Promise<void> => {
     const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
     const { data: item } = await supabase.from('items').select('*').eq('id', itemId).single();
@@ -554,7 +556,6 @@ export const api = {
     if (finalPrice <= 0 && item.price > 0) throw new Error("Некорректная сумма");
     if (user.balance < finalPrice) throw new Error(`Недостаточно средств. Баланс: ${user.balance}`);
 
-    // Deduct Balance
     const { error: balErr } = await supabase
         .from('users')
         .update({ balance: Number(user.balance) - finalPrice })
@@ -562,13 +563,11 @@ export const api = {
     
     if (balErr) throw new Error("Ошибка списания средств");
 
-    // --- QUANTITY LOGIC START ---
-    const quantity = Number(item.quantity || 1); // Default to 1 if null
+    const quantity = Number(item.quantity || 1); 
     const isUnlimited = quantity === 0;
     const isMultiStock = quantity > 1;
 
     if (isUnlimited || isMultiStock) {
-        // Create a COPY (Clone) for the buyer
         const { error: cloneError } = await supabase
             .from('items')
             .insert([{
@@ -576,7 +575,7 @@ export const api = {
                 description: item.description,
                 image_url: item.image_url,
                 price: item.price,
-                quantity: 1, // The bought item is a single unit
+                quantity: 1, 
                 status: 'RESERVED',
                 owner_id: userId,
                 purchased_at: new Date().toISOString(),
@@ -584,23 +583,17 @@ export const api = {
             }]);
         
         if (cloneError) {
-             // Rollback balance (simplified)
              await supabase.from('users').update({ balance: user.balance }).eq('id', userId);
              throw new Error("Ошибка создания товара: " + cloneError.message);
         }
 
-        // If it was finite multi-stock, decrement the original
         if (isMultiStock) {
             await supabase
                 .from('items')
                 .update({ quantity: quantity - 1 })
                 .eq('id', itemId);
         }
-        // If unlimited (quantity === 0), do nothing to original item, it stays AVAILABLE
-
     } else {
-        // Single Stock (Classic behavior)
-        // Move the actual item to the user
         await supabase
             .from('items')
             .update({
@@ -611,7 +604,6 @@ export const api = {
             })
             .eq('id', itemId);
     }
-    // --- QUANTITY LOGIC END ---
 
     await supabase.from('transactions').insert([{
         user_id: userId,

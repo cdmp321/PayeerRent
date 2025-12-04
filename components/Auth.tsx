@@ -49,8 +49,8 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         const user = await api.loginAdmin(phone, password);
         onLogin(user);
       } else {
-        // User Login/Register
-        const user = await api.loginOrRegister(phone, name);
+        // User Login/Register - Now accepts password
+        const user = await api.loginOrRegister(phone, password, name);
         onLogin(user);
       }
     } catch (err: any) {
@@ -113,6 +113,20 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
               />
             </div>
 
+            {/* Password Field (Now for BOTH Admin and Client) */}
+            <div className="relative group">
+                <Lock className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={isAdminMode ? "Пароль доступа" : "Придумайте пароль"}
+                  className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
+                  required
+                />
+            </div>
+
+            {/* Name field - only for client registration */}
             {!isAdminMode && (
               <div className="relative group">
                 <UserIcon className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
@@ -121,20 +135,6 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ваше имя"
-                  className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
-                  required
-                />
-              </div>
-            )}
-
-            {isAdminMode && (
-              <div className="relative group">
-                <Lock className="w-7 h-7 text-indigo-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none peer-focus:opacity-0 transition-opacity z-10" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Пароль доступа"
                   className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
                   required
                 />

@@ -1,4 +1,3 @@
-
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
@@ -22,11 +21,13 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // Explicitly declare state
-  public state: State = {
-    hasError: false,
-    error: null
-  };
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
