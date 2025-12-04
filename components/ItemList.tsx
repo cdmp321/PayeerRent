@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { Item, ItemStatus, User } from '../types';
@@ -180,7 +181,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   // VIEW MODE: PURCHASES
   if (viewMode === 'purchases') {
       return (
-        <div className="space-y-4 pb-24 w-full">
+        <div className="space-y-4 pb-24 w-full max-w-5xl mx-auto">
             <h3 className="text-lg font-extrabold text-slate-800 px-2 flex items-center gap-2">
                 <ShoppingBag className="w-6 h-6 text-indigo-600 stroke-[2.5]" />
                 Мои покупки
@@ -197,7 +198,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
                     )}
                  </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {myReservations.map(item => {
                         const isFreePrice = item.price === 0;
                         const currentInputAmount = customAmounts[item.id] || '';
@@ -346,7 +347,7 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
               )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredAvailableItems.map(item => {
                 const currentInputAmount = parseFloat(customAmounts[item.id] || '0');
                 const isFreePrice = item.price === 0;

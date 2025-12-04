@@ -295,224 +295,235 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
       : fullHistory.slice(0, 5);
 
   return (
-    <div className="space-y-4 pb-36">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+    <div className="space-y-4 pb-36 max-w-4xl mx-auto">
+        
+        {/* Responsive Grid for Desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
-            <div className="flex items-center justify-between mb-3 relative z-10">
-            <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-slate-700/50 rounded-lg">
-                    <WalletIcon className="w-5 h-5 text-emerald-300" />
-                </div>
-                <span className="font-medium text-slate-300 text-sm">Мой баланс</span>
-            </div>
-            <span className="text-[10px] font-mono bg-slate-700/50 px-2 py-1 rounded text-emerald-300 font-bold">PAYEER®</span>
-            </div>
-            
-            <div className="text-4xl font-extrabold mb-6 relative z-10 tracking-tight flex items-baseline gap-1">
-                {user.balance.toFixed(2)} <span className="text-xl font-normal text-black">®</span>
-            </div>
-
-            <div className="flex flex-col gap-3 relative z-10">
-                <div className="flex gap-3">
-                    <button 
-                        onClick={() => setShowTopUpModal(true)}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white h-14 rounded-xl font-extrabold text-base flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20 leading-none text-center"
-                    >
-                        Пополнить
-                    </button>
-                    <button 
-                        onClick={() => setShowWithdrawModal(true)}
-                        className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white h-14 rounded-xl font-extrabold text-base flex items-center justify-center gap-2 transition-colors border border-slate-600 leading-none text-center"
-                    >
-                        Вывести
-                    </button>
-                </div>
-                <button 
-                    onClick={() => setShowRefundModal(true)}
-                    className="w-full bg-purple-900 hover:bg-purple-800 active:bg-purple-700 text-purple-100 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-purple-800"
-                >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Возврат средств
-                </button>
-            </div>
-        </div>
-        </div>
-
-      {pendingTransactions.length > 0 && (
-          <div className="space-y-3 animate-fade-in">
-             {pendingTransactions.map(tx => {
-                 const isRefundRequest = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
-                 return (
-                 <div key={tx.id} className={`rounded-xl p-4 relative overflow-hidden border ${
-                    tx.type === 'DEPOSIT' 
-                        ? 'bg-orange-50 border-orange-100' 
-                        : (isRefundRequest ? 'bg-purple-50 border-purple-100' : 'bg-blue-50 border-blue-100')
-                 }`}>
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-full animate-pulse ${
-                            tx.type === 'DEPOSIT' 
-                                ? 'bg-orange-200' 
-                                : (isRefundRequest ? 'bg-purple-200' : 'bg-blue-200')
-                        }`}>
-                            <Clock className={`w-5 h-5 ${
-                                tx.type === 'DEPOSIT' 
-                                    ? 'text-orange-700' 
-                                    : (isRefundRequest ? 'text-purple-700' : 'text-blue-700')
-                            }`} />
+            {/* Left Column: Balance & Actions */}
+            <div className="space-y-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                    
+                    <div className="flex items-center justify-between mb-3 relative z-10">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-slate-700/50 rounded-lg">
+                            <WalletIcon className="w-5 h-5 text-emerald-300" />
                         </div>
-                        <div className="flex-1">
-                            <h3 className={`font-bold text-sm ${
-                                tx.type === 'DEPOSIT' 
-                                    ? 'text-orange-900' 
-                                    : (isRefundRequest ? 'text-purple-900' : 'text-blue-900')
-                            }`}>
-                                {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : (isRefundRequest ? 'Обработка возврата' : 'Обработка вывода')}
-                            </h3>
-                            <div className={`text-[10px] mt-0.5 font-bold ${
-                                tx.type === 'DEPOSIT' 
-                                    ? 'text-orange-600/70' 
-                                    : (isRefundRequest ? 'text-purple-600/70' : 'text-blue-600/70')
-                            }`}>
-                                {new Date(tx.date).toLocaleDateString()}
-                            </div>
-                        </div>
-                        <div className={`font-black text-lg ${
-                            tx.type === 'DEPOSIT' 
-                                ? 'text-orange-600' 
-                                : (isRefundRequest ? 'text-purple-600' : 'text-blue-600')
-                        }`}>
-                            {tx.type === 'DEPOSIT' || isRefundRequest ? '+' : '-'}{tx.amount} ®
-                        </div>
+                        <span className="font-medium text-slate-300 text-sm">Мой баланс</span>
                     </div>
-                 </div>
-             )})}
-          </div>
-      )}
-
-      {fullHistory.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <History className="w-5 h-5 text-indigo-500" />
-                    История (3 дня)
-                </h3>
-            </div>
-            
-            <div className="space-y-3">
-                {displayedHistory.map(tx => {
-                    const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств') || tx.type === 'REFUND';
-                    const isDeposit = tx.type === 'DEPOSIT';
-                    const isExpense = tx.type === 'PURCHASE' || tx.type === 'RENT_CHARGE';
-                    const isApproved = tx.status === TransactionStatus.APPROVED;
+                    <span className="text-[10px] font-mono bg-slate-700/50 px-2 py-1 rounded text-emerald-300 font-bold">PAYEER®</span>
+                    </div>
                     
-                    let Icon = ArrowUpRight;
-                    let bgColor = 'bg-gray-100';
-                    let textColor = 'text-gray-500';
-                    let statusText = 'В обработке';
-                    let statusColor = 'text-gray-500';
-                    let titleText = 'Вывод средств';
-                    let amountSign = '-';
+                    <div className="text-4xl font-extrabold mb-6 relative z-10 tracking-tight flex items-baseline gap-1">
+                        {user.balance.toFixed(2)} <span className="text-xl font-normal text-black">®</span>
+                    </div>
 
-                    if (isRefund) {
-                        Icon = RotateCcw;
-                        titleText = 'Возврат средств';
-                        amountSign = '+';
-                        if (isApproved) {
-                            bgColor = 'bg-purple-100';
-                            textColor = 'text-purple-900';
-                            statusText = 'Выполнено';
-                            statusColor = 'text-purple-900';
-                        }
-                    } else if (isDeposit) {
-                        Icon = ArrowDownLeft;
-                        titleText = 'Пополнение';
-                        amountSign = '+';
-                        if (isApproved) {
-                             bgColor = 'bg-green-100';
-                             textColor = 'text-green-600';
-                             statusText = 'Выполнено';
-                             statusColor = 'text-green-600';
-                        } else if (tx.status === TransactionStatus.REJECTED) {
-                             bgColor = 'bg-red-100';
-                             textColor = 'text-red-600';
-                             statusText = 'Отклонено';
-                             statusColor = 'text-red-500';
-                        } else {
-                             bgColor = 'bg-orange-100';
-                             textColor = 'text-orange-600';
-                             statusText = 'В обработке';
-                             statusColor = 'text-orange-500';
-                        }
-                    } else if (isExpense) {
-                        Icon = ShoppingBag;
-                        titleText = tx.type === 'PURCHASE' ? 'Оплата товара' : 'Резерв продукта';
-                        amountSign = '-';
-                        bgColor = 'bg-slate-100';
-                        textColor = 'text-slate-700';
-                        statusText = 'Выполнено';
-                        statusColor = 'text-slate-500';
-                    } else {
-                        // Withdrawal
-                        Icon = ArrowUpRight;
-                        if (isApproved) {
-                            bgColor = 'bg-green-100';
-                            textColor = 'text-green-600';
-                            statusText = 'Выполнено';
-                            statusColor = 'text-green-600';
-                        } else if (tx.status === TransactionStatus.REJECTED) {
-                            bgColor = 'bg-red-100';
-                            textColor = 'text-red-600';
-                            statusText = 'Отклонено';
-                            statusColor = 'text-red-500';
-                        } else {
-                            bgColor = 'bg-blue-50';
-                            textColor = 'text-blue-600';
-                            statusText = 'В обработке';
-                            statusColor = 'text-blue-500';
-                        }
-                    }
-                    
-                    return (
-                    <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-3 last:border-0 last:pb-0 animate-fade-in">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${bgColor} ${textColor}`}>
-                                <Icon className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-sm text-gray-800">
-                                    {titleText}
+                    <div className="flex flex-col gap-3 relative z-10">
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowTopUpModal(true)}
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white h-14 rounded-xl font-extrabold text-base flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-900/20 leading-none text-center"
+                            >
+                                Пополнить
+                            </button>
+                            <button 
+                                onClick={() => setShowWithdrawModal(true)}
+                                className="flex-1 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white h-14 rounded-xl font-extrabold text-base flex items-center justify-center gap-2 transition-colors border border-slate-600 leading-none text-center"
+                            >
+                                Вывести
+                            </button>
+                        </div>
+                        <button 
+                            onClick={() => setShowRefundModal(true)}
+                            className="w-full bg-purple-900 hover:bg-purple-800 active:bg-purple-700 text-purple-100 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-purple-800"
+                        >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            Возврат средств
+                        </button>
+                    </div>
+                </div>
+                </div>
+
+                {pendingTransactions.length > 0 && (
+                    <div className="space-y-3 animate-fade-in">
+                        {pendingTransactions.map(tx => {
+                            const isRefundRequest = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ');
+                            return (
+                            <div key={tx.id} className={`rounded-xl p-4 relative overflow-hidden border ${
+                                tx.type === 'DEPOSIT' 
+                                    ? 'bg-orange-50 border-orange-100' 
+                                    : (isRefundRequest ? 'bg-purple-50 border-purple-100' : 'bg-blue-50 border-blue-100')
+                            }`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-full animate-pulse ${
+                                        tx.type === 'DEPOSIT' 
+                                            ? 'bg-orange-200' 
+                                            : (isRefundRequest ? 'bg-purple-200' : 'bg-blue-200')
+                                    }`}>
+                                        <Clock className={`w-5 h-5 ${
+                                            tx.type === 'DEPOSIT' 
+                                                ? 'text-orange-700' 
+                                                : (isRefundRequest ? 'text-purple-700' : 'text-blue-700')
+                                        }`} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className={`font-bold text-sm ${
+                                            tx.type === 'DEPOSIT' 
+                                                ? 'text-orange-900' 
+                                                : (isRefundRequest ? 'text-purple-900' : 'text-blue-900')
+                                        }`}>
+                                            {tx.type === 'DEPOSIT' ? 'Обработка пополнения' : (isRefundRequest ? 'Обработка возврата' : 'Обработка вывода')}
+                                        </h3>
+                                        <div className={`text-[10px] mt-0.5 font-bold ${
+                                            tx.type === 'DEPOSIT' 
+                                                ? 'text-orange-600/70' 
+                                                : (isRefundRequest ? 'text-purple-600/70' : 'text-blue-600/70')
+                                        }`}>
+                                            {new Date(tx.date).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                    <div className={`font-black text-lg ${
+                                        tx.type === 'DEPOSIT' 
+                                            ? 'text-orange-600' 
+                                            : (isRefundRequest ? 'text-purple-600' : 'text-blue-600')
+                                    }`}>
+                                        {tx.type === 'DEPOSIT' || isRefundRequest ? '+' : '-'}{tx.amount} ®
+                                    </div>
                                 </div>
-                                <div className="text-[10px] text-gray-400 font-medium">{new Date(tx.date).toLocaleString()}</div>
                             </div>
-                        </div>
-                        <div className="text-right">
-                             <div className={`font-bold text-sm ${amountSign === '+' ? 'text-black' : 'text-gray-800'}`}>
-                                 {amountSign}{tx.amount} ®
-                             </div>
-                             <div className={`text-[10px] font-bold uppercase ${statusColor}`}>
-                                 {statusText}
-                             </div>
-                        </div>
+                        )})}
                     </div>
-                )})}
+                )}
             </div>
 
-            {fullHistory.length > 5 && (
-                <button 
-                    onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
-                    className="w-full mt-3 py-1.5 flex items-center justify-center gap-1 text-xs font-bold text-gray-400 hover:text-indigo-600 transition-colors border-t border-gray-100 pt-2"
-                >
-                    {isHistoryExpanded ? (
-                        <>Свернуть <ChevronUp className="w-3 h-3" /></>
-                    ) : (
-                        <>Показать еще ({fullHistory.length - 5}) <ChevronDown className="w-3 h-3" /></>
-                    )}
-                </button>
-            )}
+            {/* Right Column: History */}
+            <div>
+                {fullHistory.length > 0 && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 transition-all duration-300 h-full">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <History className="w-5 h-5 text-indigo-500" />
+                                История (3 дня)
+                            </h3>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {displayedHistory.map(tx => {
+                                const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств') || tx.type === 'REFUND';
+                                const isDeposit = tx.type === 'DEPOSIT';
+                                const isExpense = tx.type === 'PURCHASE' || tx.type === 'RENT_CHARGE';
+                                const isApproved = tx.status === TransactionStatus.APPROVED;
+                                
+                                let Icon = ArrowUpRight;
+                                let bgColor = 'bg-gray-100';
+                                let textColor = 'text-gray-500';
+                                let statusText = 'В обработке';
+                                let statusColor = 'text-gray-500';
+                                let titleText = 'Вывод средств';
+                                let amountSign = '-';
+
+                                if (isRefund) {
+                                    Icon = RotateCcw;
+                                    titleText = 'Возврат средств';
+                                    amountSign = '+';
+                                    if (isApproved) {
+                                        bgColor = 'bg-purple-100';
+                                        textColor = 'text-purple-900';
+                                        statusText = 'Выполнено';
+                                        statusColor = 'text-purple-900';
+                                    }
+                                } else if (isDeposit) {
+                                    Icon = ArrowDownLeft;
+                                    titleText = 'Пополнение';
+                                    amountSign = '+';
+                                    if (isApproved) {
+                                        bgColor = 'bg-green-100';
+                                        textColor = 'text-green-600';
+                                        statusText = 'Выполнено';
+                                        statusColor = 'text-green-600';
+                                    } else if (tx.status === TransactionStatus.REJECTED) {
+                                        bgColor = 'bg-red-100';
+                                        textColor = 'text-red-600';
+                                        statusText = 'Отклонено';
+                                        statusColor = 'text-red-500';
+                                    } else {
+                                        bgColor = 'bg-orange-100';
+                                        textColor = 'text-orange-600';
+                                        statusText = 'В обработке';
+                                        statusColor = 'text-orange-500';
+                                    }
+                                } else if (isExpense) {
+                                    Icon = ShoppingBag;
+                                    titleText = tx.type === 'PURCHASE' ? 'Оплата товара' : 'Резерв продукта';
+                                    amountSign = '-';
+                                    bgColor = 'bg-slate-100';
+                                    textColor = 'text-slate-700';
+                                    statusText = 'Выполнено';
+                                    statusColor = 'text-slate-500';
+                                } else {
+                                    // Withdrawal
+                                    Icon = ArrowUpRight;
+                                    if (isApproved) {
+                                        bgColor = 'bg-green-100';
+                                        textColor = 'text-green-600';
+                                        statusText = 'Выполнено';
+                                        statusColor = 'text-green-600';
+                                    } else if (tx.status === TransactionStatus.REJECTED) {
+                                        bgColor = 'bg-red-100';
+                                        textColor = 'text-red-600';
+                                        statusText = 'Отклонено';
+                                        statusColor = 'text-red-500';
+                                    } else {
+                                        bgColor = 'bg-blue-50';
+                                        textColor = 'text-blue-600';
+                                        statusText = 'В обработке';
+                                        statusColor = 'text-blue-500';
+                                    }
+                                }
+                                
+                                return (
+                                <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-3 last:border-0 last:pb-0 animate-fade-in">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${bgColor} ${textColor}`}>
+                                            <Icon className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-sm text-gray-800">
+                                                {titleText}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 font-medium">{new Date(tx.date).toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className={`font-bold text-sm ${amountSign === '+' ? 'text-black' : 'text-gray-800'}`}>
+                                            {amountSign}{tx.amount} ®
+                                        </div>
+                                        <div className={`text-[10px] font-bold uppercase ${statusColor}`}>
+                                            {statusText}
+                                        </div>
+                                    </div>
+                                </div>
+                            )})}
+                        </div>
+
+                        {fullHistory.length > 5 && (
+                            <button 
+                                onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                                className="w-full mt-3 py-1.5 flex items-center justify-center gap-1 text-xs font-bold text-gray-400 hover:text-indigo-600 transition-colors border-t border-gray-100 pt-2"
+                            >
+                                {isHistoryExpanded ? (
+                                    <>Свернуть <ChevronUp className="w-3 h-3" /></>
+                                ) : (
+                                    <>Показать еще ({fullHistory.length - 5}) <ChevronDown className="w-3 h-3" /></>
+                                )}
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
-      )}
 
       {notification && (
         <div className={`mx-4 mt-4 p-3 rounded-xl flex items-center gap-2 text-sm font-bold animate-fade-in border ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>

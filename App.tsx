@@ -178,10 +178,10 @@ const App: React.FC = () => {
         setNotification({ message: "Вы авторизованы! Добро пожаловать!", type: 'welcome' });
     }
 
-    // Clear after 10 seconds (increased from 4)
+    // Clear after 6 seconds
     setTimeout(() => {
         setNotification(null);
-    }, 10000);
+    }, 6000);
   };
 
   const handleLogout = async () => {
@@ -295,29 +295,28 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* NOTIFICATION BANNER - ENLARGED AND RESTYLED */}
+      {/* NOTIFICATION BANNER - UPDATED: 6 seconds, normal size, straighter */}
       {notification && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-8 py-5 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] border-slate-700 scale-110 ${
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] border-slate-700 ${
             notification.type === 'new' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-emerald-600 text-white'
         }`}>
             {notification.type === 'new' ? (
-                <PartyPopper className="w-8 h-8 animate-bounce" />
+                <PartyPopper className="w-7 h-7 animate-bounce" />
             ) : (
-                <UserCheck className="w-8 h-8" />
+                <UserCheck className="w-7 h-7" />
             )}
             <div className="flex flex-col">
-                <span className="font-extrabold text-lg">{notification.message}</span>
-                {notification.type === 'new' && <span className="text-xs opacity-90 font-bold">Добро пожаловать в PayeerRent</span>}
+                <span className="font-extrabold text-base">{notification.message}</span>
+                {notification.type === 'new' && <span className="text-[10px] opacity-90 font-bold">Добро пожаловать в PayeerRent</span>}
             </div>
         </div>
       )}
 
       {/* Header / Navbar */}
       <header className="glass-header sticky top-0 z-30 transition-all duration-300">
-        {/* Dynamic max-width based on role */}
-        <div className={`${isAdminView ? 'max-w-7xl px-4 sm:px-6' : 'max-w-md px-4'} mx-auto py-3.5 flex justify-between items-center`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-300">
                 <Store className="w-6 h-6" />
@@ -329,9 +328,32 @@ const App: React.FC = () => {
                 </span>
             )}
           </div>
+
+          {/* DESKTOP NAVIGATION FOR CLIENTS */}
+          {!isAdminView && (
+              <nav className="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 backdrop-blur-md">
+                 <button 
+                    onClick={() => setActiveUserTab('market')}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeUserTab === 'market' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                 >
+                    Магазин
+                 </button>
+                 <button 
+                    onClick={() => setActiveUserTab('purchases')}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeUserTab === 'purchases' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                 >
+                    Мои товары
+                 </button>
+                 <button 
+                    onClick={() => setActiveUserTab('wallet')}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeUserTab === 'wallet' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                 >
+                    Кошелек
+                 </button>
+              </nav>
+          )}
           
           <div className="flex items-center gap-2">
-            {/* Settings Button - Top Right, Before Logout */}
             {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && !isAdminView && (
                <button 
                  onClick={() => setIsAdminView(true)}
@@ -342,7 +364,6 @@ const App: React.FC = () => {
                </button>
             )}
             
-            {/* Logout Button - Transparent without text */}
             <button 
               onClick={handleLogout}
               className="p-3 bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95"
@@ -355,7 +376,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content Area - Responsive Container */}
-      <main className={`${isAdminView ? 'max-w-7xl px-4 sm:px-6' : 'max-w-md px-4'} mx-auto py-6 transition-all duration-300`}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 transition-all duration-300">
         {isAdminView ? (
           <AdminDashboard user={user} />
         ) : (
@@ -404,8 +425,8 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            {/* User Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-xl border-t border-white/50 px-6 py-2 flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
+            {/* User Bottom Navigation - HIDDEN ON DESKTOP */}
+            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-xl border-t border-white/50 px-6 py-2 flex justify-between items-center z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
                 {/* MARKET TAB - BLUE */}
                 <button 
                     onClick={() => setActiveUserTab('market')}
