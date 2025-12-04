@@ -5,7 +5,7 @@ import { User } from '../types';
 import { Phone, ShieldCheck, Loader2, Lock, Briefcase } from 'lucide-react';
 
 interface AuthProps {
-  onLogin: (user: User) => void;
+  onLogin: (user: User, isNewUser: boolean) => void;
 }
 
 export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
@@ -45,12 +45,12 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     try {
       if (isAdminMode) {
         // Admin/Manager Login
-        const user = await api.loginAdmin(phone, password);
-        onLogin(user);
+        const { user, isNew } = await api.loginAdmin(phone, password);
+        onLogin(user, isNew);
       } else {
         // User Login/Register - Now accepts password, name defaults to empty string
-        const user = await api.loginOrRegister(phone, password, ''); 
-        onLogin(user);
+        const { user, isNew } = await api.loginOrRegister(phone, password, ''); 
+        onLogin(user, isNew);
       }
     } catch (err: any) {
       setError(err.message || 'Ошибка авторизации');

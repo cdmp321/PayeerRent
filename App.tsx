@@ -7,7 +7,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { api } from './services/api';
 import { supabaseUrl, supabase } from './services/supabase';
 import { User, UserRole } from './types';
-import { LogOut, Settings, Store, AlertTriangle, Database, RefreshCw, Copy, Check, ShoppingBag, Wallet as WalletIcon } from 'lucide-react';
+import { LogOut, Settings, Store, AlertTriangle, Database, RefreshCw, Copy, Check, ShoppingBag, Wallet as WalletIcon, PartyPopper, UserCheck } from 'lucide-react';
 
 const SCHEMA_SQL = `-- НОВАЯ СХЕМА БАЗЫ ДАННЫХ PAYEERRENT
 -- 1. Очистка (Внимание: удалит все данные)
@@ -95,6 +95,9 @@ const App: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [copied, setCopied] = useState(false);
   
+  // Notification State for Login/Register
+  const [notification, setNotification] = useState<{message: string, type: 'new' | 'welcome'} | null>(null);
+  
   // User Navigation State
   const [activeUserTab, setActiveUserTab] = useState<'market' | 'purchases' | 'wallet'>('market');
 
@@ -159,7 +162,7 @@ const App: React.FC = () => {
     initApp();
   }, []);
 
-  const handleLogin = (loggedInUser: User) => {
+  const handleLogin = (loggedInUser: User, isNewUser: boolean) => {
     setUser(loggedInUser);
     setError(null);
     if (loggedInUser.role === UserRole.ADMIN || loggedInUser.role === UserRole.MANAGER) {
@@ -167,12 +170,25 @@ const App: React.FC = () => {
     } else {
         setActiveUserTab('market');
     }
+
+    // Set Welcome Notification
+    if (isNewUser) {
+        setNotification({ message: "Вы новый пользователь!", type: 'new' });
+    } else {
+        setNotification({ message: "Вы авторизованы! Добро пожаловать!", type: 'welcome' });
+    }
+
+    // Clear after 4 seconds
+    setTimeout(() => {
+        setNotification(null);
+    }, 4000);
   };
 
   const handleLogout = async () => {
     await api.logout();
     setUser(null);
     setIsAdminView(false);
+    setNotification(null);
   };
 
   const handleRefresh = useCallback(() => {
@@ -278,6 +294,26 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
+      
+      {/* NOTIFICATION BANNER */}
+      {notification && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border ${
+            notification.type === 'new' 
+                ? 'bg-blue-600 text-white border-blue-500' 
+                : 'bg-emerald-600 text-white border-emerald-500'
+        }`}>
+            {notification.type === 'new' ? (
+                <PartyPopper className="w-6 h-6 animate-bounce" />
+            ) : (
+                <UserCheck className="w-6 h-6" />
+            )}
+            <div className="flex flex-col">
+                <span className="font-extrabold text-sm">{notification.message}</span>
+                {notification.type === 'new' && <span className="text-[10px] opacity-80 font-bold">Добро пожаловать в PayeerRent</span>}
+            </div>
+        </div>
+      )}
+
       {/* Header / Navbar */}
       <header className="glass-header sticky top-0 z-30 transition-all duration-300">
         {/* Dynamic max-width based on role */}

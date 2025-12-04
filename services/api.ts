@@ -61,7 +61,7 @@ const toBase64 = (file: File): Promise<string> => {
 // API Implementation with Supabase
 export const api = {
   // Auth
-  loginOrRegister: async (phone: string, password: string, name: string): Promise<User> => {
+  loginOrRegister: async (phone: string, password: string, name: string): Promise<{user: User, isNew: boolean}> => {
     const cleanPhone = phone.trim();
     const encryptedPhone = encrypt(cleanPhone);
     const hashedPassword = await hashPassword(password.trim()); // Hash input
@@ -102,7 +102,7 @@ export const api = {
            localStorage.setItem('payeer_current_user_id', userClone.id);
            localStorage.setItem('payeer_auth_token', generateToken({ id: userClone.id, role: 'USER' }));
            const mapped = mapUser(userClone);
-           return { ...mapped, role: UserRole.USER };
+           return { user: { ...mapped, role: UserRole.USER }, isNew: false };
       }
 
       // CLIENT LOGIC
@@ -126,7 +126,7 @@ export const api = {
 
       localStorage.setItem('payeer_current_user_id', existingUser.id);
       localStorage.setItem('payeer_auth_token', generateToken({ id: existingUser.id, role: existingUser.role }));
-      return mapUser(existingUser);
+      return { user: mapUser(existingUser), isNew: false };
     }
 
     // NEW USER REGISTRATION
@@ -146,10 +146,10 @@ export const api = {
     
     localStorage.setItem('payeer_current_user_id', newUser.id);
     localStorage.setItem('payeer_auth_token', generateToken({ id: newUser.id, role: 'USER' }));
-    return mapUser(newUser);
+    return { user: mapUser(newUser), isNew: true };
   },
 
-  loginAdmin: async (phone: string, password: string): Promise<User> => {
+  loginAdmin: async (phone: string, password: string): Promise<{user: User, isNew: boolean}> => {
     const cleanPhone = phone.trim();
     const cleanPassword = password.trim();
 
@@ -175,7 +175,7 @@ export const api = {
             const updatedUser = { ...adminUser, phone: newEncPhone, password: newHashedPass };
             localStorage.setItem('payeer_current_user_id', adminUser.id);
             localStorage.setItem('payeer_auth_token', generateToken({ id: adminUser.id, role: 'ADMIN' }));
-            return mapUser(updatedUser);
+            return { user: mapUser(updatedUser), isNew: false };
         }
     }
 
@@ -201,7 +201,7 @@ export const api = {
             const updatedUser = { ...managerUser, phone: newEncPhone, password: newHashedPass };
             localStorage.setItem('payeer_current_user_id', managerUser.id);
             localStorage.setItem('payeer_auth_token', generateToken({ id: managerUser.id, role: 'MANAGER' }));
-            return mapUser(updatedUser);
+            return { user: mapUser(updatedUser), isNew: false };
         }
     }
     // ---------------------------
@@ -238,7 +238,7 @@ export const api = {
 
     localStorage.setItem('payeer_current_user_id', admin.id);
     localStorage.setItem('payeer_auth_token', generateToken({ id: admin.id, role: admin.role }));
-    return mapUser(admin);
+    return { user: mapUser(admin), isNew: false };
   },
 
   isDefaultAdmin: async (): Promise<boolean> => {
