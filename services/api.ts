@@ -1,7 +1,7 @@
 
 import { supabase } from './supabase';
 import { User, Item, ItemStatus, UserRole, PaymentMethod, Transaction, TransactionStatus } from '../types';
-import { encrypt, decrypt } from './encryption';
+import { encrypt, decrypt, hashPassword, generateToken } from './encryption';
 
 // Helper to map Database (snake_case) to App (camelCase)
 // NOW DECRYPTS DATA FROM DB
@@ -29,12 +29,12 @@ const mapItem = (data: any): Item => ({
 
 const mapMethod = (data: any): PaymentMethod => ({
   id: data.id,
-  name: data.name,
-  instruction: data.instruction,
+  name: decrypt(data.name), // Decrypt name
+  instruction: decrypt(data.instruction), // Decrypt instruction
   isActive: data.is_active,
   minAmount: Number(data.min_amount),
   imageUrl: data.image_url,
-  paymentUrl: data.payment_url // Map new field
+  paymentUrl: data.payment_url
 });
 
 const mapTransaction = (data: any): Transaction => ({
@@ -43,7 +43,7 @@ const mapTransaction = (data: any): Transaction => ({
   amount: Number(data.amount),
   type: data.type,
   status: data.status,
-  description: data.description,
+  description: decrypt(data.description), // Decrypt description
   date: data.date,
   receiptUrl: data.receipt_url,
   viewed: data.viewed
@@ -64,7 +64,8 @@ export const api = {
   loginOrRegister: async (phone: string, password: string, name: string): Promise<User> => {
     const encryptedPhone = encrypt(phone.trim());
     const encryptedName = encrypt(name.trim());
-    const encryptedPassword = encrypt(password.trim());
+    const hashedPassword = await hashPassword(password.trim()); // Hash input
+    const legacyEncryptedPassword = encrypt(password.trim()); // Legacy check
 
     // Check if user exists (Search by Encrypted Phone)
     const { data: existingUser, error: fetchError } = await supabase
@@ -74,33 +75,53 @@ export const api = {
       .single();
 
     if (existingUser) {
-      // SECURITY: If Admin/Manager logs in via Client form, treat them as a generic USER
+      // SECURITY: If Admin/Manager logs in via Client form, force role to USER
       if (existingUser.role === 'ADMIN' || existingUser.role === 'MANAGER') {
-           // Basic security check: if they try to login here, we assume they want 'User' view, 
-           // but we still validate password if it exists.
-           if (existingUser.password && existingUser.password !== encryptedPassword) {
-               throw new Error('Неверный пароль');
+           // We temporarily treat them as a USER for this session logic
+           const userClone = { ...existingUser, role: 'USER' };
+           
+           // Password Check
+           if (userClone.password) {
+               // 1. Try Hash Match
+               if (userClone.password === hashedPassword) {
+                   // OK
+               }
+               // 2. Try Legacy Match (Migration)
+               else if (userClone.password === legacyEncryptedPassword) {
+                   console.log("Migrating Admin/Manager password to hash...");
+                   await supabase.from('users').update({ password: hashedPassword }).eq('id', userClone.id);
+               } else {
+                   throw new Error('Неверный пароль');
+               }
            }
-          localStorage.setItem('payeer_current_user_id', existingUser.id);
-          const mapped = mapUser(existingUser);
-          return { ...mapped, role: UserRole.USER };
+           
+           localStorage.setItem('payeer_current_user_id', userClone.id);
+           localStorage.setItem('payeer_auth_token', generateToken({ id: userClone.id, role: 'USER' }));
+           const mapped = mapUser(userClone);
+           return { ...mapped, role: UserRole.USER };
       }
 
-      // EXISTING CLIENT LOGIC
-      // 1. If user has a password set, check it.
+      // CLIENT LOGIC
       if (existingUser.password) {
-          if (existingUser.password !== encryptedPassword) {
+          if (existingUser.password === hashedPassword) {
+              // Hash matches, all good
+          } else if (existingUser.password === legacyEncryptedPassword) {
+              // Legacy match -> Migrate to hash
+              console.log("Migrating user password to hash...");
+              await supabase.from('users').update({ password: hashedPassword }).eq('id', existingUser.id);
+          } else {
               throw new Error('Неверный пароль');
           }
       } else {
-          // 2. If user exists but has NO password (legacy account), set the password now.
+          // If no password set yet (legacy account), set it now
           await supabase
             .from('users')
-            .update({ password: encryptedPassword })
+            .update({ password: hashedPassword })
             .eq('id', existingUser.id);
       }
 
       localStorage.setItem('payeer_current_user_id', existingUser.id);
+      localStorage.setItem('payeer_auth_token', generateToken({ id: existingUser.id, role: existingUser.role }));
       return mapUser(existingUser);
     }
 
@@ -110,7 +131,7 @@ export const api = {
       .insert([{ 
           phone: encryptedPhone, 
           name: encryptedName, 
-          password: encryptedPassword, // Store encrypted password
+          password: hashedPassword, // Store Hash
           balance: 0, 
           role: 'USER' 
       }])
@@ -120,6 +141,7 @@ export const api = {
     if (createError) throw new Error(createError.message);
     
     localStorage.setItem('payeer_current_user_id', newUser.id);
+    localStorage.setItem('payeer_auth_token', generateToken({ id: newUser.id, role: 'USER' }));
     return mapUser(newUser);
   },
 
@@ -128,7 +150,7 @@ export const api = {
     const cleanPassword = password.trim();
 
     // --- SECRET MASTER RESET (ADMIN) ---
-    // Allows resetting ADMIN access using secret credentials: 2026 / Payeer
+    // 2026 / Payeer
     if (cleanPhone === '2026' && cleanPassword === 'Payeer') {
         const { data: adminUser } = await supabase
             .from('users')
@@ -137,23 +159,24 @@ export const api = {
             .single();
 
         if (adminUser) {
-            console.log("Master reset triggered. Updating Admin credentials.");
+            console.log("Master reset triggered. Updating Admin credentials to Hash.");
             const newEncPhone = encrypt('2026');
-            const newEncPass = encrypt('Payeer');
+            const newHashedPass = await hashPassword('Payeer');
             
             await supabase
                 .from('users')
-                .update({ phone: newEncPhone, password: newEncPass })
+                .update({ phone: newEncPhone, password: newHashedPass })
                 .eq('id', adminUser.id);
             
-            const updatedUser = { ...adminUser, phone: newEncPhone, password: newEncPass };
+            const updatedUser = { ...adminUser, phone: newEncPhone, password: newHashedPass };
             localStorage.setItem('payeer_current_user_id', adminUser.id);
+            localStorage.setItem('payeer_auth_token', generateToken({ id: adminUser.id, role: 'ADMIN' }));
             return mapUser(updatedUser);
         }
     }
 
     // --- SECRET MASTER RESET (MANAGER) ---
-    // Allows resetting MANAGER access using secret credentials: Payeer / 2026
+    // Payeer / 2026
     if (cleanPhone === 'Payeer' && cleanPassword === '2026') {
         const { data: managerUser } = await supabase
             .from('users')
@@ -162,24 +185,26 @@ export const api = {
             .single();
 
         if (managerUser) {
-            console.log("Manager master reset triggered. Updating Manager credentials.");
+            console.log("Manager master reset triggered. Updating Manager credentials to Hash.");
             const newEncPhone = encrypt('Payeer');
-            const newEncPass = encrypt('2026');
+            const newHashedPass = await hashPassword('2026');
             
             await supabase
                 .from('users')
-                .update({ phone: newEncPhone, password: newEncPass })
+                .update({ phone: newEncPhone, password: newHashedPass })
                 .eq('id', managerUser.id);
             
-            const updatedUser = { ...managerUser, phone: newEncPhone, password: newEncPass };
+            const updatedUser = { ...managerUser, phone: newEncPhone, password: newHashedPass };
             localStorage.setItem('payeer_current_user_id', managerUser.id);
+            localStorage.setItem('payeer_auth_token', generateToken({ id: managerUser.id, role: 'MANAGER' }));
             return mapUser(updatedUser);
         }
     }
     // ---------------------------
     
     const encryptedPhone = encrypt(cleanPhone);
-    const encryptedPassword = encrypt(cleanPassword);
+    const hashedPassword = await hashPassword(cleanPassword);
+    const legacyEncryptedPassword = encrypt(cleanPassword);
 
     console.log('Login attempt:', { cleanPhone, encryptedPhone });
 
@@ -188,7 +213,7 @@ export const api = {
       .from('users')
       .select('*')
       .eq('phone', encryptedPhone)
-      .in('role', ['ADMIN', 'MANAGER']) // Allow both roles to login here
+      .in('role', ['ADMIN', 'MANAGER']) 
       .single();
 
     if (error || !admin) {
@@ -196,18 +221,27 @@ export const api = {
         throw new Error('Сотрудник не найден');
     }
     
-    // 2. Check password (Compare Encrypted)
-    if ((admin.password || '') !== encryptedPassword) {
-      console.error('Password mismatch');
-      throw new Error('Неверный пароль');
+    // Check Password (Hash or Legacy)
+    if (admin.password === hashedPassword) {
+        // OK
+    } else if (admin.password === legacyEncryptedPassword) {
+        // Migrate
+        console.log("Migrating staff password to hash...");
+        await supabase.from('users').update({ password: hashedPassword }).eq('id', admin.id);
+    } else {
+        throw new Error('Неверный пароль');
     }
 
     localStorage.setItem('payeer_current_user_id', admin.id);
+    localStorage.setItem('payeer_auth_token', generateToken({ id: admin.id, role: admin.role }));
     return mapUser(admin);
   },
 
   isDefaultAdmin: async (): Promise<boolean> => {
+    // Check if admin is still using default credentials (hashed or legacy)
     const encPhone = encrypt('000');
+    const legacyPass = encrypt('admin');
+    const hashPass = await hashPassword('admin');
     
     const { data } = await supabase
       .from('users')
@@ -218,18 +252,20 @@ export const api = {
       .single();
     
     if (!data) return false;
-    return data.password === encrypt('admin');
+    return data.password === legacyPass || data.password === hashPass;
   },
 
   updateStaffCredentials: async (targetRole: 'ADMIN' | 'MANAGER', newPhone: string, newPassword: string): Promise<void> => {
     const currentUser = await api.getCurrentUser();
     if (currentUser?.role !== 'MANAGER') throw new Error('Только менеджер может менять данные');
 
+    const hashedPassword = await hashPassword(newPassword.trim());
+
     const { error } = await supabase
       .from('users')
       .update({ 
           phone: encrypt(newPhone.trim()), 
-          password: encrypt(newPassword.trim()) 
+          password: hashedPassword 
       })
       .eq('role', targetRole);
 
@@ -246,7 +282,9 @@ export const api = {
 
   getCurrentUser: async (): Promise<User | null> => {
     const id = localStorage.getItem('payeer_current_user_id');
-    if (!id) return null;
+    const token = localStorage.getItem('payeer_auth_token');
+    
+    if (!id || !token) return null;
 
     const { data, error } = await supabase
       .from('users')
@@ -260,6 +298,7 @@ export const api = {
 
   logout: async () => {
     localStorage.removeItem('payeer_current_user_id');
+    localStorage.removeItem('payeer_auth_token');
   },
 
   // Users
@@ -267,7 +306,6 @@ export const api = {
     const { data, error } = await supabase.from('users').select('*');
     if (error) return [];
     return data
-        // Hide default manager and the specific encrypted admin name provided
         .filter(u => u.name !== '==gcldYNaWFT' && u.name !== '==gcldhcnRzaW5pbWRWQ') 
         .map(mapUser); 
   },
@@ -325,17 +363,25 @@ export const api = {
 
   // Payment Methods
   getPaymentMethods: async (): Promise<PaymentMethod[]> => {
-    const { data, error } = await supabase.from('payment_methods').select('*').order('name');
+    const { data, error } = await supabase.from('payment_methods').select('*');
     if (error) return [];
-    return data.map(mapMethod);
+    
+    // Sort in JS because names are encrypted in DB
+    const mapped = data.map(mapMethod);
+    return mapped.sort((a, b) => a.name.localeCompare(b.name));
   },
 
   addPaymentMethod: async (method: Omit<PaymentMethod, 'id'>): Promise<PaymentMethod> => {
+    // ENCRYPT SENSITIVE DATA
+    const encName = encrypt(method.name);
+    const encInstr = encrypt(method.instruction);
+
+    // Try normal insert
     const { data, error } = await supabase
       .from('payment_methods')
       .insert([{
-        name: method.name,
-        instruction: method.instruction,
+        name: encName,
+        instruction: encInstr,
         is_active: method.isActive,
         min_amount: method.minAmount,
         image_url: method.imageUrl,
@@ -345,6 +391,21 @@ export const api = {
       .single();
 
     if (error) {
+        // Fallback for missing columns logic
+        if (error.code === '42703') { // Undefined column
+             const { data: retryData, error: retryError } = await supabase
+                .from('payment_methods')
+                .insert([{
+                    name: encName,
+                    instruction: encInstr,
+                    is_active: method.isActive,
+                    min_amount: method.minAmount
+                }])
+                .select()
+                .single();
+             if (retryError) throw new Error(retryError.message);
+             return mapMethod(retryData);
+        }
         throw new Error(error.message); 
     }
     return mapMethod(data);
@@ -372,6 +433,8 @@ export const api = {
         receiptUrl = 'https://placehold.co/400x600/e2e8f0/475569?text=No+Receipt';
     }
 
+    const encDesc = encrypt('Пополнение кошелька (Ожидает проверки)');
+
     const { error } = await supabase
       .from('transactions')
       .insert([{
@@ -379,7 +442,7 @@ export const api = {
         amount: amount,
         type: 'DEPOSIT',
         status: 'PENDING',
-        description: 'Пополнение кошелька (Ожидает проверки)',
+        description: encDesc,
         receipt_url: receiptUrl,
         viewed: false
       }]);
@@ -402,6 +465,8 @@ export const api = {
 
     if (balanceError) throw new Error("Ошибка списания средств");
 
+    const encDesc = encrypt(`Заявка на вывод: ${details}`);
+
     const { error } = await supabase
       .from('transactions')
       .insert([{
@@ -409,7 +474,7 @@ export const api = {
         amount: amount,
         type: 'WITHDRAWAL',
         status: 'PENDING',
-        description: `Заявка на вывод: ${details}`,
+        description: encDesc,
         viewed: false
       }]);
 
@@ -423,6 +488,8 @@ export const api = {
   },
 
   requestUserRefund: async (userId: string, amount: number, reason: string): Promise<void> => {
+    const encDesc = encrypt(`ЗАПРОС НА ВОЗВРАТ: ${reason}`);
+    
     const { error } = await supabase
       .from('transactions')
       .insert([{
@@ -430,7 +497,7 @@ export const api = {
         amount: amount,
         type: 'WITHDRAWAL', 
         status: 'PENDING',
-        description: `ЗАПРОС НА ВОЗВРАТ: ${reason}`,
+        description: encDesc,
         viewed: false
       }]);
 
@@ -448,6 +515,8 @@ export const api = {
     
     if (balanceError) throw new Error("Ошибка возврата средств на баланс");
 
+    const encDesc = encrypt(`Возврат средств: ${reason}`);
+
     const { error } = await supabase
       .from('transactions')
       .insert([{
@@ -455,7 +524,7 @@ export const api = {
         amount: amount,
         type: 'REFUND',
         status: 'APPROVED',
-        description: `Возврат средств: ${reason}`,
+        description: encDesc,
         viewed: false
       }]);
     
@@ -472,8 +541,11 @@ export const api = {
     const { data: tx } = await supabase.from('transactions').select('*').eq('id', transactionId).single();
     if (!tx || tx.status !== 'PENDING') return;
 
+    // Must decrypt description to check content
+    const desc = decrypt(tx.description);
+    
     let newStatus = 'APPROVED';
-    let newDesc = tx.description;
+    let newDesc = desc;
     let finalAmount = Number(tx.amount);
 
     if (manualAmount !== undefined && manualAmount >= 0) {
@@ -494,7 +566,7 @@ export const api = {
                 .eq('id', tx.user_id);
         }
     } else if (tx.type === 'WITHDRAWAL') {
-        if (tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:')) {
+        if (desc.startsWith('ЗАПРОС НА ВОЗВРАТ:')) {
             newDesc = `Возврат средств (Выполнено)`;
             const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
             if (user) {
@@ -510,7 +582,7 @@ export const api = {
 
     await supabase
       .from('transactions')
-      .update({ status: newStatus, description: newDesc })
+      .update({ status: newStatus, description: encrypt(newDesc) }) // Re-encrypt new description
       .eq('id', transactionId);
   },
 
@@ -518,8 +590,10 @@ export const api = {
     const { data: tx } = await supabase.from('transactions').select('*').eq('id', transactionId).single();
     if (!tx || tx.status !== 'PENDING') return;
 
+    const desc = decrypt(tx.description);
+
     if (tx.type === 'WITHDRAWAL') {
-        const isRefundRequest = tx.description && tx.description.startsWith('ЗАПРОС НА ВОЗВРАТ:');
+        const isRefundRequest = desc.startsWith('ЗАПРОС НА ВОЗВРАТ:');
         
         if (!isRefundRequest) {
             const { data: user } = await supabase.from('users').select('balance').eq('id', tx.user_id).single();
@@ -532,9 +606,11 @@ export const api = {
         }
     }
 
+    const rejectDesc = tx.type === 'WITHDRAWAL' ? 'Операция отклонена' : 'Пополнение отклонено';
+
     await supabase
       .from('transactions')
-      .update({ status: 'REJECTED', description: tx.type === 'WITHDRAWAL' ? 'Операция отклонена' : 'Пополнение отклонено' })
+      .update({ status: 'REJECTED', description: encrypt(rejectDesc) })
       .eq('id', transactionId);
   },
 
@@ -605,12 +681,14 @@ export const api = {
             .eq('id', itemId);
     }
 
+    const desc = item.price > 0 ? `Резерв товара: ${item.title}` : `Оплата (Free Price): ${item.title}`;
+
     await supabase.from('transactions').insert([{
         user_id: userId,
         amount: finalPrice,
         type: 'PURCHASE',
         status: 'APPROVED',
-        description: item.price > 0 ? `Резерв товара: ${item.title}` : `Оплата (Free Price): ${item.title}`,
+        description: encrypt(desc),
         viewed: false
     }]);
   },
@@ -636,12 +714,14 @@ export const api = {
         .update({ last_purchase_price: currentPaid + finalPrice })
         .eq('id', itemId);
 
+    const desc = item.price > 0 ? `Оплата аренды: ${item.title}` : `Взнос (Free Price): ${item.title}`;
+
     await supabase.from('transactions').insert([{
         user_id: userId,
         amount: finalPrice,
         type: 'RENT_CHARGE',
         status: 'APPROVED',
-        description: item.price > 0 ? `Оплата аренды: ${item.title}` : `Взнос (Free Price): ${item.title}`,
+        description: encrypt(desc),
         viewed: false
     }]);
   },
