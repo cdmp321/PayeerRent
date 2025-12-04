@@ -124,7 +124,7 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 inputMode={isAdminMode ? "text" : "numeric"}
                 value={phone}
                 onChange={handlePhoneChange}
-                placeholder={isAdminMode ? "Логин сотрудника" : "Номер телефона (11 цифр)"}
+                placeholder={isAdminMode ? "Логин сотрудника" : "Номер телефона"}
                 maxLength={isAdminMode ? 50 : 11}
                 className="peer w-full pl-14 pr-4 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold text-lg text-slate-800 placeholder-slate-400 shadow-inner focus:shadow-lg focus:shadow-indigo-100"
                 required
