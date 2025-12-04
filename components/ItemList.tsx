@@ -140,6 +140,8 @@ export const ItemList: React.FC<ItemListProps> = ({ user, refreshTrigger, onRent
   };
 
   const handleUnreserve = async (item: Item) => {
+    if (!window.confirm('Вы действительно хотите вернуть этот товар в магазин?')) return;
+    
     try {
       await api.cancelReservation(item.id);
       onRentAction();

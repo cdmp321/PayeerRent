@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { PaymentMethod, User, Transaction, TransactionStatus } from '../types';
-import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink, Link } from 'lucide-react';
+import { Wallet as WalletIcon, AlertCircle, CheckCircle2, X, Upload, Clock, RotateCcw, History, ArrowUpRight, Banknote, Copy, Check, ChevronUp, ChevronDown, CreditCard, Bitcoin, ExternalLink, Link, ArrowDownLeft, ShoppingBag } from 'lucide-react';
 
 interface WalletProps {
   user: User;
@@ -278,14 +278,21 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-  const fullWithdrawalHistory = transactions.filter(t => 
-      t.type === 'WITHDRAWAL' && 
-      new Date(t.date) >= threeDaysAgo
-  );
+  const fullHistory = transactions.filter(t => {
+      const isRecent = new Date(t.date) >= threeDaysAgo;
+      // Include DEPOSIT, WITHDRAWAL, PURCHASE, RENT_CHARGE
+      return isRecent && (
+          t.type === 'WITHDRAWAL' || 
+          t.type === 'DEPOSIT' || 
+          t.type === 'PURCHASE' || 
+          t.type === 'RENT_CHARGE' ||
+          t.type === 'REFUND'
+      );
+  });
 
   const displayedHistory = isHistoryExpanded 
-      ? fullWithdrawalHistory 
-      : fullWithdrawalHistory.slice(0, 5);
+      ? fullHistory 
+      : fullHistory.slice(0, 5);
 
   return (
     <div className="space-y-4 pb-36">
@@ -384,7 +391,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
           </div>
       )}
 
-      {fullWithdrawalHistory.length > 0 && (
+      {fullHistory.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -395,49 +402,104 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
             
             <div className="space-y-3">
                 {displayedHistory.map(tx => {
-                    const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств');
+                    const isRefund = tx.description?.includes('ЗАПРОС НА ВОЗВРАТ') || tx.description?.includes('Возврат средств') || tx.type === 'REFUND';
+                    const isDeposit = tx.type === 'DEPOSIT';
+                    const isExpense = tx.type === 'PURCHASE' || tx.type === 'RENT_CHARGE';
                     const isApproved = tx.status === TransactionStatus.APPROVED;
+                    
+                    let Icon = ArrowUpRight;
+                    let bgColor = 'bg-gray-100';
+                    let textColor = 'text-gray-500';
+                    let statusText = 'В обработке';
+                    let statusColor = 'text-gray-500';
+                    let titleText = 'Вывод средств';
+                    let amountSign = '-';
+
+                    if (isRefund) {
+                        Icon = RotateCcw;
+                        titleText = 'Возврат средств';
+                        amountSign = '+';
+                        if (isApproved) {
+                            bgColor = 'bg-purple-100';
+                            textColor = 'text-purple-900';
+                            statusText = 'Выполнено';
+                            statusColor = 'text-purple-900';
+                        }
+                    } else if (isDeposit) {
+                        Icon = ArrowDownLeft;
+                        titleText = 'Пополнение';
+                        amountSign = '+';
+                        if (isApproved) {
+                             bgColor = 'bg-green-100';
+                             textColor = 'text-green-600';
+                             statusText = 'Выполнено';
+                             statusColor = 'text-green-600';
+                        } else if (tx.status === TransactionStatus.REJECTED) {
+                             bgColor = 'bg-red-100';
+                             textColor = 'text-red-600';
+                             statusText = 'Отклонено';
+                             statusColor = 'text-red-500';
+                        } else {
+                             bgColor = 'bg-orange-100';
+                             textColor = 'text-orange-600';
+                             statusText = 'В обработке';
+                             statusColor = 'text-orange-500';
+                        }
+                    } else if (isExpense) {
+                        Icon = ShoppingBag;
+                        titleText = tx.type === 'PURCHASE' ? 'Оплата товара' : 'Аренда';
+                        amountSign = '-';
+                        bgColor = 'bg-slate-100';
+                        textColor = 'text-slate-700';
+                        statusText = 'Выполнено';
+                        statusColor = 'text-slate-500';
+                    } else {
+                        // Withdrawal
+                        Icon = ArrowUpRight;
+                        if (isApproved) {
+                            bgColor = 'bg-green-100';
+                            textColor = 'text-green-600';
+                            statusText = 'Выполнено';
+                            statusColor = 'text-green-600';
+                        } else if (tx.status === TransactionStatus.REJECTED) {
+                            bgColor = 'bg-red-100';
+                            textColor = 'text-red-600';
+                            statusText = 'Отклонено';
+                            statusColor = 'text-red-500';
+                        } else {
+                            bgColor = 'bg-blue-50';
+                            textColor = 'text-blue-600';
+                            statusText = 'В обработке';
+                            statusColor = 'text-blue-500';
+                        }
+                    }
                     
                     return (
                     <div key={tx.id} className="flex justify-between items-center border-b border-gray-50 pb-3 last:border-0 last:pb-0 animate-fade-in">
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${
-                                isRefund && isApproved ? 'bg-purple-100 text-purple-900' :
-                                tx.status === TransactionStatus.APPROVED ? 'bg-green-100 text-green-600' :
-                                tx.status === TransactionStatus.REJECTED ? 'bg-red-100 text-red-600' :
-                                'bg-gray-100 text-gray-500'
-                            }`}>
-                                {isRefund ? <RotateCcw className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                            <div className={`p-2 rounded-lg ${bgColor} ${textColor}`}>
+                                <Icon className="w-4 h-4" />
                             </div>
                             <div>
                                 <div className="font-bold text-sm text-gray-800">
-                                    {isRefund ? 'Возврат средств' : 'Вывод средств'}
+                                    {titleText}
                                 </div>
                                 <div className="text-[10px] text-gray-400 font-medium">{new Date(tx.date).toLocaleString()}</div>
-                                {tx.status === TransactionStatus.REJECTED && (
-                                    <div className="text-[10px] text-red-500 mt-0.5 font-bold">Отклонено</div>
-                                )}
                             </div>
                         </div>
                         <div className="text-right">
-                             <div className={`font-bold text-sm ${isRefund ? 'text-black' : 'text-gray-800'}`}>
-                                 {isRefund ? '+' : '-'}{tx.amount} ®
+                             <div className={`font-bold text-sm ${amountSign === '+' ? 'text-black' : 'text-gray-800'}`}>
+                                 {amountSign}{tx.amount} ®
                              </div>
-                             <div className={`text-[10px] font-bold uppercase ${
-                                 isRefund && isApproved ? 'text-purple-900' :
-                                 tx.status === TransactionStatus.APPROVED ? 'text-green-600' :
-                                 tx.status === TransactionStatus.REJECTED ? 'text-red-500' :
-                                 'text-orange-500'
-                             }`}>
-                                 {tx.status === TransactionStatus.APPROVED ? 'Выполнено' : 
-                                  tx.status === TransactionStatus.REJECTED ? 'Отклонено' : 'В обработке'}
+                             <div className={`text-[10px] font-bold uppercase ${statusColor}`}>
+                                 {statusText}
                              </div>
                         </div>
                     </div>
                 )})}
             </div>
 
-            {fullWithdrawalHistory.length > 5 && (
+            {fullHistory.length > 5 && (
                 <button 
                     onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
                     className="w-full mt-3 py-1.5 flex items-center justify-center gap-1 text-xs font-bold text-gray-400 hover:text-indigo-600 transition-colors border-t border-gray-100 pt-2"
@@ -445,7 +507,7 @@ export const Wallet: React.FC<WalletProps> = ({ user, onUpdateUser }) => {
                     {isHistoryExpanded ? (
                         <>Свернуть <ChevronUp className="w-3 h-3" /></>
                     ) : (
-                        <>Показать еще ({fullWithdrawalHistory.length - 5}) <ChevronDown className="w-3 h-3" /></>
+                        <>Показать еще ({fullHistory.length - 5}) <ChevronDown className="w-3 h-3" /></>
                     )}
                 </button>
             )}
