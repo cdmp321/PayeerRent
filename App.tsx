@@ -295,12 +295,12 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* NOTIFICATION BANNER - UPDATED: 6 seconds, normal size, straighter */}
+      {/* NOTIFICATION BANNER - UPDATED: Transparent (Glassmorphic) & Scaled Down 10% */}
       {notification && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] border-slate-700 ${
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] border-slate-700/50 backdrop-blur-md scale-90 ${
             notification.type === 'new' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-emerald-600 text-white'
+                ? 'bg-blue-600/85 text-white' 
+                : 'bg-emerald-600/85 text-white'
         }`}>
             {notification.type === 'new' ? (
                 <PartyPopper className="w-7 h-7 animate-bounce" />
