@@ -82,7 +82,7 @@ create policy "Public access payment_methods" on public.payment_methods for all 
 insert into public.users (phone, name, password, role, balance)
 values ('wADM', '==gcldhcnRzaW5pbWRWQ', '=4mWdaY', 'ADMIN', 0);
 
--- Manager (001 / manager) -> xADM / ==gcldYNaWb
+-- Manager (001 / manager) -> xADM / ==gcldYNaWFT
 insert into public.users (phone, name, password, role, balance)
 values ('xADM', '==gcldYNaWFT', '==gcldYNaWb', 'MANAGER', 0);
 `;
@@ -295,21 +295,21 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* NOTIFICATION BANNER - UPDATED: Transparent (Glassmorphic) & Scaled Down 10% */}
+      {/* NOTIFICATION BANNER - UPDATED: Transparent (Glassmorphic) & Scaled Down & Black Text */}
       {notification && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] border-slate-700/50 backdrop-blur-md scale-90 ${
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] backdrop-blur-xl scale-90 ${
             notification.type === 'new' 
-                ? 'bg-blue-600/85 text-white' 
-                : 'bg-emerald-600/85 text-white'
+                ? 'bg-blue-100/60 border-blue-200/50 text-slate-900' 
+                : 'bg-emerald-100/60 border-emerald-200/50 text-slate-900'
         }`}>
             {notification.type === 'new' ? (
-                <PartyPopper className="w-7 h-7 animate-bounce" />
+                <PartyPopper className="w-7 h-7 animate-bounce text-blue-600" />
             ) : (
-                <UserCheck className="w-7 h-7" />
+                <UserCheck className="w-7 h-7 text-emerald-600" />
             )}
             <div className="flex flex-col">
                 <span className="font-extrabold text-base">{notification.message}</span>
-                {notification.type === 'new' && <span className="text-[10px] opacity-90 font-bold">Добро пожаловать в PayeerRent</span>}
+                {notification.type === 'new' && <span className="text-[10px] opacity-90 font-bold text-slate-600">Добро пожаловать в PayeerRent</span>}
             </div>
         </div>
       )}
