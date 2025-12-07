@@ -150,6 +150,8 @@ const App: React.FC = () => {
             setUser(u);
             if (u?.role === UserRole.ADMIN || u?.role === UserRole.MANAGER) {
                 setIsAdminView(true);
+            } else {
+                setIsAdminView(false); // Strict: Ensure USER is never in admin view
             }
         } catch (err: any) {
             console.error("Failed to initialize:", err);
@@ -168,6 +170,7 @@ const App: React.FC = () => {
     if (loggedInUser.role === UserRole.ADMIN || loggedInUser.role === UserRole.MANAGER) {
       setIsAdminView(true);
     } else {
+        setIsAdminView(false);
         setActiveUserTab('market');
     }
 
@@ -292,10 +295,14 @@ const App: React.FC = () => {
     return <Auth onLogin={handleLogin} />;
   }
 
+  // STRICT SECURITY CHECK
+  // Prevent regular users from rendering the dashboard component at all
+  const canAccessAdmin = isAdminView && (user.role === UserRole.ADMIN || user.role === UserRole.MANAGER);
+
   return (
     <div className="min-h-screen bg-transparent pb-10 selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* NOTIFICATION BANNER - UPDATED: Transparent (Glassmorphic) & Scaled Down & Black Text */}
+      {/* NOTIFICATION BANNER */}
       {notification && (
         <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-4 animate-slide-up border-[3px] backdrop-blur-xl scale-90 ${
             notification.type === 'new' 
@@ -322,7 +329,7 @@ const App: React.FC = () => {
                 <Store className="w-6 h-6" />
             </div>
             <h1 className="font-extrabold text-xl text-slate-800 tracking-tight">PayeerRent</h1>
-            {isAdminView && (
+            {canAccessAdmin && (
                 <span className={`text-white text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ml-1 ${user.role === UserRole.MANAGER ? 'bg-purple-600' : 'bg-slate-800'}`}>
                     {user.role === UserRole.MANAGER ? 'Manager' : 'Admin'}
                 </span>
@@ -330,7 +337,7 @@ const App: React.FC = () => {
           </div>
 
           {/* DESKTOP NAVIGATION FOR CLIENTS */}
-          {!isAdminView && (
+          {!canAccessAdmin && (
               <nav className="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 backdrop-blur-md">
                  <button 
                     onClick={() => setActiveUserTab('market')}
@@ -354,7 +361,7 @@ const App: React.FC = () => {
           )}
           
           <div className="flex items-center gap-2">
-            {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && !isAdminView && (
+            {(user.role === UserRole.ADMIN || user.role === UserRole.MANAGER) && !canAccessAdmin && (
                <button 
                  onClick={() => setIsAdminView(true)}
                  className="p-2.5 rounded-full transition-all duration-200 flex items-center gap-2 hover:bg-slate-100 text-slate-500 hover:text-indigo-600"
@@ -377,7 +384,7 @@ const App: React.FC = () => {
 
       {/* Main Content Area - Responsive Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 transition-all duration-300">
-        {isAdminView ? (
+        {canAccessAdmin ? (
           <AdminDashboard user={user} />
         ) : (
           <>

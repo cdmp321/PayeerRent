@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { supabase } from '../services/supabase'; // Import supabase for Realtime
@@ -372,13 +373,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const deleteMethod = async (id: string, e: React.MouseEvent) => { e.stopPropagation(); if (!window.confirm('Удалить метод?')) return; await api.deletePaymentMethod(id); await refreshAll(); };
   
-  const handleApproveTx = async (id: string, isRefundRequest: boolean) => { 
+  const handleApproveTx = async (id: string, isRefundRequest: boolean, type: string) => { 
+      if (processingTxId === id) return; // Prevent double clicks
+
       if (isRefundRequest) {
           // Open Modal for manual amount entry
           setApproveRefundModalTxId(id);
           setApproveRefundAmount('');
       } else {
-          // Standard approval
+          // Standard approval - MANDATORY CONFIRMATION
+          const actionName = type === 'DEPOSIT' ? 'пополнение' : 'вывод';
+          if (!window.confirm(`Подтвердить ${actionName}?`)) return;
+
           setProcessingTxId(id); 
           try { 
               await api.approveTransaction(id); 
@@ -644,6 +650,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                      const isWithdrawal = tx.type === 'WITHDRAWAL';
                      const isRefundRequest = tx.description.startsWith('ЗАПРОС');
                      const isLinkPayment = tx.receiptUrl === 'LINK_PAYMENT_SPB';
+                     const isProcessingThis = processingTxId === tx.id;
 
                      return (
                         <div key={tx.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-6 relative overflow-hidden">
@@ -676,8 +683,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                                 )}
                             </div>
                             <div className="flex flex-row sm:flex-col gap-2 justify-center border-t sm:border-t-0 sm:border-l border-gray-100 pt-4 sm:pt-0 sm:pl-6">
-                                <button onClick={() => handleApproveTx(tx.id, isRefundRequest)} className="bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg shadow-emerald-200"><Check className="w-5 h-5" /></button>
-                                <button onClick={() => handleRejectTx(tx.id)} className="bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 p-3 rounded-xl"><X className="w-5 h-5" /></button>
+                                <button 
+                                    disabled={isProcessingThis}
+                                    onClick={() => handleApproveTx(tx.id, isRefundRequest, tx.type)} 
+                                    className={`p-3 rounded-xl shadow-lg transition-all ${isProcessingThis ? 'bg-gray-300 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200'}`}
+                                >
+                                    {isProcessingThis ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                                </button>
+                                <button 
+                                    disabled={isProcessingThis}
+                                    onClick={() => handleRejectTx(tx.id)} 
+                                    className="bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 p-3 rounded-xl disabled:opacity-50"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
                      )
